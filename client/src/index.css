@@ -406,17 +406,17 @@
 :root {
   --bg-base-from: #e3f1fc;
   --bg-base-to: #cfe6f7;
-  --bg-glow: rgb(255 190 140 / 0.42);
-  --bg-wave-a: rgb(45 170 190 / 0.26);
-  --bg-wave-b: rgb(70 150 215 / 0.22);
+  --bg-glow: rgb(255 180 120 / 0.6);
+  --bg-wave-a: rgb(40 175 190 / 0.45);
+  --bg-wave-b: rgb(70 150 215 / 0.38);
 }
 
 .dark {
   --bg-base-from: #0a2a33;
   --bg-base-to: #07181f;
-  --bg-glow: rgb(255 150 90 / 0.16);
-  --bg-wave-a: rgb(30 150 160 / 0.26);
-  --bg-wave-b: rgb(40 110 170 / 0.22);
+  --bg-glow: rgb(255 140 80 / 0.3);
+  --bg-wave-a: rgb(30 160 170 / 0.42);
+  --bg-wave-b: rgb(40 115 175 / 0.34);
 }
 
 .lumo-bg {
@@ -434,8 +434,8 @@
   position: absolute;
   top: -22vmax;
   right: -18vmax;
-  width: 60vmax;
-  height: 60vmax;
+  width: 70vmax;
+  height: 70vmax;
   border-radius: 50%;
   background: radial-gradient(circle, var(--bg-glow) 0%, transparent 68%);
   animation: lumo-glow-drift 32s ease-in-out infinite alternate;
@@ -451,13 +451,13 @@
 }
 
 .lumo-bg-wave-a {
-  bottom: -142vw;
+  bottom: -132vw;
   background: var(--bg-wave-a);
   animation: lumo-wave-spin 38s linear infinite;
 }
 
 .lumo-bg-wave-b {
-  bottom: -148vw;
+  bottom: -139vw;
   background: var(--bg-wave-b);
   border-radius: 46%;
   animation: lumo-wave-spin 26s linear infinite reverse;
