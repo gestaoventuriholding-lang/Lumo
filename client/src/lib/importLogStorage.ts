@@ -1,3 +1,4 @@
+import { readJSON, writeJSON, removeKey } from "@/lib/cloudStore";
 export interface ImportLogEntry {
   id: string;
   timestamp: string;
@@ -15,9 +16,8 @@ const MAX_ENTRIES = 30;
 
 export function loadImportLog(): ImportLogEntry[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as ImportLogEntry[];
+    const parsed = readJSON<ImportLogEntry[]>(STORAGE_KEY);
+    if (!parsed) return [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -29,10 +29,10 @@ export function appendImportLog(entry: Omit<ImportLogEntry, "id">): ImportLogEnt
     { ...entry, id: crypto.randomUUID() },
     ...loadImportLog(),
   ].slice(0, MAX_ENTRIES);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  writeJSON(STORAGE_KEY, next);
   return next;
 }
 
 export function clearImportLog(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  removeKey(STORAGE_KEY);
 }

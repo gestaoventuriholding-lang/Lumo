@@ -1,5 +1,7 @@
+import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { Absence, AbsenceInput } from "@/types/absence";
 import type { Attendant } from "@/types/attendant";
+import { newId } from "@/lib/ids";
 
 const STORAGE_KEY = "lumo-absences";
 
@@ -11,9 +13,9 @@ export function countAbsenceDays(startDate: string, endDate: string): number {
 
 export function loadAbsences(): Absence[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readJSON<Absence[]>(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored) as Absence[];
+      return stored;
     }
   } catch {
     // ignore parse errors
@@ -22,7 +24,7 @@ export function loadAbsences(): Absence[] {
 }
 
 export function saveAbsences(absences: Absence[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(absences));
+  writeJSON(STORAGE_KEY, absences);
 }
 
 export function createAbsence(
@@ -32,7 +34,8 @@ export function createAbsence(
 ): Absence {
   const attendant = attendants.find((a) => a.id === input.attendantId);
   const now = new Date().toISOString();
-  const nextId = existing.length > 0 ? Math.max(...existing.map((a) => a.id)) + 1 : 1;
+  void existing;
+  const nextId = newId();
 
   return {
     id: nextId,

@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { ProductionGoal, RoleGoal } from "@/types/goals";
 
 const PRODUCTION_KEY = "lumo-production-goals";
@@ -5,8 +6,8 @@ const ROLE_KEY = "lumo-role-goals";
 
 export function loadProductionGoals(): ProductionGoal[] {
   try {
-    const stored = localStorage.getItem(PRODUCTION_KEY);
-    if (stored) return JSON.parse(stored) as ProductionGoal[];
+    const stored = readJSON<ProductionGoal[]>(PRODUCTION_KEY);
+    if (stored) return stored;
   } catch {
     // ignore
   }
@@ -14,13 +15,13 @@ export function loadProductionGoals(): ProductionGoal[] {
 }
 
 export function saveProductionGoals(goals: ProductionGoal[]): void {
-  localStorage.setItem(PRODUCTION_KEY, JSON.stringify(goals));
+  writeJSON(PRODUCTION_KEY, goals);
 }
 
 export function loadRoleGoals(): RoleGoal[] {
   try {
-    const stored = localStorage.getItem(ROLE_KEY);
-    if (stored) return JSON.parse(stored) as RoleGoal[];
+    const stored = readJSON<RoleGoal[]>(ROLE_KEY);
+    if (stored) return stored;
   } catch {
     // ignore
   }
@@ -28,5 +29,5 @@ export function loadRoleGoals(): RoleGoal[] {
 }
 
 export function saveRoleGoals(goals: RoleGoal[]): void {
-  localStorage.setItem(ROLE_KEY, JSON.stringify(goals));
+  writeJSON(ROLE_KEY, goals);
 }

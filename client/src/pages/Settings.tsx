@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { clearAllLumoOperationalData } from "@/lib/clearAllLumoData";
+import { flushCloud } from "@/lib/cloudStore";
 
 export default function Settings() {
   const { logout } = useAuth();
@@ -287,7 +288,9 @@ export default function Settings() {
                     onClick={() => {
                       clearAllLumoOperationalData();
                       toast.success("Dados apagados. Recarregando…");
-                      window.setTimeout(() => window.location.reload(), 400);
+                      void flushCloud().then(() =>
+                        window.setTimeout(() => window.location.reload(), 400)
+                      );
                     }}
                   >
                     Sim, limpar tudo

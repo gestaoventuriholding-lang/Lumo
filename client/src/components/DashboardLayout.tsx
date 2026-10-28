@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import { LayoutDashboard, Users, BarChart3, Calendar, CalendarDays, LayoutGrid, Settings as SettingsIcon, Moon, Sun, Upload } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Calendar, CalendarDays, LayoutGrid, Settings as SettingsIcon, Moon, Sun, Upload, LogOut } from "lucide-react";
 import {
   CSSProperties,
   memo,
@@ -162,7 +162,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
   onNavigate,
   setSidebarWidth,
 }: AppSidebarPanelProps) {
-  const { user } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const { state, isMobile, setOpen } = useSidebar();
   const { theme, toggleTheme } = useTheme();
   const isIconOnly = !isMobile && state === "collapsed";
@@ -382,8 +382,21 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
                 <p className="truncate text-sm font-medium leading-none text-white">
                   {user?.name || "Gestor"}
                 </p>
-                <p className="mt-1 truncate text-xs text-slate-400">Administrador</p>
+                <p className="mt-1 truncate text-xs text-slate-400">
+                  {isAdmin ? "Administrador" : "Usuário"}
+                </p>
               </div>
+            )}
+            {showSidebarLabels && (
+              <button
+                type="button"
+                onClick={() => void logout()}
+                title="Sair"
+                aria-label="Sair"
+                className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             )}
           </div>
         </SidebarFooter>

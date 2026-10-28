@@ -1,3 +1,4 @@
+import { newId } from "@/lib/ids";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "@/lib/motionVariants";
 import { Plus, Edit2, Trash2 } from "lucide-react";
@@ -93,7 +94,7 @@ export default function GoalsManagement({ onDataChange }: GoalsManagementProps) 
       toast.success("Meta de produção atualizada!");
     } else {
       const newGoal: ProductionGoal = {
-        id: Math.max(...productionGoals.map((g) => g.id), 0) + 1,
+        id: newId(),
         channel: productionFormData.channel,
         dailyTarget: productionFormData.dailyTarget,
         status: productionFormData.status,

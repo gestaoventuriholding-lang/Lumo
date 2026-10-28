@@ -1,3 +1,4 @@
+import { newId } from "@/lib/ids";
 import * as XLSX from "xlsx";
 import type { Attendant } from "@/types/attendant";
 import type { AttendanceChannel } from "@/types/goals";
@@ -1621,8 +1622,6 @@ export function executePerformanceImport(
 } {
   let nextAttendants = [...attendants];
   let nextRecords = [...existingRecords];
-  let nextAttendantId = Math.max(...nextAttendants.map((a) => a.id), 0);
-  let nextRecordId = Math.max(...nextRecords.map((r) => r.id), 0);
 
   const existingDates = new Set(existingRecords.map((record) => record.date));
   const attendantByName = new Map(
@@ -1697,9 +1696,8 @@ export function executePerformanceImport(
       continue;
     }
 
-    nextRecordId += 1;
     nextRecords.push({
-      id: nextRecordId,
+      id: newId(),
       attendantId: attendant.id,
       attendantName: attendant.name,
       date: row.date,

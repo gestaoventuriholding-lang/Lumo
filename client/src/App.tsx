@@ -10,6 +10,8 @@ import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
 import ImportPage from "@/pages/Import";
 import DashboardLayout from "./components/DashboardLayout";
+import AuthGate from "./components/AuthGate";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Attendants = lazy(() => import("./pages/Attendants"));
@@ -78,16 +80,20 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
-        <LumoDataProvider>
-          <PeriodFilterProvider>
-            <UserPreferencesProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Router />
-              </TooltipProvider>
-            </UserPreferencesProvider>
-          </PeriodFilterProvider>
-        </LumoDataProvider>
+        <TooltipProvider>
+          <Toaster />
+          <AuthProvider>
+            <AuthGate>
+              <LumoDataProvider>
+                <PeriodFilterProvider>
+                  <UserPreferencesProvider>
+                    <Router />
+                  </UserPreferencesProvider>
+                </PeriodFilterProvider>
+              </LumoDataProvider>
+            </AuthGate>
+          </AuthProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

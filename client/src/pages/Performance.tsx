@@ -1,3 +1,4 @@
+import { newId as createId } from "@/lib/ids";
 import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -294,9 +295,9 @@ export default function Performance() {
       setLastSavedId(editingId);
       toast.success("Registro atualizado — visível no Dashboard!");
     } else {
-      const newId = Math.max(...records.map((r) => r.id), 0) + 1;
+      const newRecordId = createId();
       const newRecord: DailyPerformanceRecord = {
-        id: newId,
+        id: newRecordId,
         attendantId: attendant.id,
         attendantName: attendant.name,
         date: form.date,
@@ -307,7 +308,7 @@ export default function Performance() {
         updatedAt: now,
       };
       addPerformanceRecord(newRecord);
-      setLastSavedId(newId);
+      setLastSavedId(newRecordId);
       toast.success("Registro salvo — visível no Dashboard!");
     }
 

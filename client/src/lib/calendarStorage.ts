@@ -1,3 +1,5 @@
+import { readJSON, writeJSON } from "@/lib/cloudStore";
+import { newId } from "@/lib/ids";
 import type {
   CalendarEvent,
   CalendarEventInput,
@@ -7,9 +9,9 @@ const STORAGE_KEY = "lumo-calendar-events";
 
 export function loadCalendarEvents(): CalendarEvent[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readJSON<CalendarEvent[]>(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored) as CalendarEvent[];
+      return stored;
     }
   } catch {
     // ignore parse errors
@@ -18,7 +20,7 @@ export function loadCalendarEvents(): CalendarEvent[] {
 }
 
 export function saveCalendarEvents(events: CalendarEvent[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+  writeJSON(STORAGE_KEY, events);
 }
 
 export function createCalendarEvent(
@@ -26,7 +28,8 @@ export function createCalendarEvent(
   existing: CalendarEvent[]
 ): CalendarEvent {
   const now = new Date().toISOString();
-  const nextId = existing.length > 0 ? Math.max(...existing.map((event) => event.id)) + 1 : 1;
+  void existing;
+  const nextId = newId();
 
   return {
     id: nextId,

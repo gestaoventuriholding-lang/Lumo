@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from "@/lib/cloudStore";
 import {
   DEFAULT_USER_PREFERENCES,
   type UserPreferences,
@@ -7,9 +8,9 @@ const STORAGE_KEY = "lumo-user-preferences";
 
 export function loadUserPreferences(): UserPreferences {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readJSON<Partial<UserPreferences>>(STORAGE_KEY);
     if (stored) {
-      return { ...DEFAULT_USER_PREFERENCES, ...JSON.parse(stored) };
+      return { ...DEFAULT_USER_PREFERENCES, ...stored };
     }
   } catch {
     // ignore parse errors
@@ -18,5 +19,5 @@ export function loadUserPreferences(): UserPreferences {
 }
 
 export function saveUserPreferences(preferences: UserPreferences): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+  writeJSON(STORAGE_KEY, preferences);
 }

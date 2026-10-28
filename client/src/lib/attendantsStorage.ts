@@ -1,14 +1,16 @@
+import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { Attendant, AttendantInput, AttendantServiceChannel } from "@/types/attendant";
 import type { AttendanceChannel } from "@/types/goals";
 import { getLocalDateString } from "@/lib/performanceStorage";
+import { newId } from "@/lib/ids";
 
 const STORAGE_KEY = "lumo-attendants";
 
 export function loadAttendants(): Attendant[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readJSON<Attendant[]>(STORAGE_KEY);
     if (stored) {
-      return (JSON.parse(stored) as Attendant[]).map(normalizeAttendant);
+      return stored.map(normalizeAttendant);
     }
   } catch {
     // ignore
@@ -30,7 +32,7 @@ function normalizeAttendant(raw: Attendant): Attendant {
 }
 
 export function saveAttendants(attendants: Attendant[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(attendants));
+  writeJSON(STORAGE_KEY, attendants);
 }
 
 export function toAttendantServiceChannel(
@@ -58,7 +60,7 @@ export function pickDominantServiceChannel(
 
 export function createAttendant(input: AttendantInput, existing: Attendant[]): Attendant {
   return {
-    id: Math.max(...existing.map((a) => a.id), 0) + 1,
+    id: newId(),
     ...input,
     registrationDate: getLocalDateString(),
   };

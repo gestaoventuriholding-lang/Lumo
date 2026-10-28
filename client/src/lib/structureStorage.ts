@@ -1,3 +1,4 @@
+import { isCloudEnabled, readJSON, removeKey, writeJSON } from "@/lib/cloudStore";
 import type { StructureLayout, StructureMovementLog } from "@/types/structure";
 
 const STORAGE_KEY = "lumo-structure-layout";
@@ -17,22 +18,24 @@ function normalizeLayout(raw: Partial<StructureLayout>): StructureLayout {
 }
 
 export function clearStructureLayout(): void {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.setItem(VERSION_KEY, String(STORAGE_VERSION));
+  removeKey(STORAGE_KEY);
+  if (!isCloudEnabled()) localStorage.setItem(VERSION_KEY, String(STORAGE_VERSION));
 }
 
 export function loadStructureLayout(): StructureLayout {
+  if (isCloudEnabled()) {
+    const stored = readJSON<Partial<StructureLayout>>(STORAGE_KEY);
+    return stored ? normalizeLayout(stored) : emptyLayout();
+  }
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     const storedVersion = localStorage.getItem(VERSION_KEY);
-
     if (stored) {
       if (storedVersion !== String(STORAGE_VERSION)) {
         localStorage.setItem(VERSION_KEY, String(STORAGE_VERSION));
       }
       return normalizeLayout(JSON.parse(stored) as Partial<StructureLayout>);
     }
-
     if (storedVersion !== String(STORAGE_VERSION)) {
       clearStructureLayout();
     }
@@ -43,11 +46,8 @@ export function loadStructureLayout(): StructureLayout {
 }
 
 export function saveStructureLayout(layout: StructureLayout): void {
-  localStorage.setItem(VERSION_KEY, String(STORAGE_VERSION));
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({ ...layout, updatedAt: new Date().toISOString() })
-  );
+  if (!isCloudEnabled()) localStorage.setItem(VERSION_KEY, String(STORAGE_VERSION));
+  writeJSON(STORAGE_KEY, { ...layout, updatedAt: new Date().toISOString() });
 }
 
 export function appendMovementLog(

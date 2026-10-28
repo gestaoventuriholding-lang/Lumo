@@ -1,13 +1,14 @@
+import { readText, writeText } from "@/lib/cloudStore";
 const STORAGE_KEY = "lumo-analysis-note";
 
 export function loadAnalysisNote(): string {
   try {
-    return localStorage.getItem(STORAGE_KEY) ?? "";
+    return readText(STORAGE_KEY) ?? "";
   } catch {
     return "";
   }
 }
 
 export function saveAnalysisNote(note: string): void {
-  localStorage.setItem(STORAGE_KEY, note);
+  writeText(STORAGE_KEY, note);
 }

@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { DailyPerformanceRecord } from "@/types/performance";
 
 const STORAGE_KEY = "lumo-performance-records";
@@ -11,9 +12,9 @@ export function getLocalDateString(date = new Date()): string {
 
 export function loadPerformanceRecords(): DailyPerformanceRecord[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readJSON<DailyPerformanceRecord[]>(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored) as DailyPerformanceRecord[];
+      return stored;
     }
   } catch {
     // ignore parse errors
@@ -22,7 +23,7 @@ export function loadPerformanceRecords(): DailyPerformanceRecord[] {
 }
 
 export function savePerformanceRecords(records: DailyPerformanceRecord[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  writeJSON(STORAGE_KEY, records);
 }
 
 export function formatAverageTime(minutes: number): string {
