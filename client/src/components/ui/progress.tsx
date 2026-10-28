@@ -2,6 +2,7 @@
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 
 import { cn } from "@/lib/utils";
+import { motion, smoothEase } from "@/lib/motionVariants";
 
 function Progress({
   className,
@@ -17,11 +18,15 @@ function Progress({
       )}
       {...props}
     >
-      <ProgressPrimitive.Indicator
-        data-slot="progress-indicator"
-        className="bg-primary h-full w-full flex-1 transition-all"
-        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-      />
+      <ProgressPrimitive.Indicator asChild data-slot="progress-indicator">
+        {/* A barra se desenha da esquerda para a direita */}
+        <motion.div
+          className="bg-primary h-full w-full flex-1 origin-left"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: Math.min(Math.max(value || 0, 0), 100) / 100 }}
+          transition={{ duration: 0.8, ease: smoothEase }}
+        />
+      </ProgressPrimitive.Indicator>
     </ProgressPrimitive.Root>
   );
 }

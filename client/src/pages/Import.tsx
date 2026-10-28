@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { AnimatedText } from "@/components/AnimatedNumber";
+import { CHART_DRAW_MS } from "@/lib/motionVariants";
 import {
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle,
   Loader2, BarChart3, Phone, MessageSquare, Users,
@@ -193,7 +195,7 @@ function KpiCard({ icon, label, value, sub, color }: { icon: React.ReactNode; la
       <CardContent className="pt-5">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${color}`}>{icon}</div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-        <p className="text-2xl font-bold mt-1">{value}</p>
+        <p className="text-2xl font-bold mt-1"><AnimatedText text={value} /></p>
         <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </CardContent>
     </Card>
@@ -476,9 +478,9 @@ function VozDashboard({ data }: { data: ParsedRecord[] }) {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip /><Legend />
-                <Line type="monotone" dataKey="Recebidas" stroke="#2563EB" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Atendidas" stroke="#10B981" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Sem Atend." stroke="#EF4444" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Recebidas" stroke="#2563EB" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
+                <Line type="monotone" dataKey="Atendidas" stroke="#10B981" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
+                <Line type="monotone" dataKey="Sem Atend." stroke="#EF4444" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -555,7 +557,7 @@ function ChatDashboard({ data }: { data: ParsedRecord[] }) {
           <CardContent><ResponsiveContainer width="100%" height={220}><BarChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Bar dataKey="Chats" fill="#2563EB" radius={[4,4,0,0]} /></BarChart></ResponsiveContainer></CardContent>
         </Card>
         <Card><CardHeader><CardTitle className="text-sm">TMA por Dia (min)</CardTitle></CardHeader>
-          <CardContent><ResponsiveContainer width="100%" height={220}><LineChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Line type="monotone" dataKey="TMA" stroke="#F59E0B" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></CardContent>
+          <CardContent><ResponsiveContainer width="100%" height={220}><LineChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Line type="monotone" dataKey="TMA" stroke="#F59E0B" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" /></LineChart></ResponsiveContainer></CardContent>
         </Card>
       </div>
     </>

@@ -2,7 +2,10 @@ import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { MotionConfig } from "framer-motion";
+import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVariants";
+import AnimatedBackground from "./components/AnimatedBackground";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LumoDataProvider } from "./contexts/LumoDataContext";
@@ -30,21 +33,35 @@ function PageLoader() {
 }
 
 function AppRoutes() {
+  const [location] = useLocation();
+
+  // A página que sai e a que entra ficam sobrepostas (popLayout); só a área de conteúdo anima.
+  // O Switch recebe a localização da própria chave para a página que sai não trocar de tela no meio do fade.
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/attendants" component={Attendants} />
-        <Route path="/performance" component={Performance} />
-        <Route path="/absences" component={Absences} />
-        <Route path="/structure" component={Structure} />
-        <Route path="/calendar" component={CalendarPage} />
-        <Route path="/import" component={ImportPage} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={location}
+          className="flex min-h-0 flex-1 flex-col"
+          {...pageTransitionProps}
+        >
+          <Suspense fallback={<PageLoader />}>
+            <Switch location={location}>
+              <Route path="/" component={Dashboard} />
+              <Route path="/attendants" component={Attendants} />
+              <Route path="/performance" component={Performance} />
+              <Route path="/absences" component={Absences} />
+              <Route path="/structure" component={Structure} />
+              <Route path="/calendar" component={CalendarPage} />
+              <Route path="/import" component={ImportPage} />
+              <Route path="/settings" component={Settings} />
+              <Route path="/404" component={NotFound} />
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -79,6 +96,8 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <MotionConfig reducedMotion="user">
+      <AnimatedBackground />
       <ThemeProvider defaultTheme="light" switchable>
         <TooltipProvider>
           <Toaster />
@@ -95,6 +114,7 @@ function App() {
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

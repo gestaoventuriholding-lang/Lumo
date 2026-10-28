@@ -252,7 +252,8 @@
   }
 
   .lumo-page-canvas {
-    background-color: var(--page-canvas);
+    /* transparente para deixar o fundo animado aparecer */
+    background-color: transparent;
   }
 
   .lumo-sidebar-shell {
@@ -382,5 +383,104 @@
     justify-content: center;
     width: 100%;
     padding-inline: 0;
+  }
+}
+
+/* ---------- Troca de tema com revelação circular (View Transitions API) ---------- */
+/* O círculo é animado em ThemeContext.tsx; aqui só desligamos o crossfade padrão. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 0;
+}
+
+::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* ---------- Fundo animado (atrás de todo o conteúdo) ---------- */
+:root {
+  --bg-base-from: #e3f1fc;
+  --bg-base-to: #cfe6f7;
+  --bg-glow: rgb(255 190 140 / 0.42);
+  --bg-wave-a: rgb(45 170 190 / 0.26);
+  --bg-wave-b: rgb(70 150 215 / 0.22);
+}
+
+.dark {
+  --bg-base-from: #0a2a33;
+  --bg-base-to: #07181f;
+  --bg-glow: rgb(255 150 90 / 0.16);
+  --bg-wave-a: rgb(30 150 160 / 0.26);
+  --bg-wave-b: rgb(40 110 170 / 0.22);
+}
+
+.lumo-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(160deg, var(--bg-base-from), var(--bg-base-to));
+}
+
+.lumo-bg::before {
+  /* brilho quente difuso no canto superior direito */
+  content: "";
+  position: absolute;
+  top: -22vmax;
+  right: -18vmax;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--bg-glow) 0%, transparent 68%);
+  animation: lumo-glow-drift 32s ease-in-out infinite alternate;
+}
+
+.lumo-bg-wave {
+  position: absolute;
+  left: -30vw;
+  width: 160vw;
+  height: 160vw;
+  border-radius: 43%;
+  will-change: transform;
+}
+
+.lumo-bg-wave-a {
+  bottom: -142vw;
+  background: var(--bg-wave-a);
+  animation: lumo-wave-spin 38s linear infinite;
+}
+
+.lumo-bg-wave-b {
+  bottom: -148vw;
+  background: var(--bg-wave-b);
+  border-radius: 46%;
+  animation: lumo-wave-spin 26s linear infinite reverse;
+}
+
+@keyframes lumo-wave-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lumo-glow-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-4vmax, 3vmax, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumo-bg::before,
+  .lumo-bg-wave {
+    animation: none;
   }
 }

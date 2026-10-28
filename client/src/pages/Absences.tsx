@@ -16,7 +16,8 @@ import { getAbsencesForDate } from "@/lib/absenceMetrics";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import { getMonthString } from "@/lib/dateRangeFilter";
 import type { Absence, AbsenceType } from "@/types/absence";
-import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
+import { pageContainerVariants, pageItemVariants, staggerContainerVariants, cardItemVariants } from "@/lib/motionVariants";
+import AnimatedNumber from "@/components/AnimatedNumber";
 
 const absenceTypes = {
   vacation: { label: "Férias", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
@@ -362,8 +363,9 @@ export default function Absences() {
         </Card>
       </motion.div>
 
-      <motion.div variants={pageItemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+      <motion.div variants={staggerContainerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
@@ -371,11 +373,13 @@ export default function Absences() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">{absencesThisMonth}</p>
+            <p className="text-2xl font-bold text-foreground"><AnimatedNumber value={absencesThisMonth} /></p>
           </CardContent>
         </Card>
+</motion.div>
 
-        <Card>
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -383,11 +387,13 @@ export default function Absences() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-amber-400">{pendingCount}</p>
+            <p className="text-2xl font-bold text-amber-400"><AnimatedNumber value={pendingCount} /></p>
           </CardContent>
         </Card>
+</motion.div>
 
-        <Card>
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <CalendarIcon className="h-4 w-4" />
@@ -395,9 +401,10 @@ export default function Absences() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-400">{approvedVacations}</p>
+            <p className="text-2xl font-bold text-green-400"><AnimatedNumber value={approvedVacations} /></p>
           </CardContent>
         </Card>
+</motion.div>
       </motion.div>
 
       <Dialog

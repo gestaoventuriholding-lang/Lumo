@@ -32,6 +32,7 @@ import { buildPerformanceAlerts } from "@/lib/performanceMetrics";
 import type { PerformanceAlert } from "@/types/goals";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion, smoothEase } from "@/lib/motionVariants";
 
 const mainMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -263,21 +264,27 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           onClick={() => onNavigate(item.path)}
           tooltip={isIconOnly ? item.label : undefined}
           className={cn(
-            "rounded-lg text-sm",
+            "relative rounded-lg text-sm",
             !isIconOnly && "h-9",
             isActive
-              ? "font-semibold bg-blue-600 text-white shadow-md shadow-blue-600/25 hover:bg-blue-600 hover:text-white data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+              ? "font-semibold text-white hover:bg-transparent hover:text-white data-[active=true]:bg-transparent data-[active=true]:text-white"
               : "font-medium text-slate-300 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/10 data-[active=true]:text-white"
           )}
         >
+          {isActive && (
+            <motion.span
+              layoutId="sidebar-active-pill"
+              className="absolute inset-0 rounded-lg bg-blue-600 shadow-md shadow-blue-600/25"
+              transition={{ duration: 0.3, ease: smoothEase }}
+            />
+          )}
           <item.icon
-            className={
-              isActive
-                ? "h-4 w-4 text-white"
-                : "h-4 w-4 text-slate-400 group-hover/menu-button:text-white"
-            }
+            className={cn(
+              "relative h-4 w-4",
+              isActive ? "text-white" : "text-slate-400 group-hover/menu-button:text-white"
+            )}
           />
-          {!isIconOnly && <span className="truncate">{item.label}</span>}
+          {!isIconOnly && <span className="relative truncate">{item.label}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
     );
@@ -341,7 +348,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
             {renderMenuButton(settingsMenuItem)}
           </SidebarMenu>
           <button
-            onClick={() => toggleTheme?.()}
+            onClick={(event) => toggleTheme?.(event.currentTarget)}
             className={cn(
               "rounded-lg text-sm text-slate-300 transition-colors hover:bg-white/10",
               isIconOnly
@@ -350,11 +357,20 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
             )}
             title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
           >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4 shrink-0" />
-            ) : (
-              <Moon className="h-4 w-4 shrink-0" />
-            )}
+            <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={theme}
+                  className="flex"
+                  initial={{ rotate: -90, scale: 0.6, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: 90, scale: 0.6, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: smoothEase }}
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </motion.span>
+              </AnimatePresence>
+            </span>
             {showSidebarLabels && (
               <span className="truncate">
                 {theme === "dark" ? "Modo claro" : "Modo escuro"}
@@ -429,11 +445,11 @@ const LayoutMain = memo(function LayoutMain({
   return (
     <SidebarInset
       className={cn(
-        "min-w-0 flex-1",
+        "min-w-0 flex-1 bg-transparent",
         isStructurePage && "h-svh max-h-svh overflow-hidden"
       )}
     >
-      <div className="z-40 flex h-12 shrink-0 items-center justify-between border-b border-border bg-card px-3 shadow-surface md:px-4">
+      <div className="z-40 flex h-12 shrink-0 items-center justify-between border-b border-border bg-card/85 px-3 backdrop-blur-md shadow-surface md:px-4">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-base font-medium tracking-tight text-foreground">
             {pageTitle}

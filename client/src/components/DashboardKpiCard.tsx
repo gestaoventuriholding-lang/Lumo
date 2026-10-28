@@ -1,5 +1,7 @@
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import { motion, cardItemVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
+import { AnimatedText } from "@/components/AnimatedNumber";
 import type { LucideIcon } from "lucide-react";
 
 type SparkPoint = { v: number };
@@ -30,7 +32,7 @@ export default function DashboardKpiCard({
   sparkData,
 }: DashboardKpiCardProps) {
   return (
-    <div className="lumo-panel-sm p-4">
+    <motion.div variants={cardItemVariants} className="lumo-panel-sm p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", iconBg)}>
           <Icon className={cn("h-5 w-5", iconColor)} />
@@ -47,7 +49,9 @@ export default function DashboardKpiCard({
                   fillOpacity={0.12}
                   strokeWidth={2}
                   dot={false}
-                  isAnimationActive={false}
+                  isAnimationActive
+                  animationDuration={CHART_DRAW_MS}
+                  animationEasing="ease-in-out"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -55,7 +59,9 @@ export default function DashboardKpiCard({
         )}
       </div>
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{value}</p>
+      <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
+        <AnimatedText text={value} />
+      </p>
       <p
         className={cn(
           "mt-2 text-xs font-medium",
@@ -67,6 +73,6 @@ export default function DashboardKpiCard({
         {comparison}
       </p>
       {footnote ? <p className="mt-1 text-xs text-muted-foreground">{footnote}</p> : null}
-    </div>
+    </motion.div>
   );
 }

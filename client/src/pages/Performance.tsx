@@ -53,7 +53,9 @@ import ImportModal from "@/components/ImportModal";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PerformanceRankings from "@/components/PerformanceRankings";
-import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
+import { pageContainerVariants, pageItemVariants, staggerContainerVariants, cardItemVariants } from "@/lib/motionVariants";
+import { AnimatedText } from "@/components/AnimatedNumber";
+import AnimatedNumber from "@/components/AnimatedNumber";
 
 const channels: AttendanceChannel[] = ["Ligação", "WhatsApp"];
 
@@ -392,8 +394,9 @@ export default function Performance() {
         />
       </motion.div>
 
-      <motion.div variants={pageItemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      <motion.div variants={staggerContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Phone className="h-4 w-4" />
@@ -401,11 +404,13 @@ export default function Performance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{kpis.totalAttendances.toLocaleString("pt-BR")}</p>
+            <p className="text-2xl font-bold"><AnimatedNumber value={kpis.totalAttendances} /></p>
           </CardContent>
         </Card>
+</motion.div>
 
-        <Card>
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -414,12 +419,14 @@ export default function Performance() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {kpis.averageTime > 0 ? formatAverageTime(kpis.averageTime) : "—"}
+              <AnimatedText text={kpis.averageTime > 0 ? formatAverageTime(kpis.averageTime) : "—"} />
             </p>
           </CardContent>
         </Card>
+</motion.div>
 
-        <Card>
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -427,11 +434,13 @@ export default function Performance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{kpis.attendantsCount}</p>
+            <p className="text-2xl font-bold"><AnimatedNumber value={kpis.attendantsCount} /></p>
           </CardContent>
         </Card>
+</motion.div>
 
-        <Card>
+        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
+<Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Target className="h-4 w-4" />
@@ -440,10 +449,11 @@ export default function Performance() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {kpis.averagePercentage > 0 ? `${Math.round(kpis.averagePercentage)}%` : "—"}
+              <AnimatedText text={kpis.averagePercentage > 0 ? `${Math.round(kpis.averagePercentage)}%` : "—"} />
             </p>
           </CardContent>
         </Card>
+</motion.div>
       </motion.div>
 
       <motion.div variants={pageItemVariants} ref={tableRef}>

@@ -12,6 +12,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { motion, pageContainerVariants, pageItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
+import AnimatedNumber from "@/components/AnimatedNumber";
 import { Users, TrendingUp, Target, AlertCircle, Upload, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ImportModal from "@/components/ImportModal";
@@ -209,8 +211,16 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-6 pb-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <motion.div
+      className="space-y-6 pb-8"
+      variants={pageContainerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        variants={pageItemVariants}
+        className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+      >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
           <p className="mt-1 text-muted-foreground">
@@ -231,17 +241,22 @@ export default function Dashboard() {
             Importar Planilha
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      <PeriodFilterBar showScopeHint={false} />
+      <motion.div variants={pageItemVariants}>
+        <PeriodFilterBar showScopeHint={false} />
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <motion.div
+        variants={staggerContainerVariants}
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
         {mainCards.map((card) => (
           <DashboardKpiCard key={card.title} {...card} />
         ))}
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="lumo-panel-sm p-5 xl:col-span-2">
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
@@ -285,6 +300,9 @@ export default function Dashboard() {
                   strokeWidth={2.5}
                   fill="url(#ligacaoGradient)"
                   dot={false}
+                  isAnimationActive
+                  animationDuration={CHART_DRAW_MS}
+                  animationEasing="ease-in-out"
                   activeDot={{ r: 5 }}
                 />
                 <Area
@@ -295,6 +313,9 @@ export default function Dashboard() {
                   strokeWidth={2.5}
                   fill="url(#whatsappGradient)"
                   dot={false}
+                  isAnimationActive
+                  animationDuration={CHART_DRAW_MS}
+                  animationEasing="ease-in-out"
                   activeDot={{ r: 5 }}
                 />
               </AreaChart>
@@ -336,7 +357,7 @@ export default function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-6">
-                <p className="text-2xl font-bold text-foreground">{formatCount(channelTotal)}</p>
+                <p className="text-2xl font-bold text-foreground"><AnimatedNumber value={channelTotal} /></p>
                 <p className="text-xs text-muted-foreground">total</p>
               </div>
               <div className="space-y-2">
@@ -363,16 +384,18 @@ export default function Dashboard() {
             <EmptySection message="Sem dados de canal no período selecionado." />
           )}
         </div>
-      </div>
+      </motion.div>
 
-      <PerformanceRankings
-        ligacaoSummaries={ligacaoSummaries}
-        whatsappSummaries={whatsappSummaries}
-        overallSummaries={attendantSummaries}
-        period={period}
-      />
+      <motion.div variants={pageItemVariants}>
+        <PerformanceRankings
+          ligacaoSummaries={ligacaoSummaries}
+          whatsappSummaries={whatsappSummaries}
+          overallSummaries={attendantSummaries}
+          period={period}
+        />
+      </motion.div>
 
-      <details className="lumo-panel-sm overflow-hidden">
+      <motion.details variants={pageItemVariants} className="lumo-panel-sm overflow-hidden">
         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-foreground">
           Análise detalhada
         </summary>
@@ -383,7 +406,7 @@ export default function Dashboard() {
             onNoteChange={setAnalysisNote}
           />
         </div>
-      </details>
+      </motion.details>
 
       <p className="text-center text-xs text-muted-foreground">
         Dados atualizados em {lastUpdated}
@@ -391,6 +414,6 @@ export default function Dashboard() {
 
       <ImportModal open={showImportModal} onOpenChange={setShowImportModal} />
       <ExportModal open={showExportModal} onOpenChange={setShowExportModal} />
-    </div>
+    </motion.div>
   );
 }
