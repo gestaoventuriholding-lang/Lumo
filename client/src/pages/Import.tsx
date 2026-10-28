@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AnimatedText } from "@/components/AnimatedNumber";
-import { CHART_DRAW_MS } from "@/lib/motionVariants";
+import { CHART_DRAW_MS, motion, pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle,
   Loader2, BarChart3, Phone, MessageSquare, Users,
@@ -695,18 +695,26 @@ export default function ImportPage() {
   const activeSheets = Object.values(sheetConfigs).filter((c) => c.ativo && c.tipo !== "outro").length;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <motion.div
+      className="p-6 max-w-7xl mx-auto space-y-6"
+      variants={pageContainerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={pageItemVariants} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Importar Relatório</h1>
           <p className="text-muted-foreground text-sm mt-1">Configure aba por aba quais colunas importar</p>
         </div>
-      </div>
+      </motion.div>
 
-      <StepBar current={step} />
+      <motion.div variants={pageItemVariants}>
+        <StepBar current={step} />
+      </motion.div>
 
       {/* UPLOAD */}
       {step === "upload" && (
+        <motion.div variants={pageItemVariants} initial="hidden" animate="visible">
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Upload className="w-4 h-4 text-primary" />Selecionar Arquivo</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -743,10 +751,12 @@ export default function ImportPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {/* ANALYZING */}
       {step === "analyzing" && (
+        <motion.div variants={pageItemVariants} initial="hidden" animate="visible">
         <Card>
           <CardContent className="pt-12 pb-12 flex flex-col items-center gap-6">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -764,10 +774,12 @@ export default function ImportPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {/* CONFIGURE */}
       {step === "configure" && (
+        <motion.div variants={pageItemVariants} initial="hidden" animate="visible">
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -822,10 +834,12 @@ export default function ImportPage() {
             </CardContent>
           </Card>
         </div>
+        </motion.div>
       )}
 
       {/* DASHBOARD */}
       {step === "dashboard" && (
+        <motion.div variants={pageItemVariants} initial="hidden" animate="visible">
         <div className="space-y-4">
           <Tabs defaultValue="voz">
             <TabsList>
@@ -842,7 +856,8 @@ export default function ImportPage() {
             <Button variant="outline" onClick={resetAll} className="gap-2"><Upload className="w-4 h-4" />Novo arquivo</Button>
           </div>
         </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

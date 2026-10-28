@@ -7,6 +7,7 @@ import { getEditorTool } from "@/lib/structureEditorTools";
 import type { StructureElementType } from "@/types/structure";
 import StructureHeader from "@/components/structure/StructureHeader";
 import StructureEditorToolbar from "@/components/structure/StructureEditorToolbar";
+import { motion, pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import StructureEditorSidebar from "@/components/structure/StructureEditorSidebar";
 import StructureCanvas from "@/components/structure/StructureCanvas";
 import ElementEditorDialog from "@/components/structure/ElementEditorDialog";
@@ -117,9 +118,17 @@ export default function Structure() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
-      <StructureHeader onSave={saveNow} onAddElement={handleAddElement} />
+    <motion.div
+      className="flex h-full min-h-0 flex-col gap-2 overflow-hidden"
+      variants={pageContainerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={pageItemVariants}>
+        <StructureHeader onSave={saveNow} onAddElement={handleAddElement} />
+      </motion.div>
 
+      <motion.div variants={pageItemVariants}>
       <StructureEditorToolbar
         activeTool={activeTool}
         zoom={zoom}
@@ -134,8 +143,12 @@ export default function Structure() {
           if (selectedId) handleRemoveElement(selectedId);
         }}
       />
+      </motion.div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden rounded-lg lumo-panel">
+      <motion.div
+        variants={pageItemVariants}
+        className="flex min-h-0 flex-1 overflow-hidden rounded-lg lumo-panel"
+      >
         <StructureEditorSidebar
           elements={layout.elements}
           selectedId={selectedId}
@@ -168,7 +181,7 @@ export default function Structure() {
           onRemoveElement={handleRemoveElement}
           onAddAt={handleAddAt}
         />
-      </div>
+      </motion.div>
 
       <ElementEditorDialog
         open={elementDialogOpen}
@@ -181,6 +194,6 @@ export default function Structure() {
           if (selectedId) handleRemoveElement(selectedId);
         }}
       />
-    </div>
+    </motion.div>
   );
 }
