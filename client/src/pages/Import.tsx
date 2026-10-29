@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
+import { useLocation } from "wouter";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AnimatedText } from "@/components/AnimatedNumber";
+import ProductivityReportReview from "@/components/ProductivityReportReview";
+import { useLumoData } from "@/contexts/LumoDataContext";
+import { parseProductivityWorkbook, type ProductivityReport } from "@/lib/reportParser";
+import { previewProductivityImport } from "@/lib/productivityImport";
+import type { AttendanceChannel } from "@/types/goals";
 import { CHART_DRAW_MS, motion, pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle,
@@ -27,7 +33,7 @@ import {
 // ----------------------------------------------------------------
 // Tipos
 // ----------------------------------------------------------------
-type Step = "upload" | "analyzing" | "configure" | "dashboard";
+type Step = "upload" | "analyzing" | "configure" | "dashboard" | "report";
 
 interface SheetData {
   titleRow: string[];
@@ -165,12 +171,18 @@ function autoDetectCols(headerRow: string[], suggestedFields: FieldKey[]): Parti
 // Sub-components UI
 // ----------------------------------------------------------------
 function StepBar({ current }: { current: Step }) {
-  const steps: { id: Step; label: string }[] = [
-    { id: "upload", label: "Upload" },
-    { id: "analyzing", label: "Lendo" },
-    { id: "configure", label: "Configurar" },
-    { id: "dashboard", label: "Dashboard" },
-  ];
+  const steps: { id: Step; label: string }[] =
+    current === "report"
+      ? [
+          { id: "upload", label: "Upload" },
+          { id: "report", label: "Conferir e importar" },
+        ]
+      : [
+          { id: "upload", label: "Upload" },
+          { id: "analyzing", label: "Lendo" },
+          { id: "configure", label: "Configurar" },
+          { id: "dashboard", label: "Dashboard" },
+        ];
   const idx = steps.findIndex((s) => s.id === current);
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -597,6 +609,53 @@ export default function ImportPage() {
   const [sheetConfigs, setSheetConfigs] = useState<Record<string, SheetConfig>>({});
   const [appData, setAppData] = useState<AppData>({ voz: [], vozProd: [], chat: [], chatProd: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, navigate] = useLocation();
+  const { attendants, productivityRecords, importProductivityReport } = useLumoData();
+  // Relatório de produtividade reconhecido sozinho (ex.: REL090): sem mapear colunas
+  const [report, setReport] = useState<ProductivityReport | null>(null);
+  const [reportChannel, setReportChannel] = useState<AttendanceChannel | "">("");
+  const [reportStart, setReportStart] = useState("");
+  const [reportEnd, setReportEnd] = useState("");
+  const [createAttendants, setCreateAttendants] = useState(true);
+
+  const reportPreview = useMemo(
+    () =>
+      report && reportChannel
+        ? previewProductivityImport(report, attendants, productivityRecords, {
+            channel: reportChannel,
+            periodStart: reportStart || undefined,
+            periodEnd: reportEnd || undefined,
+          })
+        : { matched: [], toCreate: [], alreadyImported: [] },
+    [report, reportChannel, reportStart, reportEnd, attendants, productivityRecords]
+  );
+  const reportReady =
+    report != null &&
+    reportChannel !== "" &&
+    (report.mode === "daily" || (reportStart !== "" && reportEnd !== "" && reportEnd >= reportStart));
+
+  function handleImportReport() {
+    if (!report || !reportChannel || !reportReady) return;
+    try {
+      const result = importProductivityReport(report, {
+        channel: reportChannel,
+        periodStart: reportStart || undefined,
+        periodEnd: reportEnd || undefined,
+        createAttendants,
+        fileName,
+      });
+      toast.success("Importação concluída", { description: result.logMessage });
+      if (result.summary.unmatchedNames.length > 0) {
+        toast.warning(
+          `${result.summary.unmatchedNames.length} colaborador(es) não foram importados porque não estão cadastrados: ${result.summary.unmatchedNames.join(", ")}`
+        );
+      }
+      resetAll();
+      navigate("/performance");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao importar o relatório");
+    }
+  }
 
   const readFile = useCallback((file: File) => {
     const ext = file.name.split(".").pop()?.toLowerCase();
@@ -606,6 +665,17 @@ export default function ImportPage() {
     reader.onload = (e) => {
       try {
         const wb = XLSX.read(e.target?.result, { type: "binary", cellDates: false, raw: false, dateNF: "dd/mm/yyyy" });
+        const productivity = parseProductivityWorkbook(wb, file.name);
+        if (productivity) {
+          setReport(productivity);
+          setReportChannel(productivity.channel ?? "");
+          setReportStart(productivity.periodStart ?? "");
+          setReportEnd(productivity.periodEnd ?? "");
+          setStep("report");
+          toast.success("Relatório reconhecido automaticamente");
+          return;
+        }
+        setReport(null);
         const sheets: Record<string, SheetData> = {};
         wb.SheetNames.forEach((name) => {
           const ws = wb.Sheets[name];
@@ -687,6 +757,7 @@ export default function ImportPage() {
 
   function resetAll() {
     setStep("upload"); setFileName(""); setProgress(0); setProgressMsg(""); setProgressLogs([]);
+    setReport(null); setReportChannel(""); setReportStart(""); setReportEnd("");
     setSheetsRaw({}); setSheetConfigs({}); setAppData({ voz: [], vozProd: [], chat: [], chatProd: [] });
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
@@ -704,7 +775,7 @@ export default function ImportPage() {
       <motion.div variants={pageItemVariants} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Importar Relatório</h1>
-          <p className="text-muted-foreground text-sm mt-1">Configure aba por aba quais colunas importar</p>
+          <p className="text-muted-foreground text-sm mt-1">Envie o relatório: o Elos reconhece as colunas sozinho</p>
         </div>
       </motion.div>
 
@@ -751,6 +822,45 @@ export default function ImportPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
+      )}
+
+      {/* RELATÓRIO DE PRODUTIVIDADE RECONHECIDO */}
+      {step === "report" && report && (
+        <motion.div variants={pageItemVariants} initial="hidden" animate="visible">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Relatório reconhecido automaticamente
+                </CardTitle>
+                <Badge variant="outline" className="text-xs">{fileName}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <ProductivityReportReview
+                report={report}
+                preview={reportPreview}
+                channel={reportChannel}
+                onChannelChange={setReportChannel}
+                periodStart={reportStart}
+                periodEnd={reportEnd}
+                onPeriodStartChange={setReportStart}
+                onPeriodEndChange={setReportEnd}
+                createAttendants={createAttendants}
+                onCreateAttendantsChange={setCreateAttendants}
+              />
+              <div className="flex justify-between pt-4 border-t">
+                <Button variant="outline" onClick={resetAll} className="gap-2">
+                  <RefreshCw className="w-4 h-4" /> Novo arquivo
+                </Button>
+                <Button onClick={handleImportReport} disabled={!reportReady} className="gap-2">
+                  Importar relatório <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       )}
 
