@@ -238,11 +238,9 @@ function Sidebar({
           "relative min-h-svh w-(--sidebar-width) bg-transparent",
           disableTransition
             ? "transition-none"
-            : "transition-[width] duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            : "transition-[width] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
-          // modo ícone: o espaço reservado é sempre o da barra recolhida; ao abrir, o menu flutua por cima
-          collapsible === "icon" && variant === "sidebar" && "w-(--sidebar-width-icon)",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
@@ -251,7 +249,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-50 hidden h-svh w-(--sidebar-width) md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
           disableTransition
             ? "transition-none"
             : "transition-[left,right,width,box-shadow] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
