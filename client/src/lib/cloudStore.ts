@@ -27,6 +27,7 @@ export const KEYS = {
   structure: "lumo-structure-layout",
   preferences: "lumo-user-preferences",
   analysisNote: "lumo-analysis-note",
+  productivity: "lumo-productivity-reports",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -95,6 +96,68 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       createdAt: str(r.created_at),
       updatedAt: str(r.updated_at),
     }),
+  },
+  [KEYS.productivity]: {
+    table: "productivity_reports",
+    order: "period_start",
+    toRow: (p) => ({
+      id: p.id,
+      attendant_id: p.attendantId,
+      period_start: p.periodStart,
+      period_end: p.periodEnd,
+      channel: p.channel,
+      inbound_count: nullable(p.inboundCount),
+      outbound_count: nullable(p.outboundCount),
+      attendances_count: num(p.attendancesCount),
+      talk_seconds: nullable(p.talkSeconds),
+      tma_seconds: nullable(p.tmaSeconds),
+      login_seconds: nullable(p.loginSeconds),
+      pause_seconds: nullable(p.pauseSeconds),
+      pause_percent: nullable(p.pausePercent),
+      pause_legal_seconds: nullable(p.pauseLegalSeconds),
+      pause_productive_seconds: nullable(p.pauseProductiveSeconds),
+      pause_unproductive_seconds: nullable(p.pauseUnproductiveSeconds),
+      occupancy_to1: nullable(p.occupancyTo1),
+      occupancy_to2: nullable(p.occupancyTo2),
+      occupancy_to3: nullable(p.occupancyTo3),
+      occupancy_to4: nullable(p.occupancyTo4),
+      per_hour: nullable(p.perHour),
+      report_code: nullable(p.reportCode),
+      source_file: nullable(p.sourceFile),
+      created_at: nullable(p.createdAt) ?? undefined,
+      updated_at: nullable(p.updatedAt) ?? undefined,
+    }),
+    fromRow: (r, ctx) => {
+      const opt = (v: unknown) => (v == null ? undefined : Number(v));
+      return {
+        id: num(r.id),
+        attendantId: num(r.attendant_id),
+        attendantName: ctx.attendantNames.get(num(r.attendant_id)) ?? "Colaborador",
+        periodStart: str(r.period_start),
+        periodEnd: str(r.period_end),
+        channel: str(r.channel),
+        inboundCount: opt(r.inbound_count),
+        outboundCount: opt(r.outbound_count),
+        attendancesCount: num(r.attendances_count),
+        talkSeconds: opt(r.talk_seconds),
+        tmaSeconds: opt(r.tma_seconds),
+        loginSeconds: opt(r.login_seconds),
+        pauseSeconds: opt(r.pause_seconds),
+        pausePercent: opt(r.pause_percent),
+        pauseLegalSeconds: opt(r.pause_legal_seconds),
+        pauseProductiveSeconds: opt(r.pause_productive_seconds),
+        pauseUnproductiveSeconds: opt(r.pause_unproductive_seconds),
+        occupancyTo1: opt(r.occupancy_to1),
+        occupancyTo2: opt(r.occupancy_to2),
+        occupancyTo3: opt(r.occupancy_to3),
+        occupancyTo4: opt(r.occupancy_to4),
+        perHour: opt(r.per_hour),
+        reportCode: optStr(r.report_code),
+        sourceFile: optStr(r.source_file),
+        createdAt: str(r.created_at),
+        updatedAt: str(r.updated_at),
+      };
+    },
   },
   [KEYS.absences]: {
     table: "absences",
@@ -449,6 +512,8 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     fetchAll("production_goals", "created_at"),
     fetchAll("role_goals", "created_at"),
     fetchAll("import_logs", "created_at"),
+    // tolerante: se a tabela nova ainda não existir no banco, o resto do app continua funcionando
+    fetchAll("productivity_reports", "period_start").catch((): Row[] => []),
   ]);
   const attendantNames = new Map(attendantRows.map((r) => [num(r.id), str(r.name)]));
   const ctx = { attendantNames };
@@ -461,6 +526,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     KEYS.productionGoals,
     KEYS.roleGoals,
     KEYS.importLog,
+    KEYS.productivity,
   ];
   const allRows = [attendantRows, ...otherRows];
   keysInOrder.forEach((key, index) => {

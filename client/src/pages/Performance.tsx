@@ -50,6 +50,7 @@ import type { DailyPerformanceRecord } from "@/types/performance";
 import { motion } from "@/lib/motionVariants";
 import { Plus, Edit2, Trash2, Clock, Phone, Users, Upload, Target } from "lucide-react";
 import ImportModal from "@/components/ImportModal";
+import ProductivitySection from "@/components/ProductivitySection";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PerformanceRankings from "@/components/PerformanceRankings";
@@ -102,6 +103,7 @@ export default function Performance() {
   const {
     attendants,
     performanceRecords: records,
+    productivityRecords,
     productionGoals,
     addPerformanceRecord,
     updatePerformanceRecord,
@@ -129,6 +131,8 @@ export default function Performance() {
   );
 
   const isDayDetailView = period === "day" || drillDownDay !== "";
+
+  const attendantIds = useMemo(() => new Set(attendants.map((a) => a.id)), [attendants]);
 
   const availableDays = useMemo(
     () => getDaysWithRecordsInRange(records, dateRange),
@@ -454,6 +458,14 @@ export default function Performance() {
           </CardContent>
         </Card>
 </motion.div>
+      </motion.div>
+
+      <motion.div variants={pageItemVariants}>
+        <ProductivitySection
+          records={productivityRecords}
+          attendantIds={attendantIds}
+          range={displayRange}
+        />
       </motion.div>
 
       <motion.div variants={pageItemVariants} ref={tableRef}>

@@ -52,6 +52,9 @@ import {
   type ParsedSheet,
 } from "@/lib/spreadsheetImport";
 import { loadImportLog, type ImportLogEntry } from "@/lib/importLogStorage";
+import { parseProductivityWorkbook, type ProductivityReport } from "@/lib/reportParser";
+import { previewProductivityImport } from "@/lib/productivityImport";
+import ProductivityReportReview from "@/components/ProductivityReportReview";
 import { parseImportNumber } from "@shared/importMapping";
 import type { AttendanceChannel } from "@/types/goals";
 
@@ -60,7 +63,7 @@ interface ImportModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type ModalStep = "upload" | "configure" | "import";
+type ModalStep = "upload" | "configure" | "import" | "report";
 
 interface SheetData {
   titleRow: string[];
@@ -573,7 +576,13 @@ function SheetConfigurator({
 }
 
 export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
-  const { attendants, performanceRecords, importPerformance } = useLumoData();
+  const {
+    attendants,
+    performanceRecords,
+    productivityRecords,
+    importPerformance,
+    importProductivityReport,
+  } = useLumoData();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<ModalStep>("upload");
@@ -588,6 +597,28 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
   const [importLog, setImportLog] = useState<ImportLogEntry[]>(() => loadImportLog());
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Relatório de produtividade (ex.: REL090) — reconhecido sozinho, sem mapear colunas
+  const [report, setReport] = useState<ProductivityReport | null>(null);
+  const [reportChannel, setReportChannel] = useState<AttendanceChannel | "">("");
+  const [reportStart, setReportStart] = useState("");
+  const [reportEnd, setReportEnd] = useState("");
+
+  const reportPreview = useMemo(
+    () =>
+      report && reportChannel
+        ? previewProductivityImport(report, attendants, productivityRecords, {
+            channel: reportChannel,
+            periodStart: reportStart || undefined,
+            periodEnd: reportEnd || undefined,
+          })
+        : { matched: [], toCreate: [], alreadyImported: [] },
+    [report, reportChannel, reportStart, reportEnd, attendants, productivityRecords]
+  );
+
+  const reportReady =
+    report != null &&
+    reportChannel !== "" &&
+    (report.mode === "daily" || (reportStart !== "" && reportEnd !== "" && reportEnd >= reportStart));
 
   const importOptions: ImportBatchOptions = useMemo(
     () => ({ createAttendants, updateDuplicates, onlyNewDays }),
@@ -623,6 +654,10 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
     setSheetsRaw({});
     setSheetConfigs({});
     setParsedSheet(null);
+    setReport(null);
+    setReportChannel("");
+    setReportStart("");
+    setReportEnd("");
     setError(null);
     setIsImporting(false);
     setCreateAttendants(true);
@@ -664,6 +699,18 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
           raw: false,
           dateNF: "dd/mm/yyyy",
         });
+        // 1º: relatório de produtividade por agente (qualquer layout, qualquer linha de cabeçalho)
+        const productivity = parseProductivityWorkbook(wb, file.name);
+        if (productivity) {
+          setReport(productivity);
+          setReportChannel(productivity.channel ?? "");
+          setReportStart(productivity.periodStart ?? "");
+          setReportEnd(productivity.periodEnd ?? "");
+          setStep("report");
+          toast.success("Relatório reconhecido automaticamente");
+          return;
+        }
+
         const sheets: Record<string, SheetData> = {};
         wb.SheetNames.forEach((name) => {
           const ws = wb.Sheets[name];
@@ -740,6 +787,33 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
     }
   }
 
+  function handleImportReport() {
+    if (!report || !reportChannel || !reportReady) return;
+    setIsImporting(true);
+    try {
+      const result = importProductivityReport(report, {
+        channel: reportChannel,
+        periodStart: reportStart || undefined,
+        periodEnd: reportEnd || undefined,
+        createAttendants,
+        fileName,
+      });
+      const { summary } = result;
+      toast.success("Importação concluída", { description: result.logMessage });
+      if (summary.unmatchedNames.length > 0) {
+        toast.warning(
+          `${summary.unmatchedNames.length} colaborador(es) não foram importados porque não estão cadastrados: ${summary.unmatchedNames.join(", ")}`
+        );
+      }
+      setImportLog(loadImportLog());
+      handleClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao importar o relatório");
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
   function updateConfig(sheetName: string, config: SheetConfig) {
     setSheetConfigs((prev) => ({ ...prev, [sheetName]: config }));
     setParsedSheet(null);
@@ -757,10 +831,11 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
         <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
           <DialogTitle>Importar dados</DialogTitle>
           <DialogDescription>
-            {step === "upload" && "Carregue a planilha de acompanhamento diário (XLSX ou CSV)."}
+            {step === "upload" && "Carregue o relatório do sistema (produtividade por agente, REL090 etc.) ou a planilha de acompanhamento diário (XLSX, XLS ou CSV)."}
             {step === "configure" &&
               `${activeSheets} de ${sheetNames.length} aba(s) ativas — configure o mapeamento de colunas.`}
             {step === "import" && "Revise e confirme a importação para o Elos."}
+            {step === "report" && "Confira o que foi reconhecido e confirme a importação."}
           </DialogDescription>
         </DialogHeader>
 
@@ -872,6 +947,22 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
                 </TabsContent>
               ))}
             </Tabs>
+          )}
+
+          {/* Relatório de produtividade reconhecido automaticamente */}
+          {step === "report" && report && (
+            <ProductivityReportReview
+              report={report}
+              preview={reportPreview}
+              channel={reportChannel}
+              onChannelChange={setReportChannel}
+              periodStart={reportStart}
+              periodEnd={reportEnd}
+              onPeriodStartChange={setReportStart}
+              onPeriodEndChange={setReportEnd}
+              createAttendants={createAttendants}
+              onCreateAttendantsChange={setCreateAttendants}
+            />
           )}
 
           {/* ETAPA 3 — Importar */}
@@ -1014,6 +1105,18 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
               <Button onClick={goToImportStep} className="gap-1">
                 Revisar importação
                 <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+            {step === "report" && (
+              <Button onClick={handleImportReport} disabled={isImporting || !reportReady}>
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  "Importar relatório"
+                )}
               </Button>
             )}
             {step === "import" && (

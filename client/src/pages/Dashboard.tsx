@@ -14,9 +14,8 @@ import {
 } from "recharts";
 import { motion, pageContainerVariants, pageItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import AnimatedNumber from "@/components/AnimatedNumber";
-import { Users, TrendingUp, Target, AlertCircle, Upload, Download } from "lucide-react";
+import { Users, TrendingUp, Target, AlertCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ImportModal from "@/components/ImportModal";
 import ExportModal from "@/components/ExportModal";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import DetailedAnalysisSummary from "@/components/DetailedAnalysisSummary";
@@ -54,7 +53,6 @@ function toSparkData(values: number[]) {
 }
 
 export default function Dashboard() {
-  const [showImportModal, setShowImportModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [analysisNote, setAnalysisNote] = useState(() => loadAnalysisNote());
   const { period, dateRange } = usePeriodFilter();
@@ -233,13 +231,6 @@ export default function Dashboard() {
             <Download className="h-4 w-4" />
             Exportar Dados
           </Button>
-          <Button
-            onClick={() => setShowImportModal(true)}
-            className="gap-2 bg-blue-600 hover:bg-blue-700"
-          >
-            <Upload className="h-4 w-4" />
-            Importar Planilha
-          </Button>
         </div>
       </motion.div>
 
@@ -412,7 +403,6 @@ export default function Dashboard() {
         Dados atualizados em {lastUpdated}
       </p>
 
-      <ImportModal open={showImportModal} onOpenChange={setShowImportModal} />
       <ExportModal open={showExportModal} onOpenChange={setShowExportModal} />
     </motion.div>
   );

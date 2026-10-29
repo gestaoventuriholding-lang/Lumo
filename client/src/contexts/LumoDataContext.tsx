@@ -27,6 +27,14 @@ import {
   createAttendant,
 } from "@/lib/attendantsStorage";
 import { loadPerformanceRecords, savePerformanceRecords } from "@/lib/performanceStorage";
+import { loadProductivityRecords, saveProductivityRecords } from "@/lib/productivityStorage";
+import {
+  executeProductivityImport,
+  type ProductivityImportOptions,
+  type ProductivityImportResult,
+} from "@/lib/productivityImport";
+import type { ProductivityReport } from "@/lib/reportParser";
+import type { ProductivityRecord } from "@/types/productivity";
 import {
   executePerformanceImport,
   type ImportBatchOptions,
@@ -48,6 +56,7 @@ import {
 interface LumoDataContextValue {
   attendants: Attendant[];
   performanceRecords: DailyPerformanceRecord[];
+  productivityRecords: ProductivityRecord[];
   absences: Absence[];
   calendarEvents: CalendarEvent[];
   productionGoals: ProductionGoal[];
@@ -76,6 +85,11 @@ interface LumoDataContextValue {
     meta?: { fileName?: string }
   ) => ImportBatchResult;
 
+  importProductivityReport: (
+    report: ProductivityReport,
+    options: ProductivityImportOptions
+  ) => ProductivityImportResult;
+
   setProductionGoals: (goals: ProductionGoal[]) => void;
   setRoleGoals: (goals: RoleGoal[]) => void;
 
@@ -88,6 +102,9 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
   const [attendants, setAttendantsState] = useState<Attendant[]>(() => loadAttendants());
   const [performanceRecords, setPerformanceRecordsState] = useState<DailyPerformanceRecord[]>(() =>
     loadPerformanceRecords()
+  );
+  const [productivityRecords, setProductivityRecordsState] = useState<ProductivityRecord[]>(() =>
+    loadProductivityRecords()
   );
   const [absences, setAbsencesState] = useState<Absence[]>(() => loadAbsences());
   const [calendarEvents, setCalendarEventsState] = useState<CalendarEvent[]>(() =>
@@ -356,6 +373,37 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     [attendants, performanceRecords]
   );
 
+  const importProductivityReport = useCallback(
+    (report: ProductivityReport, options: ProductivityImportOptions): ProductivityImportResult => {
+      const outcome = executeProductivityImport(
+        report,
+        attendants,
+        performanceRecords,
+        productivityRecords,
+        options
+      );
+      // colaboradores primeiro: os registros apontam para eles no banco
+      setAttendantsState(outcome.attendants);
+      saveAttendants(outcome.attendants);
+      setPerformanceRecordsState(outcome.performanceRecords);
+      savePerformanceRecords(outcome.performanceRecords);
+      setProductivityRecordsState(outcome.productivityRecords);
+      saveProductivityRecords(outcome.productivityRecords);
+      appendImportLog({
+        timestamp: new Date().toISOString(),
+        fileName: options.fileName,
+        message: outcome.logMessage,
+        imported: outcome.summary.productivityCreated,
+        updated: outcome.summary.productivityUpdated,
+        skipped: outcome.summary.unmatchedNames.length,
+        uniqueAttendants: outcome.summary.attendantsInFile,
+        newDays: outcome.summary.days,
+      });
+      return outcome;
+    },
+    [attendants, performanceRecords, productivityRecords]
+  );
+
   const setProductionGoals = useCallback((goals: ProductionGoal[]) => {
     setProductionGoalsState(goals);
     saveProductionGoals(goals);
@@ -377,6 +425,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     () => ({
       attendants,
       performanceRecords,
+      productivityRecords,
       absences,
       calendarEvents,
       productionGoals,
@@ -396,6 +445,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       updatePerformanceRecord,
       removePerformanceRecord,
       importPerformance,
+      importProductivityReport,
       setProductionGoals,
       setRoleGoals,
       todayIndicators,
@@ -403,6 +453,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     [
       attendants,
       performanceRecords,
+      productivityRecords,
       absences,
       calendarEvents,
       productionGoals,
@@ -422,6 +473,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       updatePerformanceRecord,
       removePerformanceRecord,
       importPerformance,
+      importProductivityReport,
       setProductionGoals,
       setRoleGoals,
       todayIndicators,

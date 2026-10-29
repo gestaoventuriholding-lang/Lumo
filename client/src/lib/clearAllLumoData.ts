@@ -2,6 +2,7 @@ import { flushCloud, isCloudEnabled, removeKey } from "@/lib/cloudStore";
 const OPERATIONAL_KEYS = [
   "lumo-attendants",
   "lumo-performance-records",
+  "lumo-productivity-reports",
   "lumo-absences",
   "lumo-production-goals",
   "lumo-role-goals",
@@ -14,6 +15,7 @@ const OPERATIONAL_KEYS = [
 const CLOUD_KEYS = new Set<string>([
   "lumo-attendants",
   "lumo-performance-records",
+  "lumo-productivity-reports",
   "lumo-absences",
   "lumo-production-goals",
   "lumo-role-goals",
