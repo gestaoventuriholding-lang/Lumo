@@ -186,20 +186,35 @@ export function calculatePerformanceScore(
   return throughput * metaFactor;
 }
 
+/** Como o ranking é ordenado: meta atingida (padrão), volume de atendimentos ou TMA */
+export type RankingCriterion = "goal" | "attendances" | "tma";
+
+export const RANKING_CRITERIA: { value: RankingCriterion; label: string; hint: string }[] = [
+  { value: "goal", label: "Meta atingida", hint: "100% = bateu a meta; passou da meta, a % sobe. Empate: menor TMA." },
+  { value: "attendances", label: "Atendimentos", hint: "Quem atendeu mais. Empate: menor TMA." },
+  { value: "tma", label: "TMA", hint: "Quem atende mais rápido (menor TMA). Empate: mais atendimentos." },
+];
+
+// TMA 0 = sem tempo informado: nunca vence por "mais rápido"
+const tmaOrInfinity = (s: AttendantPerformanceSummary) =>
+  s.averageTimeMinutes > 0 ? s.averageTimeMinutes : Number.POSITIVE_INFINITY;
+
 export function compareAttendantSummaries(
   a: AttendantPerformanceSummary,
-  b: AttendantPerformanceSummary
+  b: AttendantPerformanceSummary,
+  criterion: RankingCriterion = "goal"
 ): number {
-  if (b.performanceScore !== a.performanceScore) {
-    return b.performanceScore - a.performanceScore;
-  }
-  if (b.totalAttendances !== a.totalAttendances) {
-    return b.totalAttendances - a.totalAttendances;
-  }
-  if (a.averageTimeMinutes !== b.averageTimeMinutes) {
-    return a.averageTimeMinutes - b.averageTimeMinutes;
-  }
-  return b.averagePercentage - a.averagePercentage;
+  const byGoal = b.averagePercentage - a.averagePercentage;
+  const byVolume = b.totalAttendances - a.totalAttendances;
+  const byTma = tmaOrInfinity(a) === tmaOrInfinity(b) ? 0 : tmaOrInfinity(a) < tmaOrInfinity(b) ? -1 : 1;
+
+  const order =
+    criterion === "attendances"
+      ? [byVolume, byTma, byGoal]
+      : criterion === "tma"
+        ? [byTma, byVolume, byGoal]
+        : [byGoal, byTma, byVolume];
+  return order.find((value) => value !== 0) ?? 0;
 }
 
 export function buildAttendantSummaries(

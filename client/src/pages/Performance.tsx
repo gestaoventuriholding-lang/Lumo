@@ -555,7 +555,6 @@ export default function Performance() {
                     <TableRow className="bg-muted/50">
                       <TableHead>#</TableHead>
                       <TableHead>Colaborador</TableHead>
-                      <TableHead>Pontuação</TableHead>
                       <TableHead>Atendimentos</TableHead>
                       <TableHead>Tempo Médio</TableHead>
                       <TableHead>% Meta</TableHead>
@@ -567,11 +566,6 @@ export default function Performance() {
                         <TableRow key={row.attendantId}>
                           <TableCell className="font-bold text-primary">#{row.ranking}</TableCell>
                           <TableCell className="font-medium">{row.name}</TableCell>
-                          <TableCell>
-                            <span className="font-semibold text-primary">
-                              {row.performanceScore.toFixed(1)} pts
-                            </span>
-                          </TableCell>
                           <TableCell>
                             <span className="font-semibold">{row.totalAttendances}</span>
                           </TableCell>
@@ -593,7 +587,7 @@ export default function Performance() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                           Nenhum registro no período. Ajuste o filtro ou importe uma planilha.
                         </TableCell>
                       </TableRow>

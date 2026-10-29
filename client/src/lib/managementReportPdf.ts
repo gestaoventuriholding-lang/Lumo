@@ -138,14 +138,13 @@ function rankingTable(
   autoTable(doc, {
     startY: y,
     margin: { left: MARGIN, right: MARGIN },
-    head: [["#", "Colaborador", "Atend.", "TMA", "% Meta", "Score"]],
+    head: [["#", "Colaborador", "Atend.", "TMA", "% Meta"]],
     body: rows.map((row) => [
       String(row.position),
       row.name,
       String(row.attendances),
       row.averageTime,
       `${row.metaPercent}%`,
-      row.score.toFixed(1),
     ]),
     styles: { fontSize: 8, cellPadding: 2.5 },
     headStyles: {
