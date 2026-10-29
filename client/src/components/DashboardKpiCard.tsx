@@ -32,7 +32,7 @@ export default function DashboardKpiCard({
   sparkData,
 }: DashboardKpiCardProps) {
   return (
-    <motion.div variants={cardItemVariants} className="lumo-panel-sm p-4">
+    <motion.div variants={cardItemVariants} className="lumo-panel-sm p-4 transition-[box-shadow,border-color] duration-200 hover:border-primary/30 hover:shadow-raised">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", iconBg)}>
           <Icon className={cn("h-5 w-5", iconColor)} />

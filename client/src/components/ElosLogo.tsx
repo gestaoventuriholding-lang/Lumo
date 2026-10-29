@@ -7,6 +7,8 @@ type ElosLogoProps = {
   variant?: "full" | "mark";
   /** "onDark": para fundos azul-marinho (menu lateral). "onLight": segue o tema da página */
   tone?: "onDark" | "onLight";
+  /** Esconde o nome com fade (menu lateral recolhido); o símbolo continua no mesmo lugar */
+  collapsed?: boolean;
 };
 
 const BRAND_BLUE = "#3366FF";
@@ -50,7 +52,12 @@ export function ElosMark({
   );
 }
 
-export function ElosLogo({ className, variant = "full", tone = "onDark" }: ElosLogoProps) {
+export function ElosLogo({
+  className,
+  variant = "full",
+  tone = "onDark",
+  collapsed = false,
+}: ElosLogoProps) {
   if (variant === "mark") {
     return <ElosMark tone={tone} className={cn("h-9 w-9", className)} />;
   }
@@ -60,7 +67,8 @@ export function ElosLogo({ className, variant = "full", tone = "onDark" }: ElosL
       <ElosMark tone={tone} className="h-9 w-9" />
       <span
         className={cn(
-          "text-[1.65rem] font-semibold leading-none tracking-tight",
+          "text-[1.65rem] font-semibold leading-none tracking-tight transition-[opacity,transform] duration-200 ease-out",
+          collapsed ? "-translate-x-2 opacity-0" : "translate-x-0 opacity-100 delay-100",
           tone === "onDark" ? "text-white" : "text-[#0B1F44] dark:text-white"
         )}
       >

@@ -156,6 +156,17 @@
   html {
     font-family: 'Inter', sans-serif;
     font-size: calc(16px * var(--ui-scale));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 28%, transparent);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 35%, transparent) transparent;
   }
   body {
     @apply bg-background text-foreground text-base leading-normal;
@@ -272,14 +283,15 @@
     border-color: var(--sidebar-border-token);
     color: #f8fafc;
     transition:
-      box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  /* aberto, o menu flutua sobre a página */
   .lumo-sidebar-shell.lumo-sidebar-expanded {
     box-shadow:
-      inset -1px 0 0 rgba(59, 130, 246, 0.14),
-      4px 0 28px -10px rgba(15, 23, 42, 0.55);
+      inset -1px 0 0 rgba(123, 167, 255, 0.16),
+      12px 0 44px -14px rgba(5, 15, 38, 0.6);
   }
 
   .lumo-sidebar-shell.lumo-sidebar-expanded [data-slot="sidebar-inner"] {

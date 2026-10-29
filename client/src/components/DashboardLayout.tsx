@@ -255,6 +255,12 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
     [isMobile, isResizing, setOpen]
   );
 
+  // Rótulos ficam montados e entram/saem com fade, em vez de aparecer de repente
+  const labelClass = cn(
+    "transition-[opacity,transform] duration-200 ease-out",
+    isIconOnly ? "pointer-events-none -translate-x-2 opacity-0" : "translate-x-0 opacity-100 delay-100"
+  );
+
   const renderMenuButton = (item: MenuItem) => {
     const isActive = location === item.path;
     return (
@@ -264,8 +270,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           onClick={() => onNavigate(item.path)}
           tooltip={isIconOnly ? item.label : undefined}
           className={cn(
-            "relative rounded-lg text-sm",
-            !isIconOnly && "h-9",
+            "relative h-9 gap-3 rounded-lg px-3 text-sm group-data-[collapsible=icon]:size-auto! group-data-[collapsible=icon]:h-9! group-data-[collapsible=icon]:w-full! group-data-[collapsible=icon]:px-3!",
             isActive
               ? "font-semibold text-white hover:bg-transparent hover:text-white active:bg-transparent active:text-white data-[active=true]:bg-transparent data-[active=true]:text-white"
               : "font-medium text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/10 active:text-white data-[active=true]:bg-white/10 data-[active=true]:text-white"
@@ -284,7 +289,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
               isActive ? "text-white" : "text-slate-400 group-hover/menu-button:text-white"
             )}
           />
-          {!isIconOnly && <span className="relative truncate">{item.label}</span>}
+          <span className={cn("relative whitespace-nowrap", labelClass)}>{item.label}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     );
@@ -303,58 +308,34 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
         onMouseEnter={handleSidebarEnter}
         onMouseLeave={handleSidebarLeave}
         className={cn(
-          "lumo-sidebar-shell border-r shadow-surface",
-          isIconOnly ? "lumo-sidebar-rail overflow-x-hidden" : "lumo-sidebar-expanded"
+          "lumo-sidebar-shell overflow-x-hidden border-r shadow-surface",
+          !isIconOnly && "lumo-sidebar-expanded"
         )}
         disableTransition={isResizing}
       >
         <SidebarHeader
-          className={cn(
-            "lumo-sidebar-shell h-14 justify-center border-b",
-            isIconOnly ? "!gap-0 !p-0" : "p-2"
-          )}
+          className="lumo-sidebar-shell h-14 justify-center border-b p-2"
         >
-          <div
-            className={cn(
-              "flex w-full items-center",
-              isIconOnly ? "justify-center overflow-visible" : "justify-start overflow-hidden px-2"
-            )}
-          >
-            {isIconOnly ? (
-              <div className="flex size-10 items-center justify-center">
-                <ElosLogo variant="mark" />
-              </div>
-            ) : (
-              <div className="flex w-full items-center justify-start">
-                <ElosLogo variant="full" />
-              </div>
-            )}
+          <div className="flex w-full items-center justify-start overflow-hidden px-0.5">
+            <ElosLogo variant="full" collapsed={isIconOnly} />
           </div>
         </SidebarHeader>
 
         <SidebarContent className="lumo-sidebar-shell gap-0">
-          <SidebarMenu className={cn("py-3", !isIconOnly && "px-2")}>
+          <SidebarMenu className="px-2 py-3">
             {mainMenuItems.map((item) => renderMenuButton(item))}
           </SidebarMenu>
         </SidebarContent>
 
         <SidebarFooter
-          className={cn(
-            "lumo-sidebar-shell mt-auto space-y-2 border-t",
-            isIconOnly ? "!gap-2 !p-0" : "p-3"
-          )}
+          className="lumo-sidebar-shell mt-auto space-y-2 border-t p-2"
         >
-          <SidebarMenu className={cn(!isIconOnly && "px-0")}>
+          <SidebarMenu>
             {renderMenuButton(settingsMenuItem)}
           </SidebarMenu>
           <button
             onClick={(event) => toggleTheme?.(event.currentTarget)}
-            className={cn(
-              "rounded-lg text-sm text-slate-300 transition-colors hover:bg-white/10",
-              isIconOnly
-                ? "lumo-sidebar-rail-action"
-                : "flex h-9 w-full items-center gap-2 px-2"
-            )}
+            className="flex h-9 w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-sm text-slate-300 transition-colors hover:bg-white/10 hover:text-white active:bg-white/10"
             title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
           >
             <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
@@ -371,58 +352,46 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
                 </motion.span>
               </AnimatePresence>
             </span>
-            {showSidebarLabels && (
-              <span className="truncate">
-                {theme === "dark" ? "Modo claro" : "Modo escuro"}
-              </span>
-            )}
+            <span className={cn("whitespace-nowrap", labelClass)}>
+              {theme === "dark" ? "Modo claro" : "Modo escuro"}
+            </span>
           </button>
-          <div
-            className={cn(
-              "rounded-lg py-1",
-              isIconOnly ? "lumo-sidebar-rail-profile" : "flex w-full items-center gap-2 px-1"
-            )}
-          >
-            <Avatar
-              className={cn(
-                "shrink-0 border border-slate-700 bg-slate-800",
-                isIconOnly ? "h-8 w-8" : "h-9 w-9"
-              )}
-            >
+          <div className="flex w-full items-center gap-2 overflow-hidden rounded-lg px-0.5 py-1">
+            <Avatar className="h-9 w-9 shrink-0 border border-slate-700 bg-slate-800">
               <AvatarFallback className="bg-blue-600 text-sm font-bold text-white">
                 {(user?.name ?? "Gestor").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            {showSidebarLabels && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium leading-none text-white">
-                  {user?.name || "Gestor"}
-                </p>
-                <p className="mt-1 truncate text-xs text-slate-400">
-                  {isAdmin ? "Administrador" : "Usuário"}
-                </p>
-              </div>
-            )}
-            {showSidebarLabels && (
-              <button
-                type="button"
-                onClick={() => void logout()}
-                title="Sair"
-                aria-label="Sair"
-                className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            )}
+            <div className={cn("min-w-0 flex-1", labelClass)}>
+              <p className="truncate text-sm font-medium leading-none text-white">
+                {user?.name || "Gestor"}
+              </p>
+              <p className="mt-1 truncate text-xs text-slate-400">
+                {isAdmin ? "Administrador" : "Usuário"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              title="Sair"
+              aria-label="Sair"
+              tabIndex={isIconOnly ? -1 : 0}
+              className={cn(
+                "shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white",
+                labelClass
+              )}
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </SidebarFooter>
       </Sidebar>
       {!isMobile && !isIconOnly && (
         <div
-          className="absolute top-0 right-0 hidden h-full w-1 cursor-col-resize transition-colors hover:bg-sidebar-accent/40 md:block"
+          className="absolute top-0 hidden h-full w-1 cursor-col-resize transition-colors hover:bg-blue-500/40 md:block"
           onMouseDown={() => setIsResizing(true)}
           onMouseEnter={handleSidebarEnter}
-          style={{ zIndex: 50 }}
+          style={{ left: "calc(var(--sidebar-width) - 4px)", zIndex: 60 }}
         />
       )}
     </div>
