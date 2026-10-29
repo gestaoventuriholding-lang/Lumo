@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { StructureElement } from "@/types/structure";
 import type { ResizeHandle } from "@/lib/structureElementBounds";
-import { GripHorizontal, Trash2 } from "lucide-react";
+import { GripHorizontal, RotateCw, Trash2 } from "lucide-react";
 import { structureSelectionRing } from "@/lib/structureVisualStyles";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,7 @@ interface StructureElementFrameProps {
   onRemove: () => void;
   onDragStart: (event: React.MouseEvent) => void;
   onResizeStart: (handle: ResizeHandle, event: React.MouseEvent) => void;
+  onRotateStart: (event: React.MouseEvent) => void;
   className?: string;
   contentClassName?: string;
   children: ReactNode;
@@ -41,6 +42,7 @@ export default function StructureElementFrame({
   onRemove,
   onDragStart,
   onResizeStart,
+  onRotateStart,
   className,
   contentClassName,
   children,
@@ -54,6 +56,7 @@ export default function StructureElementFrame({
         width: element.width,
         height: element.height,
         zIndex: element.zIndex,
+        transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -107,6 +110,22 @@ export default function StructureElementFrame({
       >
         {children}
       </div>
+
+      {selected && editMode && (
+        <button
+          type="button"
+          aria-label="Girar elemento"
+          title="Arraste para girar"
+          className="absolute -top-9 left-1/2 z-30 flex h-6 w-6 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm active:cursor-grabbing"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            onRotateStart(e);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <RotateCw className="h-3 w-3" />
+        </button>
+      )}
 
       {selected && editMode &&
         HANDLES.map((handle) => (

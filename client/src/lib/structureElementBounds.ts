@@ -9,7 +9,7 @@ export type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 const CANVAS_PADDING = 12;
 
 function minSizeForType(type: StructureElement["type"]): { width: number; height: number } {
-  if (type === "wall" || type === "partition") return { width: 40, height: 6 };
+  if (type === "wall" || type === "partition") return { width: 20, height: 6 };
   if (type === "corridor") return { width: 60, height: 24 };
   if (type === "door") return { width: 32, height: 32 };
   if (type === "text") return { width: 48, height: 24 };

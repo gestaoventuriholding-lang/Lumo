@@ -18,6 +18,7 @@ interface StructureElementNodeProps {
   onDragStart: (event: React.MouseEvent) => void;
   onRemove: () => void;
   onResizeStart: (handle: ResizeHandle, event: React.MouseEvent) => void;
+  onRotateStart: (event: React.MouseEvent) => void;
 }
 
 function RoomContent({ element }: { element: StructureElement }) {
@@ -78,6 +79,7 @@ export default function StructureElementNode({
   onDragStart,
   onRemove,
   onResizeStart,
+  onRotateStart,
 }: StructureElementNodeProps) {
   const frameProps = {
     element,
@@ -88,6 +90,7 @@ export default function StructureElementNode({
     onDragStart,
     onRemove,
     onResizeStart,
+    onRotateStart,
   };
 
   if (element.type === "text") {

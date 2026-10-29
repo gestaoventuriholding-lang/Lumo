@@ -46,6 +46,8 @@ interface StructureCanvasProps {
   onEditElement: (id: string) => void;
   onRemoveElement: (id: string) => void;
   onAddAt: (element: StructureElement) => void;
+  onRotate: (id: string, rotation: number, live?: boolean) => void;
+  onDrawWall: (element: StructureElement) => void;
 }
 
 export default function StructureCanvas({
@@ -68,11 +70,19 @@ export default function StructureCanvas({
   onEditElement,
   onRemoveElement,
   onAddAt,
+  onRotate,
+  onDrawWall,
 }: StructureCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [canvasScale, setCanvasScale] = useState({ x: 1, y: 1 });
   const [isDragOver, setIsDragOver] = useState(false);
+  const [wallPreview, setWallPreview] = useState<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  } | null>(null);
   const movedRef = useRef(false);
   const resizedRef = useRef(false);
 
@@ -175,6 +185,99 @@ export default function StructureCanvas({
     document.addEventListener("mouseup", onMouseUp);
   };
 
+  /** Posição do mouse em coordenadas do layout (já descontando zoom e escala) */
+  const toLayoutPoint = (clientX: number, clientY: number) => {
+    const rect = workspaceRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: (clientX - rect.left) / effectiveZoomX,
+      y: (clientY - rect.top) / effectiveZoomY,
+    };
+  };
+
+  const startRotate = (element: StructureElement, event: React.MouseEvent) => {
+    if (activeTool !== "select") return;
+    event.preventDefault();
+    event.stopPropagation();
+    movedRef.current = false;
+    onMoveStart(layoutSnapshot);
+
+    const cx = element.x + element.width / 2;
+    const cy = element.y + element.height / 2;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const p = toLayoutPoint(moveEvent.clientX, moveEvent.clientY);
+      let angle = (Math.atan2(p.y - cy, p.x - cx) * 180) / Math.PI + 90;
+      // com o encaixe ligado (ou Shift), gira de 15 em 15 graus
+      if (snapEnabled || moveEvent.shiftKey) angle = Math.round(angle / 15) * 15;
+      const rotation = ((Math.round(angle) % 360) + 360) % 360;
+      movedRef.current = true;
+      onRotate(element.id, rotation, true);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      if (movedRef.current) onMoveEnd();
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  /** Ferramenta Parede: clique e arraste para desenhar; Shift trava o ângulo em 45° */
+  const startWall = (event: React.MouseEvent) => {
+    if (activeTool !== "wall" || event.button !== 0) return;
+    event.preventDefault();
+    const start = toLayoutPoint(event.clientX, event.clientY);
+    const x1 = snap(start.x);
+    const y1 = snap(start.y);
+
+    const endPoint = (moveEvent: MouseEvent) => {
+      const p = toLayoutPoint(moveEvent.clientX, moveEvent.clientY);
+      let x2 = snap(p.x);
+      let y2 = snap(p.y);
+      if (moveEvent.shiftKey) {
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const angle = Math.round(Math.atan2(y2 - y1, x2 - x1) / (Math.PI / 4)) * (Math.PI / 4);
+        x2 = x1 + Math.cos(angle) * len;
+        y2 = y1 + Math.sin(angle) * len;
+      }
+      return { x2, y2 };
+    };
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      setWallPreview({ x1, y1, ...endPoint(moveEvent) });
+    };
+
+    const onMouseUp = (upEvent: MouseEvent) => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      setWallPreview(null);
+      const { x2, y2 } = endPoint(upEvent);
+      const length = Math.hypot(x2 - x1, y2 - y1);
+      if (length < 20) return;
+
+      const thickness = 12;
+      const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+      const wall = createStructureElement("wall", {
+        sector: defaultSector,
+        team: defaultTeam,
+        x: (x1 + x2) / 2 - length / 2,
+        y: (y1 + y2) / 2 - thickness / 2,
+      });
+      onDrawWall({
+        ...wall,
+        width: length,
+        height: thickness,
+        rotation: ((Math.round(angle) % 360) + 360) % 360,
+      });
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault();
     setIsDragOver(false);
@@ -205,7 +308,7 @@ export default function StructureCanvas({
       ref={containerRef}
       className={`relative min-h-0 flex-1 overflow-hidden bg-card transition-colors ${
         isDragOver ? "bg-blue-500/[0.03]" : ""
-      }`}
+      } ${activeTool === "wall" ? "cursor-crosshair" : ""}`}
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragOver(true);
@@ -218,9 +321,16 @@ export default function StructureCanvas({
         <div className="pointer-events-none absolute inset-0 z-10 border-2 border-dashed border-blue-400/40" />
       )}
 
+      {activeTool === "wall" && (
+        <p className="pointer-events-none absolute left-3 top-3 z-20 rounded-md bg-foreground/80 px-2.5 py-1 text-xs text-background">
+          Clique e arraste para desenhar uma parede. Shift trava o ângulo. Escolha &quot;Seleção&quot; para terminar.
+        </p>
+      )}
+
       <div
         ref={workspaceRef}
         className="absolute inset-0 origin-top-left"
+        onMouseDown={startWall}
         style={{
           width: STRUCTURE_CANVAS_WIDTH,
           height: STRUCTURE_CANVAS_HEIGHT,
@@ -259,8 +369,27 @@ export default function StructureCanvas({
               onRemove={() => onRemoveElement(element.id)}
               onDragStart={(e) => startDrag(element, e)}
               onResizeStart={(handle, e) => startResize(element, handle, e)}
+              onRotateStart={(e) => startRotate(element, e)}
             />
           ))
+        )}
+        {wallPreview && (
+          <svg
+            className="pointer-events-none absolute inset-0 z-[40]"
+            width={STRUCTURE_CANVAS_WIDTH}
+            height={STRUCTURE_CANVAS_HEIGHT}
+          >
+            <line
+              x1={wallPreview.x1}
+              y1={wallPreview.y1}
+              x2={wallPreview.x2}
+              y2={wallPreview.y2}
+              stroke="#2563eb"
+              strokeWidth={12}
+              strokeLinecap="butt"
+              opacity={0.45}
+            />
+          </svg>
         )}
       </div>
     </div>

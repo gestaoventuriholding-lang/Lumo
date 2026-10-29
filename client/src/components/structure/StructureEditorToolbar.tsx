@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Grid3x3, Magnet, Redo2, Trash2, Undo2 } from "lucide-react";
+import { Grid3x3, Magnet, Redo2, RotateCw, Trash2, Undo2 } from "lucide-react";
 import { EDITOR_TOOLS, type EditorToolId } from "@/lib/structureEditorTools";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ interface StructureEditorToolbarProps {
   onRedo: () => void;
   canDelete: boolean;
   onDelete: () => void;
+  onRotate90: () => void;
   showGrid: boolean;
   snapToGrid: boolean;
   onShowGridChange: (value: boolean) => void;
@@ -46,6 +47,7 @@ export default function StructureEditorToolbar({
   onRedo,
   canDelete,
   onDelete,
+  onRotate90,
   showGrid,
   snapToGrid,
   onShowGridChange,
@@ -96,6 +98,17 @@ export default function StructureEditorToolbar({
         >
           <Magnet className="h-3.5 w-3.5" />
           <span className="hidden md:inline">Encaixar</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 px-2.5 text-xs"
+          disabled={!canDelete}
+          onClick={onRotate90}
+          title="Girar o elemento selecionado em 90°"
+        >
+          <RotateCw className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Girar 90°</span>
         </Button>
         <Button
           variant="ghost"

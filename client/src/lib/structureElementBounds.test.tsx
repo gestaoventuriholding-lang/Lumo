@@ -27,7 +27,7 @@ describe("structureElementBounds", () => {
   it("respects minimum size for walls", () => {
     const element = createStructureElement("wall", { x: 40, y: 40 });
     const bounds = clampElementBounds(element, { width: 10, height: 2 });
-    expect(bounds.width).toBeGreaterThanOrEqual(40);
+    expect(bounds.width).toBeGreaterThanOrEqual(20);
     expect(bounds.height).toBeGreaterThanOrEqual(6);
   });
 });

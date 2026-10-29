@@ -45,6 +45,8 @@ export interface StructureElement {
   slots: StructureSlot[];
   zIndex: number;
   textContent?: string;
+  /** Giro em graus (sentido horário) em torno do centro do elemento */
+  rotation?: number;
 }
 
 export interface StructureMovementLog {

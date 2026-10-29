@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import type { StructureElementType } from "@/types/structure";
-export type EditorToolId = "select" | "desk" | "text" | "image" | "area";
+export type EditorToolId = "select" | "desk" | "wall" | "text" | "image" | "area";
 
 export interface EditorTool {
   id: EditorToolId;
@@ -27,6 +27,7 @@ export interface EditorTool {
 export const EDITOR_TOOLS: EditorTool[] = [
   { id: "select", label: "Seleção", icon: MousePointer2 },
   { id: "desk", label: "Mesa", icon: Monitor, elementType: "desk-single" },
+  { id: "wall", label: "Parede", icon: Minus },
   { id: "text", label: "Texto", icon: Type, elementType: "text" },
   { id: "image", label: "Imagem", icon: ImageIcon, elementType: "image" },
   { id: "area", label: "Área", icon: LayoutGrid, elementType: "area" },

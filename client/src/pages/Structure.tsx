@@ -138,6 +138,13 @@ export default function Structure() {
         canRedo={canRedo}
         onToolChange={handleToolChange}
         onZoomChange={setZoom}
+        onRotate90={() => {
+          if (selectedElement) {
+            updateElement(selectedElement.id, {
+              rotation: (((selectedElement.rotation ?? 0) + 90) % 360),
+            });
+          }
+        }}
         showGrid={showGrid}
         snapToGrid={snapEnabled}
         onShowGridChange={setShowGrid}
@@ -188,6 +195,11 @@ export default function Structure() {
           onEditElement={handleEditElement}
           onRemoveElement={handleRemoveElement}
           onAddAt={handleAddAt}
+          onRotate={(id, rotation, live) => updateElement(id, { rotation }, live)}
+          onDrawWall={(wall) => {
+            addElement(wall);
+            setSelectedId(wall.id);
+          }}
         />
       </motion.div>
 
