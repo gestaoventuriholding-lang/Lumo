@@ -286,6 +286,8 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
 // Estado
 // ---------------------------------------------------------------
 let cloudUserId: string | null = null;
+// A estrutura da sala é uma só para a central: guarda de quem é a linha para todos editarem a mesma
+let structureOwnerId: string | null = null;
 const cache = new Map<string, unknown>();
 const synced = new Map<string, unknown>();
 let queue: Promise<void> = Promise.resolve();
@@ -350,7 +352,7 @@ export function removeKey(key: string): void {
           const { error } = await getSupabase()
             .from("structure_layouts")
             .delete()
-            .eq("owner_id", cloudUserId!);
+            .eq("owner_id", structureOwnerId ?? cloudUserId!);
           if (error) throw error;
         });
       }
@@ -404,10 +406,12 @@ function scheduleSync(key: string, next: unknown) {
   if (key === KEYS.structure) {
     const layout = (nextCopy ?? {}) as { elements?: unknown; history?: unknown };
     enqueue(async () => {
+      const ownerId = structureOwnerId ?? userId;
+      structureOwnerId = ownerId;
       const { error } = await getSupabase()
         .from("structure_layouts")
         .upsert(
-          { owner_id: userId, elements: layout.elements ?? [], history: layout.history ?? [] },
+          { owner_id: ownerId, elements: layout.elements ?? [], history: layout.history ?? [] },
           { onConflict: "owner_id" }
         );
       if (error) throw error;
@@ -537,9 +541,15 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
   });
 
   const [{ data: layout }, { data: prefs }] = await Promise.all([
-    supabase.from("structure_layouts").select("*").eq("owner_id", userId).maybeSingle(),
+    supabase
+      .from("structure_layouts")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     supabase.from("user_preferences").select("*").eq("owner_id", userId).maybeSingle(),
   ]);
+  structureOwnerId = layout ? str(layout.owner_id) : null;
   if (layout) {
     const value = {
       elements: layout.elements ?? [],

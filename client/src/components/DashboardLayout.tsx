@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import { LayoutDashboard, Users, BarChart3, Calendar, CalendarDays, LayoutGrid, Settings as SettingsIcon, Moon, Sun, Upload, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Calendar, CalendarDays, LayoutGrid, Settings as SettingsIcon, Moon, Sun, Upload, LogOut, UserCog } from "lucide-react";
 import {
   CSSProperties,
   memo,
@@ -44,6 +44,12 @@ const mainMenuItems = [
   { icon: Upload, label: "Importar Relatório", path: "/import" },
 ];
 
+const usersMenuItem = {
+  icon: UserCog,
+  label: "Usuários",
+  path: "/users",
+};
+
 const settingsMenuItem = {
   icon: SettingsIcon,
   label: "Configurações",
@@ -58,7 +64,7 @@ const MIN_WIDTH = 168;
 const MAX_WIDTH = 360;
 const SIDEBAR_COLLAPSE_DELAY_MS = 80;
 
-type MenuItem = (typeof mainMenuItems)[number] | typeof settingsMenuItem;
+type MenuItem = (typeof mainMenuItems)[number] | typeof settingsMenuItem | typeof usersMenuItem;
 
 export default function DashboardLayout({
   children,
@@ -115,7 +121,8 @@ function DashboardLayoutContent({
   const { isMobile, openMobile, setOpenMobile } = useSidebar();
   const activeMenuItem =
     mainMenuItems.find((item) => item.path === location) ??
-    (location === settingsMenuItem.path ? settingsMenuItem : undefined);
+    (location === settingsMenuItem.path ? settingsMenuItem : undefined) ??
+    (location === usersMenuItem.path ? usersMenuItem : undefined);
   const isStructurePage = location === "/structure";
 
   const handleNavigate = useCallback(
@@ -331,6 +338,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           className="lumo-sidebar-shell mt-auto space-y-2 border-t p-2"
         >
           <SidebarMenu>
+            {isAdmin && renderMenuButton(usersMenuItem)}
             {renderMenuButton(settingsMenuItem)}
           </SidebarMenu>
           <button

@@ -43,6 +43,18 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       return <LoginPage />;
     case "recovering":
       return <LoginPage initialMode="new-password" />;
+    case "no-access":
+      return (
+        <FullScreenMessage>
+          <p className="text-base font-medium text-foreground">Esta conta ainda não tem acesso ao Elos.</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Peça a quem administra o Elos para cadastrar o seu e-mail na aba Usuários.
+          </p>
+          <Button variant="outline" onClick={() => void auth.signOut()}>
+            Sair
+          </Button>
+        </FullScreenMessage>
+      );
     case "error":
       return (
         <FullScreenMessage>

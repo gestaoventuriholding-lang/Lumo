@@ -12,7 +12,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase";
 import { disableCloud, flushCloud, hydrateCloud } from "@/lib/cloudStore";
 
-type Status = "loading" | "signed-out" | "recovering" | "hydrating" | "ready" | "error";
+type Status = "loading" | "signed-out" | "recovering" | "hydrating" | "ready" | "no-access" | "error";
 
 interface AuthContextValue {
   status: Status;
@@ -96,12 +96,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     (async () => {
       try {
-        const [{ migrated: didMigrate }, adminResult] = await Promise.all([
-          hydrateCloud(sessionUserId),
+        // Só entra quem é administrador ou foi cadastrado na aba Usuários.
+        const [adminResult, memberResult] = await Promise.all([
           supabase.from("admins").select("user_id").eq("user_id", sessionUserId).maybeSingle(),
+          supabase.from("members").select("user_id").eq("user_id", sessionUserId).maybeSingle(),
         ]);
         if (cancelled) return;
-        setIsAdmin(Boolean(adminResult.data));
+        if (adminResult.error && memberResult.error) throw adminResult.error;
+        const admin = Boolean(adminResult.data);
+        if (!admin && !memberResult.data && !memberResult.error) {
+          setIsAdmin(false);
+          setStatus("no-access");
+          return;
+        }
+        const { migrated: didMigrate } = await hydrateCloud(sessionUserId);
+        if (cancelled) return;
+        setIsAdmin(admin);
         setMigrated(didMigrate);
         setStatus("ready");
       } catch (e) {

@@ -23,6 +23,7 @@ const Absences = lazy(() => import("./pages/Absences"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Structure = lazy(() => import("./pages/Structure"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const UsersPage = lazy(() => import("./pages/Users"));
 
 function PageLoader() {
   return (
@@ -54,6 +55,7 @@ function AppRoutes() {
               <Route path="/structure" component={Structure} />
               <Route path="/calendar" component={CalendarPage} />
               <Route path="/import" component={ImportPage} />
+              <Route path="/users" component={UsersPage} />
               <Route path="/settings" component={Settings} />
               <Route path="/404" component={NotFound} />
               <Route component={NotFound} />
