@@ -295,7 +295,7 @@ export default function StructureCanvas({
       label: payload.label,
       placementIndex: elements.length,
       x: Math.max(12, snap(x - 70)),
-      y: Math.max(12, snap(y - 50)),
+      y: Math.max(32, snap(y - 50)),
     });
 
     onAddAt(element);

@@ -68,14 +68,30 @@ export default function StructureElementFrame({
       }}
     >
       {editMode && (
+        // Barra de controles fora do elemento (acima dele), para nunca cobrir o texto
         <div
           className={cn(
-            "absolute inset-x-0 top-0 z-20 flex h-4 items-center justify-between rounded-t-[inherit] border-b border-border/50 bg-card/95 px-0.5 shadow-sm",
+            "absolute inset-x-0 bottom-full z-20 mb-1 flex h-6 items-center justify-between gap-1 rounded-md border border-border/60 bg-card px-1 shadow-sm",
             selected ? "opacity-100" : "opacity-0 group-hover/element:opacity-100"
           )}
         >
+          {selected && (
+            <button
+              type="button"
+              aria-label="Girar elemento"
+              title="Arraste para girar"
+              className="flex h-4 w-4 shrink-0 cursor-grab items-center justify-center rounded-full bg-blue-600 text-white active:cursor-grabbing"
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                onRotateStart(e);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <RotateCw className="h-2.5 w-2.5" />
+            </button>
+          )}
           <div
-            className="flex flex-1 cursor-grab items-center justify-center active:cursor-grabbing"
+            className="flex h-full flex-1 cursor-grab items-center justify-center active:cursor-grabbing"
             onMouseDown={(e) => {
               e.stopPropagation();
               onDragStart(e);
@@ -88,7 +104,7 @@ export default function StructureElementFrame({
           {selected && (
             <button
               type="button"
-              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded text-destructive hover:bg-destructive/10"
+              className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-destructive hover:bg-destructive/10"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove();
@@ -110,22 +126,6 @@ export default function StructureElementFrame({
       >
         {children}
       </div>
-
-      {selected && editMode && (
-        <button
-          type="button"
-          aria-label="Girar elemento"
-          title="Arraste para girar"
-          className="absolute -top-9 left-1/2 z-30 flex h-6 w-6 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm active:cursor-grabbing"
-          onMouseDown={(e) => {
-            e.stopPropagation();
-            onRotateStart(e);
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <RotateCw className="h-3 w-3" />
-        </button>
-      )}
 
       {selected && editMode &&
         HANDLES.map((handle) => (

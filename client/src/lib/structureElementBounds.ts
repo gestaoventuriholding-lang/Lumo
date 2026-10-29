@@ -7,6 +7,8 @@ import type { StructureElement } from "@/types/structure";
 export type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
 const CANVAS_PADDING = 12;
+/** Folga extra no topo para a barra de controles do elemento selecionado */
+const TOP_PADDING = 32;
 
 function minSizeForType(type: StructureElement["type"]): { width: number; height: number } {
   if (type === "wall" || type === "partition") return { width: 20, height: 6 };
@@ -30,12 +32,12 @@ export function clampElementBounds(
   height = Math.max(mins.height, height);
 
   const maxWidth = STRUCTURE_CANVAS_WIDTH - CANVAS_PADDING * 2;
-  const maxHeight = STRUCTURE_CANVAS_HEIGHT - CANVAS_PADDING * 2;
+  const maxHeight = STRUCTURE_CANVAS_HEIGHT - CANVAS_PADDING - TOP_PADDING;
   width = Math.min(width, maxWidth);
   height = Math.min(height, maxHeight);
 
   x = Math.max(CANVAS_PADDING, Math.min(x, STRUCTURE_CANVAS_WIDTH - width - CANVAS_PADDING));
-  y = Math.max(CANVAS_PADDING, Math.min(y, STRUCTURE_CANVAS_HEIGHT - height - CANVAS_PADDING));
+  y = Math.max(TOP_PADDING, Math.min(y, STRUCTURE_CANVAS_HEIGHT - height - CANVAS_PADDING));
 
   return { x, y, width, height };
 }

@@ -32,6 +32,6 @@ export function getCenteredPosition(
 
   return {
     x: Math.max(16, Math.min(snapToGrid(x), STRUCTURE_CANVAS_WIDTH - width - 16)),
-    y: Math.max(16, Math.min(snapToGrid(y), STRUCTURE_CANVAS_HEIGHT - height - 16)),
+    y: Math.max(32, Math.min(snapToGrid(y), STRUCTURE_CANVAS_HEIGHT - height - 16)),
   };
 }
