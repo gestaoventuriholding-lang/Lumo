@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Grid3x3, Magnet, Redo2, RotateCw, Trash2, Undo2 } from "lucide-react";
+import { Copy, Grid3x3, Magnet, Redo2, RotateCw, Trash2, Undo2 } from "lucide-react";
 import { EDITOR_TOOLS, type EditorToolId } from "@/lib/structureEditorTools";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,7 @@ interface StructureEditorToolbarProps {
   canDelete: boolean;
   onDelete: () => void;
   onRotate90: () => void;
+  onDuplicate: () => void;
   showGrid: boolean;
   snapToGrid: boolean;
   onShowGridChange: (value: boolean) => void;
@@ -48,6 +49,7 @@ export default function StructureEditorToolbar({
   canDelete,
   onDelete,
   onRotate90,
+  onDuplicate,
   showGrid,
   snapToGrid,
   onShowGridChange,
@@ -98,6 +100,17 @@ export default function StructureEditorToolbar({
         >
           <Magnet className="h-3.5 w-3.5" />
           <span className="hidden md:inline">Encaixar</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 px-2.5 text-xs"
+          disabled={!canDelete}
+          onClick={onDuplicate}
+          title="Duplicar o elemento selecionado (Ctrl+D). Ctrl+C e Ctrl+V também copiam e colam"
+        >
+          <Copy className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Duplicar</span>
         </Button>
         <Button
           variant="ghost"

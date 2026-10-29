@@ -8,6 +8,9 @@ import type { StructureElementType } from "@/types/structure";
 import StructureHeader from "@/components/structure/StructureHeader";
 import StructureEditorToolbar from "@/components/structure/StructureEditorToolbar";
 import { motion, pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
+import { STRUCTURE_GRID_SIZE } from "@/lib/structureConstants";
+import { clampElementBounds, clampMovePosition } from "@/lib/structureElementBounds";
+import type { StructureElement } from "@/types/structure";
 import StructureEditorSidebar from "@/components/structure/StructureEditorSidebar";
 import StructureCanvas from "@/components/structure/StructureCanvas";
 import ElementEditorDialog from "@/components/structure/ElementEditorDialog";
@@ -72,11 +75,72 @@ export default function Structure() {
     [layout.elements, removeElement]
   );
 
+  /** Cria uma cópia (com mesas novas e vagas livres, sem repetir atendentes) deslocada do original */
+  const cloneElement = useCallback(
+    (source: StructureElement, offset: number) => {
+      const copy = createStructureElement(source.type, {
+        roomKind: source.roomKind,
+        sector: source.sector,
+        team: source.team,
+        textContent: source.textContent,
+        x: source.x + offset,
+        y: source.y + offset,
+      });
+      const bounds = clampElementBounds(copy, {
+        x: source.x + offset,
+        y: source.y + offset,
+        width: source.width,
+        height: source.height,
+      });
+      return {
+        ...copy,
+        ...bounds,
+        rotation: source.rotation,
+        zIndex: source.zIndex,
+        ...(source.type === "text" || source.type === "area" || source.type === "sector"
+          ? { label: source.label }
+          : null),
+      } satisfies StructureElement;
+    },
+    []
+  );
+
+  const clipboardRef = useRef<{ element: StructureElement; pastes: number } | null>(null);
+
+  const handleDuplicate = useCallback(() => {
+    if (!selectedElement) return;
+    const copy = cloneElement(selectedElement, STRUCTURE_GRID_SIZE);
+    addElement(copy);
+    setSelectedId(copy.id);
+    toast.success(`${copy.label} duplicado`);
+  }, [selectedElement, cloneElement, addElement]);
+
+  const handleCopy = useCallback(() => {
+    if (!selectedElement) return;
+    clipboardRef.current = { element: selectedElement, pastes: 0 };
+    toast.success(`${selectedElement.label} copiado`);
+  }, [selectedElement]);
+
+  const handlePaste = useCallback(() => {
+    const clip = clipboardRef.current;
+    if (!clip) return;
+    clip.pastes += 1;
+    const copy = cloneElement(clip.element, STRUCTURE_GRID_SIZE * clip.pastes);
+    addElement(copy);
+    setSelectedId(copy.id);
+  }, [cloneElement, addElement]);
+
+  const handleNudge = useCallback(
+    (dx: number, dy: number) => {
+      if (!selectedElement) return;
+      const next = clampMovePosition(selectedElement, selectedElement.x + dx, selectedElement.y + dy);
+      updateElement(selectedElement.id, next);
+    },
+    [selectedElement, updateElement]
+  );
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Delete" && event.key !== "Backspace") return;
-      if (!selectedId || activeTool !== "select") return;
-
       const target = event.target as HTMLElement | null;
       if (
         target?.closest("input, textarea, select, [contenteditable='true'], [role='dialog']")
@@ -84,13 +148,76 @@ export default function Structure() {
         return;
       }
 
-      event.preventDefault();
-      handleRemoveElement(selectedId);
+      const mod = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+
+      if (event.key === "Escape") {
+        setSelectedId(null);
+        setActiveTool("select");
+        return;
+      }
+
+      if (mod && key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (mod && key === "y") {
+        event.preventDefault();
+        redo();
+        return;
+      }
+
+      if (activeTool !== "select" || !selectedId) return;
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        handleRemoveElement(selectedId);
+      } else if (mod && key === "c") {
+        event.preventDefault();
+        handleCopy();
+      } else if (mod && key === "d") {
+        event.preventDefault();
+        handleDuplicate();
+      } else if (event.key.startsWith("Arrow") && !mod) {
+        event.preventDefault();
+        const step = event.shiftKey ? STRUCTURE_GRID_SIZE : snapEnabled ? STRUCTURE_GRID_SIZE : 1;
+        if (event.key === "ArrowLeft") handleNudge(-step, 0);
+        if (event.key === "ArrowRight") handleNudge(step, 0);
+        if (event.key === "ArrowUp") handleNudge(0, -step);
+        if (event.key === "ArrowDown") handleNudge(0, step);
+      }
+    };
+
+    // Colar funciona mesmo sem seleção (cola o último elemento copiado)
+    const onPaste = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v") {
+        event.preventDefault();
+        handlePaste();
+      }
     };
 
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedId, activeTool, handleRemoveElement]);
+    window.addEventListener("keydown", onPaste);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onPaste);
+    };
+  }, [
+    selectedId,
+    activeTool,
+    snapEnabled,
+    handleRemoveElement,
+    handleCopy,
+    handlePaste,
+    handleDuplicate,
+    handleNudge,
+    undo,
+    redo,
+  ]);
 
   const handleAddElement = (type: StructureElementType) => {
     const element = createStructureElement(type, {
@@ -138,6 +265,7 @@ export default function Structure() {
         canRedo={canRedo}
         onToolChange={handleToolChange}
         onZoomChange={setZoom}
+        onDuplicate={handleDuplicate}
         onRotate90={() => {
           if (selectedElement) {
             updateElement(selectedElement.id, {
