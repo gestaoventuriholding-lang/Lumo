@@ -328,7 +328,7 @@ function SheetConfigurator({
                   <div className="rounded-lg border overflow-hidden">
                     {/* Header */}
                     <div className="grid grid-cols-[1fr_1fr_auto] bg-muted px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wide gap-4">
-                      <span>Campo do Lumo</span>
+                      <span>Campo do Elos</span>
                       <span>Coluna da planilha</span>
                       <span>Remover</span>
                     </div>

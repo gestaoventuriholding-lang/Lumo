@@ -888,7 +888,7 @@ export default function Home() {
                 <BarChart3 className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Bem-vindo ao Lumo</h2>
+                <h2 className="text-lg font-semibold">Bem-vindo ao Elos</h2>
                 <p className="text-muted-foreground text-sm mt-1 max-w-md">
                   Carregue sua planilha de acompanhamento diário para visualizar ligações, chat e
                   produtividade por agente.

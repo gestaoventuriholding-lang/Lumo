@@ -760,7 +760,7 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
             {step === "upload" && "Carregue a planilha de acompanhamento diário (XLSX ou CSV)."}
             {step === "configure" &&
               `${activeSheets} de ${sheetNames.length} aba(s) ativas — configure o mapeamento de colunas.`}
-            {step === "import" && "Revise e confirme a importação para o Lumo."}
+            {step === "import" && "Revise e confirme a importação para o Elos."}
           </DialogDescription>
         </DialogHeader>
 
@@ -922,7 +922,7 @@ export default function ImportModal({ open, onOpenChange }: ImportModalProps) {
                     onCheckedChange={(checked) => setCreateAttendants(checked === true)}
                   />
                   <span className="text-sm leading-snug">
-                    Criar colaboradores que ainda não existem no Lumo
+                    Criar colaboradores que ainda não existem no Elos
                   </span>
                 </label>
                 <label className="flex cursor-pointer items-start gap-3">

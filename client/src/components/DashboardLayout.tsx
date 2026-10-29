@@ -26,7 +26,7 @@ import {
 } from "react";
 import { useLocation } from "wouter";
 import NotificationCenter from "./NotificationCenter";
-import { LumoLogo } from "./LumoLogo";
+import { ElosLogo } from "./ElosLogo";
 import { useLumoData } from "@/contexts/LumoDataContext";
 import { buildPerformanceAlerts } from "@/lib/performanceMetrics";
 import type { PerformanceAlert } from "@/types/goals";
@@ -142,7 +142,7 @@ function DashboardLayoutContent({
       <AppSidebarPanel location={location} onNavigate={handleNavigate} setSidebarWidth={setSidebarWidth} />
 
       <LayoutMain
-        pageTitle={activeMenuItem?.label ?? "Lumo"}
+        pageTitle={activeMenuItem?.label ?? "Elos"}
         performanceAlerts={performanceAlerts}
         isStructurePage={isStructurePage}
       >
@@ -322,11 +322,11 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           >
             {isIconOnly ? (
               <div className="flex size-10 items-center justify-center">
-                <LumoLogo variant="mark" />
+                <ElosLogo variant="mark" />
               </div>
             ) : (
               <div className="flex w-full items-center justify-center">
-                <LumoLogo variant="full" />
+                <ElosLogo variant="full" />
               </div>
             )}
           </div>

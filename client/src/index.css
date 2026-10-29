@@ -59,42 +59,43 @@
 
 :root {
   --ui-scale: 0.9;
-  --primary: #2563eb;
-  --primary-foreground: #eff6ff;
-  --sidebar-primary: #2563eb;
-  --sidebar-primary-foreground: #eff6ff;
-  --chart-1: #93c5fd;
-  --chart-2: #3b82f6;
-  --chart-3: #2563eb;
-  --chart-4: #1d4ed8;
-  --chart-5: #1e40af;
+  /* Identidade Elos: #0B1F44 marinho, #3366FF azul, #7BA7FF azul claro, #E6EDF7 gelo */
+  --primary: #3366ff;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #3366ff;
+  --sidebar-primary-foreground: #ffffff;
+  --chart-1: #7ba7ff;
+  --chart-2: #3366ff;
+  --chart-3: #1d4ed8;
+  --chart-4: #0b1f44;
+  --chart-5: #5b86e5;
   --radius: 0.55rem;
-  --background: #eef2f7;
-  --foreground: #0f172a;
+  --background: #e6edf7;
+  --foreground: #0b1f44;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #0b1f44;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --secondary: #e2e8f0;
-  --secondary-foreground: #0f172a;
-  --muted: #e2e8f0;
-  --muted-foreground: #475569;
-  --accent: #2563eb;
-  --accent-foreground: #eff6ff;
+  --popover-foreground: #0b1f44;
+  --secondary: #e6edf7;
+  --secondary-foreground: #0b1f44;
+  --muted: #e6edf7;
+  --muted-foreground: #4b5f85;
+  --accent: #3366ff;
+  --accent-foreground: #ffffff;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #cbd5e1;
+  --border: #cbd8ee;
   --input: #ffffff;
-  --ring: #2563eb;
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #0f172a;
-  --sidebar-accent: #dbeafe;
-  --sidebar-accent-foreground: #1e40af;
-  --sidebar-border: #cbd5e1;
-  --sidebar-ring: #2563eb;
-  --page-canvas: #f4f6f9;
-  --sidebar-bg: #0f172a;
-  --sidebar-border-token: #1e293b;
+  --ring: #3366ff;
+  --sidebar: #f4f7fc;
+  --sidebar-foreground: #0b1f44;
+  --sidebar-accent: #e6edf7;
+  --sidebar-accent-foreground: #0b1f44;
+  --sidebar-border: #cbd8ee;
+  --sidebar-ring: #3366ff;
+  --page-canvas: #e6edf7;
+  --sidebar-bg: #0b1f44;
+  --sidebar-border-token: #1a3566;
   --shadow-surface: 0 1px 2px rgb(15 23 42 / 0.07), 0 2px 8px rgb(15 23 42 / 0.06);
   --shadow-raised: 0 1px 3px rgb(15 23 42 / 0.08), 0 6px 20px rgb(15 23 42 / 0.08);
   --shadow-overlay: 0 4px 10px rgb(15 23 42 / 0.08), 0 14px 32px rgb(15 23 42 / 0.11);
@@ -102,41 +103,41 @@
 
 .dark {
   color-scheme: dark;
-  --primary: #3b82f6;
-  --primary-foreground: #eff6ff;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #eff6ff;
-  --background: #0f1419;
-  --foreground: #e8edf4;
-  --card: #171f2e;
-  --card-foreground: #e8edf4;
-  --popover: #1c2536;
-  --popover-foreground: #e8edf4;
-  --secondary: #243044;
-  --secondary-foreground: #e8edf4;
-  --muted: #243044;
-  --muted-foreground: #9aa8bc;
-  --accent: #3b82f6;
-  --accent-foreground: #eff6ff;
+  --primary: #4d7cff;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #4d7cff;
+  --sidebar-primary-foreground: #ffffff;
+  --background: #071634;
+  --foreground: #e6edf7;
+  --card: #0e2552;
+  --card-foreground: #e6edf7;
+  --popover: #12306a;
+  --popover-foreground: #e6edf7;
+  --secondary: #16346f;
+  --secondary-foreground: #e6edf7;
+  --muted: #16346f;
+  --muted-foreground: #9fb2d6;
+  --accent: #4d7cff;
+  --accent-foreground: #ffffff;
   --destructive: #f87171;
   --destructive-foreground: #fef2f2;
-  --border: #2d3a4f;
-  --input: #1c2536;
-  --ring: #3b82f6;
-  --chart-1: #60a5fa;
+  --border: #23427f;
+  --input: #12306a;
+  --ring: #4d7cff;
+  --chart-1: #7ba7ff;
   --chart-2: #34d399;
   --chart-3: #a78bfa;
   --chart-4: #fb923c;
   --chart-5: #22d3ee;
-  --sidebar: #080d14;
-  --sidebar-foreground: #e8edf4;
-  --sidebar-accent: #1e3a8a;
-  --sidebar-accent-foreground: #e8edf4;
-  --sidebar-border: #1a2332;
-  --sidebar-ring: #3b82f6;
-  --page-canvas: #0b1018;
-  --sidebar-bg: #080d14;
-  --sidebar-border-token: #1a2332;
+  --sidebar: #061229;
+  --sidebar-foreground: #e6edf7;
+  --sidebar-accent: #16346f;
+  --sidebar-accent-foreground: #e6edf7;
+  --sidebar-border: #12275a;
+  --sidebar-ring: #4d7cff;
+  --page-canvas: #071634;
+  --sidebar-bg: #061229;
+  --sidebar-border-token: #12275a;
   --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 10px rgb(0 0 0 / 0.32);
   --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.45), 0 8px 26px rgb(0 0 0 / 0.38);
   --shadow-overlay: 0 6px 16px rgb(0 0 0 / 0.5), 0 20px 40px rgb(0 0 0 / 0.42);
@@ -404,19 +405,19 @@
 
 /* ---------- Fundo animado (atrás de todo o conteúdo) ---------- */
 :root {
-  --bg-base-from: #e3f1fc;
-  --bg-base-to: #cfe6f7;
-  --bg-glow: rgb(255 180 120 / 0.6);
-  --bg-wave-a: rgb(40 175 190 / 0.45);
-  --bg-wave-b: rgb(70 150 215 / 0.38);
+  --bg-base-from: #eef3fb;
+  --bg-base-to: #d6e2f5;
+  --bg-glow: rgb(123 167 255 / 0.55);
+  --bg-wave-a: rgb(51 102 255 / 0.28);
+  --bg-wave-b: rgb(123 167 255 / 0.38);
 }
 
 .dark {
-  --bg-base-from: #0a2a33;
-  --bg-base-to: #07181f;
-  --bg-glow: rgb(255 140 80 / 0.3);
-  --bg-wave-a: rgb(30 160 170 / 0.42);
-  --bg-wave-b: rgb(40 115 175 / 0.34);
+  --bg-base-from: #0b1f44;
+  --bg-base-to: #050f26;
+  --bg-glow: rgb(51 102 255 / 0.32);
+  --bg-wave-a: rgb(51 102 255 / 0.32);
+  --bg-wave-b: rgb(123 167 255 / 0.16);
 }
 
 .lumo-bg {

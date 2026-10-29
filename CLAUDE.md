@@ -1,6 +1,10 @@
 # Lumo — contexto para o Claude Code
 
-Lumo é o sistema de gestão de central de atendimento (call center) da Venturi Tecnologia.
+O produto se chama **Elos** (antes Lumo): sistema de gestão de central de atendimento (call center) da Venturi Tecnologia.
+Identidade visual: marinho #0B1F44, azul #3366FF, azul claro #7BA7FF, gelo #E6EDF7, branco; fonte Inter; logo em
+`client/src/components/ElosLogo.tsx`. Só o texto visível mudou: chaves de armazenamento (`lumo-*`), classes CSS
+(`lumo-*`), `LumoDataContext`, o repositório e o projeto Supabase continuam com o nome antigo de propósito
+(renomear apagaria os dados já salvos nos navegadores).
 Dona do produto: Amanda Silva (CEO). Fale em português do Brasil.
 
 ## Onde tudo está

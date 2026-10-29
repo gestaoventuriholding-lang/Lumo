@@ -3,7 +3,7 @@ import { Loader2, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LumoLogo } from "@/components/LumoLogo";
+import { ElosLogo } from "@/components/ElosLogo";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 type Mode = "signin" | "forgot" | "new-password";
@@ -34,7 +34,7 @@ export default function LoginPage({ initialMode = "signin" }: { initialMode?: Mo
         if (message) setError(message);
         else
           setNotice(
-            "Se esse e-mail tiver acesso ao Lumo, enviamos um link para criar uma nova senha. Confira também o spam."
+            "Se esse e-mail tiver acesso ao Elos, enviamos um link para criar uma nova senha. Confira também o spam."
           );
       } else {
         if (password.length < 8) {
@@ -52,7 +52,7 @@ export default function LoginPage({ initialMode = "signin" }: { initialMode?: Mo
   };
 
   const title =
-    mode === "signin" ? "Entrar no Lumo" : mode === "forgot" ? "Recuperar senha" : "Criar nova senha";
+    mode === "signin" ? "Entrar no Elos" : mode === "forgot" ? "Recuperar senha" : "Criar nova senha";
   const subtitle =
     mode === "signin"
       ? "Use o e-mail e a senha do seu acesso."
@@ -61,10 +61,10 @@ export default function LoginPage({ initialMode = "signin" }: { initialMode?: Mo
         : "Escolha a nova senha do seu acesso.";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-lg">
         <div className="mb-8 flex justify-center">
-          <LumoLogo className="h-10" />
+          <ElosLogo tone="onLight" />
         </div>
         <h1 className="text-center text-xl font-semibold text-foreground">{title}</h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">{subtitle}</p>

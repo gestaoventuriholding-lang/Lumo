@@ -309,7 +309,7 @@ function structuredCloneSafe<T>(value: T): T {
 // ---------------------------------------------------------------
 function enqueue(task: () => Promise<void>) {
   queue = queue.then(task).catch((error: unknown) => {
-    console.error("[Lumo] Falha ao salvar no banco", error);
+    console.error("[Elos] Falha ao salvar no banco", error);
     if (!errorShown) {
       errorShown = true;
       toast.error(

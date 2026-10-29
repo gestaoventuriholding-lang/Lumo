@@ -59,7 +59,7 @@ function drawHeader(doc: jsPDF, data: ManagementReportData): number {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(255, 255, 255);
-  doc.text("Lumo", MARGIN, 14);
+  doc.text("Elos", MARGIN, 14);
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text("Relatorio Gerencial de Operacao", MARGIN, 22);
@@ -316,7 +316,7 @@ function drawFooter(doc: jsPDF) {
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      `Lumo · Relatorio gerencial · Pagina ${page} de ${pageCount}`,
+      `Elos · Relatorio gerencial · Pagina ${page} de ${pageCount}`,
       PAGE_WIDTH / 2,
       pageHeight - 8,
       { align: "center" }
