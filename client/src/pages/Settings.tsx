@@ -30,17 +30,12 @@ import { flushCloud } from "@/lib/cloudStore";
 export default function Settings() {
   const { logout } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { preferences, setPreferences, savePreferences } = useUserPreferences();
-  const [isSaving, setIsSaving] = useState(false);
+  const { preferences, savePreferences } = useUserPreferences();
 
-  const handleSavePreferences = async () => {
-    setIsSaving(true);
-    try {
-      savePreferences(preferences);
-      toast.success("Preferências salvas com sucesso!");
-    } finally {
-      setIsSaving(false);
-    }
+  /** Cada mudança é gravada na hora, sem botão de salvar */
+  const updatePreference = (patch: Partial<typeof preferences>) => {
+    savePreferences({ ...preferences, ...patch });
+    toast.success("Preferência salva", { id: "preference-saved", duration: 1800 });
   };
 
   return (
@@ -109,9 +104,7 @@ export default function Settings() {
                 </div>
                 <Switch
                   checked={preferences.notifications}
-                  onCheckedChange={(checked) =>
-                    setPreferences((prev) => ({ ...prev, notifications: checked }))
-                  }
+                  onCheckedChange={(checked) => updatePreference({ notifications: checked })}
                 />
               </div>
 
@@ -125,9 +118,7 @@ export default function Settings() {
                 </div>
                 <Switch
                   checked={preferences.emailReports}
-                  onCheckedChange={(checked) =>
-                    setPreferences((prev) => ({ ...prev, emailReports: checked }))
-                  }
+                  onCheckedChange={(checked) => updatePreference({ emailReports: checked })}
                 />
               </div>
 
@@ -136,9 +127,7 @@ export default function Settings() {
                 <Label htmlFor="language">Idioma</Label>
                 <Select
                   value={preferences.language}
-                  onValueChange={(value) =>
-                    setPreferences((prev) => ({ ...prev, language: value }))
-                  }
+                  onValueChange={(value) => updatePreference({ language: value })}
                 >
                   <SelectTrigger id="language">
                     <SelectValue />
@@ -156,9 +145,7 @@ export default function Settings() {
                 <Label htmlFor="timezone">Fuso Horário</Label>
                 <Select
                   value={preferences.timezone}
-                  onValueChange={(value) =>
-                    setPreferences((prev) => ({ ...prev, timezone: value }))
-                  }
+                  onValueChange={(value) => updatePreference({ timezone: value })}
                 >
                   <SelectTrigger id="timezone">
                     <SelectValue />
@@ -179,15 +166,6 @@ export default function Settings() {
               </div>
             </div>
 
-            <Separator className="bg-border/30" />
-
-            <Button
-              onClick={handleSavePreferences}
-              disabled={isSaving}
-              className="w-full md:w-auto"
-            >
-              {isSaving ? "Salvando..." : "Salvar Preferências"}
-            </Button>
           </CardContent>
         </Card>
       </motion.div>
