@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
-import { MessageCircle, Phone, Trophy } from "lucide-react";
+import { ChevronDown, MessageCircle, Phone, Trophy } from "lucide-react";
 import {
   compareAttendantSummaries,
   goalPercentageTone,
@@ -19,8 +18,9 @@ type PerformanceRankingsProps = {
   whatsappSummaries: AttendantPerformanceSummary[];
   overallSummaries?: AttendantPerformanceSummary[];
   period: DashboardPeriod;
-  compact?: boolean;
 };
+
+const TOP_COUNT = 3;
 
 const STORAGE_KEY = "lumo-ranking-prefs";
 
@@ -98,20 +98,22 @@ function GoalBar({ value, scale }: { value: number; scale: number }) {
 function RankingTable({
   summaries,
   criterion,
-  limit,
+  expanded,
+  onToggle,
 }: {
   summaries: AttendantPerformanceSummary[];
   criterion: RankingCriterion;
-  limit: number;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
-  const rows = useMemo(
+  const ranked = useMemo(
     () =>
       summaries
         .filter((summary) => summary.totalAttendances > 0)
-        .sort((a, b) => compareAttendantSummaries(a, b, criterion))
-        .slice(0, limit),
-    [summaries, criterion, limit]
+        .sort((a, b) => compareAttendantSummaries(a, b, criterion)),
+    [summaries, criterion]
   );
+  const rows = expanded ? ranked : ranked.slice(0, TOP_COUNT);
   const scale = Math.max(100, ...rows.map((row) => row.averagePercentage));
 
   const highlight = (key: RankingCriterion) =>
@@ -158,6 +160,17 @@ function RankingTable({
           )}
         </tbody>
       </table>
+      {ranked.length > TOP_COUNT && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={expanded}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-blue-600 transition-colors hover:bg-muted/50 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          {expanded ? `Mostrar só o top ${TOP_COUNT}` : `Ver todos (${ranked.length})`}
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
+        </button>
+      )}
     </div>
   );
 }
@@ -165,7 +178,6 @@ function RankingTable({
 export default function PerformanceRankings({
   ligacaoSummaries,
   whatsappSummaries,
-  compact = false,
 }: PerformanceRankingsProps) {
   const total = (list: AttendantPerformanceSummary[]) =>
     list.reduce((sum, item) => sum + item.totalAttendances, 0);
@@ -189,7 +201,7 @@ export default function PerformanceRankings({
 
   const summaries = channel === "WhatsApp" ? whatsappSummaries : ligacaoSummaries;
   const active = RANKING_CRITERIA.find((c) => c.value === criterion);
-  const limit = compact ? 5 : 10;
+  const [expanded, setExpanded] = useState(false);
 
   const channels: { value: RankingChannel; icon: typeof Phone }[] = [
     { value: "WhatsApp", icon: MessageCircle },
@@ -241,17 +253,14 @@ export default function PerformanceRankings({
               </button>
             ))}
           </div>
-          <Link
-            href="/performance"
-            className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            Ver todos
-          </Link>
         </div>
       </div>
       <p className="mb-4 text-xs text-muted-foreground">Ordenado por {active?.label.toLowerCase()}. {active?.hint}</p>
 
-      <RankingTable summaries={summaries} criterion={criterion} limit={limit} />
+      <RankingTable summaries={summaries} criterion={criterion}
+        expanded={expanded}
+        onToggle={() => setExpanded((value) => !value)}
+      />
     </div>
   );
 }
