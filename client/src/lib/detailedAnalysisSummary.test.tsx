@@ -31,8 +31,8 @@ const attendants: Attendant[] = [
 ];
 
 const goals: ProductionGoal[] = [
-  { id: 1, channel: "Ligação", dailyTarget: 70, status: "Ativo" },
-  { id: 2, channel: "WhatsApp", dailyTarget: 75, status: "Ativo" },
+  { id: 1, channel: "Ligação", dailyTarget: 70, status: "Ativo", createdAt: "", updatedAt: "" },
+  { id: 2, channel: "WhatsApp", dailyTarget: 75, status: "Ativo", createdAt: "", updatedAt: "" },
 ];
 
 const range = { start: "2026-06-01", end: "2026-06-30", label: "Junho 2026" };

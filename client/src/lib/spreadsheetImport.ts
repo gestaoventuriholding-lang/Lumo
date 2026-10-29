@@ -1129,7 +1129,7 @@ export function analyzeImportProfile(
     Array.isArray(headersOrSheet)
       ? null
       : headersOrSheet;
-  const headers = parsed?.headers ?? headersOrSheet;
+  const headers: string[] = parsed ? parsed.headers : (headersOrSheet as string[]);
   const name = parsed?.fileName ?? fileName ?? "";
 
   if (parsed?.sourceSheets?.length) {

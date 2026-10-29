@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
+import type { Attendant } from "@/types/attendant";
 import {
   analyzeImportProfile,
   buildImportPlan,
@@ -308,7 +309,7 @@ describe("spreadsheetImport", () => {
         updatedAt: "",
       },
     ];
-    const attendants = [
+    const attendants: Attendant[] = [
       {
         id: 1,
         name: "Ana Silva",
@@ -397,7 +398,7 @@ describe("spreadsheetImport", () => {
       },
     ];
     const mapping = detectColumnMapping(Object.keys(rows[0]));
-    const attendants = [
+    const attendants: Attendant[] = [
       {
         id: 1,
         name: "Ana Silva",

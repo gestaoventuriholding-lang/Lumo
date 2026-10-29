@@ -87,7 +87,7 @@ function App() {
       void import("./pages/CalendarPage");
     };
 
-    if ("requestIdleCallback" in window) {
+    if (typeof window.requestIdleCallback === "function") {
       const id = requestIdleCallback(prefetchRoutes);
       return () => cancelIdleCallback(id);
     }

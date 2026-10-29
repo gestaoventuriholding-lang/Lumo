@@ -177,7 +177,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
   const showSidebarLabels = isMobile || !isIconOnly;
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const collapseTimerRef = useRef<number>();
+  const collapseTimerRef = useRef<number | undefined>(undefined);
   const isHoveringRef = useRef(false);
 
   useEffect(() => {

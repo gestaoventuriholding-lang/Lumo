@@ -30,7 +30,7 @@ interface StructureElementFrameProps {
   onRotateStart: (event: React.MouseEvent) => void;
   className?: string;
   contentClassName?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export default function StructureElementFrame({

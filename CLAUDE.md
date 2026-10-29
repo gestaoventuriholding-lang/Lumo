@@ -23,18 +23,17 @@ Dona do produto: Amanda Silva (CEO). Fale em português do Brasil.
 pnpm install        # dependências (pnpm 10)
 pnpm vite           # front em modo dev (http://localhost:5173) — é o que vai para a Vercel
 pnpm vite build     # build de produção em dist/public
-pnpm test           # vitest (60 testes, todos devem passar)
-pnpm check          # tsc — ainda há ~56 erros ANTIGOS (ver "Pendências"); não aumente esse número
+pnpm test           # vitest (todos devem passar)
+pnpm check          # tsc — está em 0 erros; mantenha assim
 ```
 
-Não use `pnpm dev`: ele sobe o servidor Express/tRPC herdado do template, que não é usado em produção.
+Não existe servidor próprio: o projeto é só o front em `client/` (o servidor tRPC/Express e o drizzle do
+template do Manus foram removidos).
 
 ## Arquitetura
 
 - React 19 + Vite + Tailwind 4 + shadcn/ui (Radix) + Recharts + Framer Motion + wouter (rotas).
 - Front estático na Vercel. **O app não usa servidor próprio**: fala direto com o Supabase.
-- `server/`, `drizzle/`, `shared/` e o tRPC em `client/src/lib/trpc.ts` são sobras do template do Manus.
-  Ainda compilam, mas nada em produção depende deles. Podem ser removidos com cuidado.
 
 ### Login e acesso
 - `client/src/lib/supabase.ts`: cliente Supabase. A chave ali é a **publicável** (feita para ficar no
@@ -63,10 +62,11 @@ Não use `pnpm dev`: ele sobe o servidor Express/tRPC herdado do template, que n
 ### Banco (Supabase)
 - Migrações em `supabase/migrations/` (aplicadas manualmente no editor SQL ou pelo MCP do Supabase).
 - Tabelas: `attendants`, `performance_records`, `absences`, `calendar_events`, `production_goals`,
-  `role_goals`, `structure_layouts` (1 por usuário), `import_logs`, `user_preferences` (1 por usuário,
-  inclui `analysis_note`), `admins`.
-- RLS em todas: cada usuário só vê/altera linhas com `owner_id = auth.uid()`; quem está em `admins`
-  vê e altera tudo (`public.is_admin()`). Visitante anônimo não acessa nada.
+  `role_goals`, `structure_layouts` (layout único e compartilhado), `import_logs`, `productivity_reports`,
+  `user_preferences` (1 por usuário, inclui `analysis_note`), `admins`, `members`.
+- RLS em todas: os dados são **compartilhados pela equipe**. Quem está em `members` (ou `admins`) lê e
+  altera tudo (`public.is_member()`); visitante anônimo e conta sem acesso não veem nada. Só o admin
+  gerencia usuários, pela Edge Function `gerenciar-usuarios` (aba Usuários).
 - `performance_records` e `absences` herdam o `owner_id` do atendente (gatilho `check_attendant_owner`).
 - O e-mail amanda.silva@venturiholding.com.br vira admin automaticamente ao criar a conta
   (gatilho `lumo_grant_admin_on_signup`).
@@ -89,12 +89,5 @@ Não use `pnpm dev`: ele sobe o servidor Express/tRPC herdado do template, que n
 - Canais da central: Ligação e WhatsApp. Contexto: laboratório/clínica.
 
 ## Pendências conhecidas
-1. Decidir o modelo de acesso: hoje cada usuário vê só o que é dele e o admin vê tudo. A Amanda vai
-   decidir depois se a equipe terá conta própria ou uma conta compartilhada da central.
-2. Cadastro público no Supabase ainda ligado (qualquer um com o link pode criar conta vazia).
+1. Cadastro público no Supabase ainda ligado (qualquer um com o link pode criar conta vazia).
    Sugestão já feita: desligar em Authentication → Sign In / Providers → "Allow new users to sign up".
-3. ~56 erros de TypeScript antigos (variantes do framer-motion em `Attendants.tsx`, `GoalsManagement.tsx`,
-   `NotificationCenter.tsx` etc., e `baseUrl`/target no `tsconfig.json`). O build passa mesmo assim.
-4. Tela `client/src/pages/Home.tsx` (painel com assistente de importação) existe mas não tem rota.
-5. Como admin, "Limpar todos os dados" em Configurações apaga os dados de **todos** os usuários.
-6. Remover sobras do template (servidor tRPC, drizzle, `netlify.toml`, docs antigos).

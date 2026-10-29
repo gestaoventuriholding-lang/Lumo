@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   type DashboardPeriod,
+  type DateRange,
   getMonthString,
   resolveDateRange,
 } from "@/lib/dateRangeFilter";
