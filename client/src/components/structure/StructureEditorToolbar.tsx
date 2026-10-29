@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Redo2, Trash2, Undo2 } from "lucide-react";
+import { Grid3x3, Magnet, Redo2, Trash2, Undo2 } from "lucide-react";
 import { EDITOR_TOOLS, type EditorToolId } from "@/lib/structureEditorTools";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,10 @@ interface StructureEditorToolbarProps {
   onRedo: () => void;
   canDelete: boolean;
   onDelete: () => void;
+  showGrid: boolean;
+  snapToGrid: boolean;
+  onShowGridChange: (value: boolean) => void;
+  onSnapToGridChange: (value: boolean) => void;
 }
 
 const ZOOM_OPTIONS = [
@@ -42,6 +46,10 @@ export default function StructureEditorToolbar({
   onRedo,
   canDelete,
   onDelete,
+  showGrid,
+  snapToGrid,
+  onShowGridChange,
+  onSnapToGridChange,
 }: StructureEditorToolbarProps) {
   return (
     <div className="lumo-panel-sm flex shrink-0 items-center justify-between gap-3 px-3 py-2">
@@ -65,6 +73,30 @@ export default function StructureEditorToolbar({
       </div>
 
       <div className="flex items-center gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-pressed={showGrid}
+          className={cn("h-8 gap-1.5 px-2.5 text-xs", showGrid && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-blue-950/40 dark:text-blue-300")}
+          onClick={() => onShowGridChange(!showGrid)}
+          title="Mostrar ou ocultar a grade"
+        >
+          <Grid3x3 className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Grade</span>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-pressed={snapToGrid}
+          className={cn("h-8 gap-1.5 px-2.5 text-xs", snapToGrid && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-blue-950/40 dark:text-blue-300")}
+          onClick={() => onSnapToGridChange(!snapToGrid)}
+          title="Encaixar elementos na grade ao mover e redimensionar. Desligado, você posiciona livremente"
+        >
+          <Magnet className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Encaixar</span>
+        </Button>
         <Button
           variant="ghost"
           size="sm"

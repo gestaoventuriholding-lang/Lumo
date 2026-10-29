@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { STRUCTURE_PALETTE, getElementIcon } from "@/lib/structureEditorTools";
+import { PALETTE_GROUPS, STRUCTURE_PALETTE, getElementIcon } from "@/lib/structureEditorTools";
 import { DRAG_MIME, serializeDragPayload } from "@/lib/structureDrag";
 import { cn } from "@/lib/utils";
 import type { StructureElement, StructureElementType } from "@/types/structure";
@@ -31,38 +31,46 @@ export default function StructureEditorSidebar({
   const layers = [...elements].sort((a, b) => b.zIndex - a.zIndex);
 
   return (
-    <aside className="lumo-panel-sm flex h-full min-h-0 w-[200px] shrink-0 flex-col overflow-hidden border-r-0">
+    <aside className="lumo-panel-sm flex h-full min-h-0 w-[220px] shrink-0 flex-col overflow-y-auto border-r-0">
       <div className="shrink-0 border-b border-border/50 px-3 py-2.5">
         <p className="text-sm font-semibold text-foreground">Elementos</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           Arraste os elementos para o layout
         </p>
-        <div className="mt-2 max-h-[min(200px,28vh)] space-y-1 overflow-y-auto">
-          {STRUCTURE_PALETTE.map((tool) => (
-            <button
-              key={tool.id}
-              type="button"
-              draggable
-              onClick={() => onAddElement(tool.elementType)}
-              onDragStart={(e) => {
-                e.dataTransfer.setData(
-                  DRAG_MIME,
-                  serializeDragPayload(tool.elementType, tool.label)
-                );
-                e.dataTransfer.effectAllowed = "copy";
-              }}
-              className="flex w-full cursor-grab items-center gap-2 rounded-md border border-transparent px-2 py-2 text-left text-sm hover:border-border/60 hover:bg-muted/40 active:cursor-grabbing"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted/60">
-                <tool.icon className="h-4 w-4 text-blue-600" />
-              </span>
-              {tool.label}
-            </button>
+        <div className="mt-2 space-y-3">
+          {PALETTE_GROUPS.map((group) => (
+            <div key={group}>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {group}
+              </p>
+              <div className="grid grid-cols-2 gap-1">
+                {STRUCTURE_PALETTE.filter((tool) => tool.group === group).map((tool) => (
+                  <button
+                    key={tool.id}
+                    type="button"
+                    draggable
+                    onClick={() => onAddElement(tool.elementType)}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(
+                        DRAG_MIME,
+                        serializeDragPayload(tool.elementType, tool.label)
+                      );
+                      e.dataTransfer.effectAllowed = "copy";
+                    }}
+                    title={`Arraste para o layout ou clique para adicionar: ${tool.label}`}
+                    className="flex cursor-grab flex-col items-center gap-1 rounded-md border border-border/50 px-1 py-2 text-center text-xs hover:border-blue-400/60 hover:bg-muted/40 active:cursor-grabbing"
+                  >
+                    <tool.icon className="h-4 w-4 text-blue-600" />
+                    <span className="w-full truncate">{tool.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex shrink-0 flex-col">
         <div className="shrink-0 border-b border-border/50 px-3 py-2">
           <p className="text-sm font-semibold text-foreground">Camadas</p>
           {layers.length > 0 && (
@@ -71,7 +79,7 @@ export default function StructureEditorSidebar({
             </p>
           )}
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <div className="p-2">
           {layers.length === 0 ? (
             <p className="px-2 py-4 text-center text-sm text-muted-foreground">
               Nenhum elemento no layout

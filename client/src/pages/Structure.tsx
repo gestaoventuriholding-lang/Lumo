@@ -30,6 +30,8 @@ export default function Structure() {
   const [defaultTeam] = useState("Equipe A");
   const [activeTool, setActiveTool] = useState<EditorToolId>("select");
   const [zoom, setZoom] = useState(1);
+  const [showGrid, setShowGrid] = useState(true);
+  const [snapEnabled, setSnapEnabled] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [elementDialogOpen, setElementDialogOpen] = useState(false);
   const moveSnapshotRef = useRef(structuredClone(layout));
@@ -136,6 +138,10 @@ export default function Structure() {
         canRedo={canRedo}
         onToolChange={handleToolChange}
         onZoomChange={setZoom}
+        showGrid={showGrid}
+        snapToGrid={snapEnabled}
+        onShowGridChange={setShowGrid}
+        onSnapToGridChange={setSnapEnabled}
         onUndo={undo}
         onRedo={redo}
         canDelete={selectedId != null}
@@ -163,6 +169,8 @@ export default function Structure() {
           selectedId={selectedId}
           activeTool={activeTool}
           zoom={zoom}
+          showGrid={showGrid}
+          snapEnabled={snapEnabled}
           defaultSector={defaultSector}
           defaultTeam={defaultTeam}
           layoutSnapshot={layout}

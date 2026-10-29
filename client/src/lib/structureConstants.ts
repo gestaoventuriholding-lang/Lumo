@@ -1,6 +1,13 @@
 export const STRUCTURE_CANVAS_WIDTH = 1120;
 export const STRUCTURE_CANVAS_HEIGHT = 720;
 
+/** Tamanho de cada quadrado da grade (px do layout) */
+export const STRUCTURE_GRID_SIZE = 20;
+
+export function snapToGrid(value: number): number {
+  return Math.round(value / STRUCTURE_GRID_SIZE) * STRUCTURE_GRID_SIZE;
+}
+
 export function getCenteredPosition(
   width: number,
   height: number,
@@ -24,7 +31,7 @@ export function getCenteredPosition(
   const y = (STRUCTURE_CANVAS_HEIGHT - height) / 2 + dy + ringOffset;
 
   return {
-    x: Math.max(16, Math.min(x, STRUCTURE_CANVAS_WIDTH - width - 16)),
-    y: Math.max(16, Math.min(y, STRUCTURE_CANVAS_HEIGHT - height - 16)),
+    x: Math.max(16, Math.min(snapToGrid(x), STRUCTURE_CANVAS_WIDTH - width - 16)),
+    y: Math.max(16, Math.min(snapToGrid(y), STRUCTURE_CANVAS_HEIGHT - height - 16)),
   };
 }

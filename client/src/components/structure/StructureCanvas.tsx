@@ -8,12 +8,15 @@ import type { StructureLayout } from "@/types/structure";
 import {
   STRUCTURE_CANVAS_HEIGHT,
   STRUCTURE_CANVAS_WIDTH,
+  STRUCTURE_GRID_SIZE,
+  snapToGrid,
 } from "@/lib/structureConstants";
 import { createStructureElement } from "@/lib/structureFactory";
 import { DRAG_MIME, parseDragPayload } from "@/lib/structureDrag";
 import type { EditorToolId } from "@/lib/structureEditorTools";
 import {
   applyResizeDelta,
+  clampElementBounds,
   clampMovePosition,
   type ResizeHandle,
 } from "@/lib/structureElementBounds";
@@ -24,6 +27,8 @@ interface StructureCanvasProps {
   selectedId: string | null;
   activeTool: EditorToolId;
   zoom: number;
+  showGrid: boolean;
+  snapEnabled: boolean;
   defaultSector: string;
   defaultTeam: string;
   layoutSnapshot: StructureLayout;
@@ -48,6 +53,8 @@ export default function StructureCanvas({
   selectedId,
   activeTool,
   zoom,
+  showGrid,
+  snapEnabled,
   defaultSector,
   defaultTeam,
   layoutSnapshot,
@@ -88,6 +95,7 @@ export default function StructureCanvas({
     return () => observer.disconnect();
   }, []);
 
+  const snap = (value: number) => (snapEnabled ? snapToGrid(value) : value);
   const effectiveZoomX = canvasScale.x * zoom;
   const effectiveZoomY = canvasScale.y * zoom;
 
@@ -107,7 +115,7 @@ export default function StructureCanvas({
       const dx = (moveEvent.clientX - startX) / effectiveZoomX;
       const dy = (moveEvent.clientY - startY) / effectiveZoomY;
       if (Math.abs(dx) > 1 || Math.abs(dy) > 1) movedRef.current = true;
-      const next = clampMovePosition(element, originX + dx, originY + dy);
+      const next = clampMovePosition(element, snap(originX + dx), snap(originY + dy));
       onMove(element.id, next.x, next.y, true);
     };
 
@@ -145,7 +153,15 @@ export default function StructureCanvas({
       const dx = (moveEvent.clientX - startX) / effectiveZoomX;
       const dy = (moveEvent.clientY - startY) / effectiveZoomY;
       if (Math.abs(dx) > 1 || Math.abs(dy) > 1) resizedRef.current = true;
-      const bounds = applyResizeDelta(element, handle, dx, dy, origin);
+      const raw = applyResizeDelta(element, handle, dx, dy, origin);
+      const bounds = snapEnabled
+        ? clampElementBounds(element, {
+            x: snapToGrid(raw.x),
+            y: snapToGrid(raw.y),
+            width: snapToGrid(raw.width),
+            height: snapToGrid(raw.height),
+          })
+        : raw;
       onResize(element.id, bounds, true);
     };
 
@@ -175,8 +191,8 @@ export default function StructureCanvas({
       team: defaultTeam,
       label: payload.label,
       placementIndex: elements.length,
-      x: Math.max(12, x - 70),
-      y: Math.max(12, y - 50),
+      x: Math.max(12, snap(x - 70)),
+      y: Math.max(12, snap(y - 50)),
     });
 
     onAddAt(element);
@@ -208,6 +224,13 @@ export default function StructureCanvas({
         style={{
           width: STRUCTURE_CANVAS_WIDTH,
           height: STRUCTURE_CANVAS_HEIGHT,
+          ...(showGrid
+            ? {
+                backgroundImage:
+                  "linear-gradient(to right, color-mix(in srgb, var(--border) 45%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--border) 45%, transparent) 1px, transparent 1px)",
+                backgroundSize: `${STRUCTURE_GRID_SIZE}px ${STRUCTURE_GRID_SIZE}px`,
+              }
+            : null),
           transform: `scale(${effectiveZoomX}, ${effectiveZoomY})`,
         }}
         onClick={(e) => {
