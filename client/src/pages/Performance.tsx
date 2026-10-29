@@ -48,8 +48,8 @@ import { periodAttendancesLabel, type DateRange } from "@/lib/dateRangeFilter";
 import type { AttendanceChannel } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
 import { motion } from "@/lib/motionVariants";
-import { Plus, Edit2, Trash2, Clock, Phone, Users, Upload, Target } from "lucide-react";
-import ImportModal from "@/components/ImportModal";
+import { Plus, Edit2, Trash2, Clock, Phone, Users, Target } from "lucide-react";
+import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
 import ProductivitySection from "@/components/ProductivitySection";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
@@ -119,7 +119,6 @@ export default function Performance() {
     setPeriod,
     setSelectedDay,
   } = usePeriodFilter();
-  const [showImportModal, setShowImportModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -360,10 +359,6 @@ export default function Performance() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:shrink-0">
           <ManagementReportButton className="gap-2" />
-          <Button variant="outline" onClick={() => setShowImportModal(true)} className="gap-2">
-            <Upload className="h-4 w-4" />
-            Importar Planilha
-          </Button>
           <Button onClick={openCreateModal} className="gap-2">
             <Plus className="h-4 w-4" />
             Registrar Atendimento
@@ -374,6 +369,8 @@ export default function Performance() {
       <motion.div variants={pageItemVariants}>
         <PeriodFilterBar />
       </motion.div>
+
+      <PeriodTotalsNotice range={displayRange} />
 
       {period !== "day" && availableDays.length > 0 && (
         <motion.div variants={pageItemVariants}>
@@ -771,8 +768,6 @@ export default function Performance() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <ImportModal open={showImportModal} onOpenChange={setShowImportModal} />
     </motion.div>
   );
 }

@@ -63,3 +63,40 @@ export function mergePeriodTotals(
   });
   return synthetic.length > 0 ? [...records, ...synthetic] : records;
 }
+
+export interface HiddenPeriodTotal {
+  periodStart: string;
+  periodEnd: string;
+  attendances: number;
+}
+
+/**
+ * Totais de período que tocam o filtro mas não cabem nele (então ficam de fora das contas).
+ * Serve para avisar a pessoa em vez de deixar números "sumirem" sem explicação.
+ */
+export function findHiddenPeriodTotals(
+  records: DailyPerformanceRecord[],
+  productivity: ProductivityRecord[],
+  range: { start: string; end: string }
+): HiddenPeriodTotal[] {
+  const groups = new Map<string, HiddenPeriodTotal>();
+  productivity.forEach((p) => {
+    if (p.periodEnd <= p.periodStart || p.attendancesCount <= 0) return;
+    const overlaps = p.periodStart <= range.end && p.periodEnd >= range.start;
+    const contained = p.periodStart >= range.start && p.periodEnd <= range.end;
+    if (!overlaps || contained) return;
+    const hasDaily = records.some(
+      (r) =>
+        r.attendantId === p.attendantId &&
+        r.channel === p.channel &&
+        r.date >= p.periodStart &&
+        r.date <= p.periodEnd
+    );
+    if (hasDaily) return;
+    const key = `${p.periodStart}|${p.periodEnd}`;
+    const group = groups.get(key) ?? { periodStart: p.periodStart, periodEnd: p.periodEnd, attendances: 0 };
+    group.attendances += p.attendancesCount;
+    groups.set(key, group);
+  });
+  return Array.from(groups.values());
+}

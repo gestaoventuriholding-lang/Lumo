@@ -21,6 +21,7 @@ import ExportModal from "@/components/ExportModal";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import DetailedAnalysisSummary from "@/components/DetailedAnalysisSummary";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
+import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
 import PerformanceRankings from "@/components/PerformanceRankings";
 import DashboardKpiCard from "@/components/DashboardKpiCard";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
@@ -243,6 +244,8 @@ export default function Dashboard() {
       <motion.div variants={pageItemVariants}>
         <PeriodFilterBar showScopeHint={false} />
       </motion.div>
+
+      <PeriodTotalsNotice range={dateRange} />
 
       <motion.div
         variants={staggerContainerVariants}

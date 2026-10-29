@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countWeekdays, mergePeriodTotals } from "./periodTotals";
+import { countWeekdays, findHiddenPeriodTotals, mergePeriodTotals } from "./periodTotals";
 import { buildAttendantSummaries, buildAttendancesTrend, buildChannelAttendanceTotals } from "./performanceMetrics";
 import type { ProductivityRecord } from "@/types/productivity";
 import type { Attendant } from "@/types/attendant";
@@ -65,5 +65,19 @@ describe("mergePeriodTotals", () => {
     const [row] = buildAttendantSummaries(merged, [ellen], [goal], month, "WhatsApp");
     expect(row.averagePercentage).toBeCloseTo((1486 / (70 * 21)) * 100, 1);
     expect(buildAttendancesTrend(merged, month)).toHaveLength(0);
+  });
+});
+
+describe("findHiddenPeriodTotals", () => {
+  it("avisa quando o filtro é menor que o período do relatório", () => {
+    const week = { start: "2026-10-05", end: "2026-10-11" };
+    expect(findHiddenPeriodTotals([], [total], week)).toEqual([
+      { periodStart: "2026-10-01", periodEnd: "2026-10-29", attendances: 1486 },
+    ]);
+  });
+
+  it("não avisa quando o relatório cabe no filtro ou está fora dele", () => {
+    expect(findHiddenPeriodTotals([], [total], month)).toEqual([]);
+    expect(findHiddenPeriodTotals([], [total], { start: "2026-11-02", end: "2026-11-08" })).toEqual([]);
   });
 });

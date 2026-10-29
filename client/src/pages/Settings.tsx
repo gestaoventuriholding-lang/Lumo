@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "@/lib/motionVariants";
+import { Input } from "@/components/ui/input";
 import { Bell, Shield, LogOut, Target, Moon, Trash2 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -28,7 +29,8 @@ import { clearAllLumoOperationalData } from "@/lib/clearAllLumoData";
 import { flushCloud } from "@/lib/cloudStore";
 
 export default function Settings() {
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
+  const [confirmText, setConfirmText] = useState("");
   const { theme, setTheme } = useTheme();
   const { preferences, savePreferences } = useUserPreferences();
 
@@ -216,8 +218,8 @@ export default function Settings() {
         </Card>
       </motion.div>
 
-      {/* Reset operational data */}
-      <motion.div variants={pageItemVariants}>
+      {/* Reset operational data: apaga os dados da central inteira, só admin */}
+      {isAdmin && <motion.div variants={pageItemVariants}>
         <Card className="border-destructive/40">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -226,17 +228,17 @@ export default function Settings() {
                 <CardTitle>Recomeçar do zero</CardTitle>
                 <CardDescription>
                   Apaga colaboradores, desempenho, ausências, metas, estrutura e histórico de
-                  importação deste navegador
+                  importação de toda a central
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Use antes de cadastrar uma operação nova. Tema, preferências de notificação e login
-              são mantidos. Esta ação não pode ser desfeita.
+              Use antes de cadastrar uma operação nova. Como os dados são compartilhados, isso apaga
+              para TODOS os usuários. Login e usuários cadastrados são mantidos. Não pode ser desfeito.
             </p>
-            <AlertDialog>
+            <AlertDialog onOpenChange={(open) => !open && setConfirmText("")}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="w-full md:w-auto">
                   Limpar todos os dados operacionais
@@ -256,6 +258,14 @@ export default function Settings() {
                         <li>Layout de estruturas</li>
                         <li>Filtro de período salvo</li>
                       </ul>
+                      <p className="font-medium text-foreground">Vale para todos os usuários da central.</p>
+                      <Label htmlFor="confirm-clear" className="pt-1">Digite APAGAR para confirmar</Label>
+                      <Input
+                        id="confirm-clear"
+                        value={confirmText}
+                        onChange={(e) => setConfirmText(e.target.value)}
+                        autoComplete="off"
+                      />
                     </div>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -263,6 +273,7 @@ export default function Settings() {
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive text-white hover:bg-destructive/90"
+                    disabled={confirmText.trim().toUpperCase() !== "APAGAR"}
                     onClick={() => {
                       clearAllLumoOperationalData();
                       toast.success("Dados apagados. Recarregando…");
@@ -278,7 +289,7 @@ export default function Settings() {
             </AlertDialog>
           </CardContent>
         </Card>
-      </motion.div>
+      </motion.div>}
 
       {/* Logout Section */}
       <motion.div variants={pageItemVariants}>
