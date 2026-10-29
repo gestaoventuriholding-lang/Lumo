@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion, AnimatePresence } from "@/lib/motionVariants";
+import { motion } from "@/lib/motionVariants";
 import {
   Plus,
   Search,
@@ -308,15 +308,15 @@ export default function Attendants() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <AnimatePresence>
+              {/* sem AnimatePresence: a saída das linhas antigas se sobrepunha às novas ao trocar de página */}
+              <>
                 {paginatedAttendants.length > 0 ? (
                   paginatedAttendants.map((attendant, index) => (
                     <motion.tr
                       key={attendant.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{ duration: 0.25, delay: Math.min(index, 9) * 0.03 }}
                       className={`border-border/50 transition-colors ${
                         selectedIds.has(attendant.id)
                           ? "bg-primary/10"
@@ -390,7 +390,7 @@ export default function Attendants() {
                     </TableCell>
                   </motion.tr>
                 )}
-              </AnimatePresence>
+              </>
             </TableBody>
           </Table>
         </div>
