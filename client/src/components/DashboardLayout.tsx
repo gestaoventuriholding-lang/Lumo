@@ -316,8 +316,8 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
         >
           <div
             className={cn(
-              "flex w-full items-center justify-center",
-              isIconOnly ? "overflow-visible" : "overflow-hidden px-2"
+              "flex w-full items-center",
+              isIconOnly ? "justify-center overflow-visible" : "justify-start overflow-hidden px-2"
             )}
           >
             {isIconOnly ? (
@@ -325,7 +325,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
                 <ElosLogo variant="mark" />
               </div>
             ) : (
-              <div className="flex w-full items-center justify-center">
+              <div className="flex w-full items-center justify-start">
                 <ElosLogo variant="full" />
               </div>
             )}
