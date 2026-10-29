@@ -15,14 +15,14 @@ import {
 import { motion, pageContainerVariants, pageItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import { mergePeriodTotals } from "@/lib/periodTotals";
-import { Users, TrendingUp, Target, AlertCircle, Download } from "lucide-react";
+import { Users, TrendingUp, Target, AlertCircle, Download, ArrowRight, Trophy } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import ExportModal from "@/components/ExportModal";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import DetailedAnalysisSummary from "@/components/DetailedAnalysisSummary";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
-import PerformanceRankings from "@/components/PerformanceRankings";
 import DashboardKpiCard from "@/components/DashboardKpiCard";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
 import {
@@ -69,35 +69,6 @@ export default function Dashboard() {
   const dashboardStats = useMemo(
     () => buildDashboardStats(attendants, performanceRecords, productionGoals, dateRange),
     [attendants, performanceRecords, productionGoals, dateRange]
-  );
-
-  const attendantSummaries = useMemo(
-    () => buildAttendantSummaries(performanceRecords, attendants, productionGoals, dateRange),
-    [performanceRecords, attendants, productionGoals, dateRange]
-  );
-
-  const ligacaoSummaries = useMemo(
-    () =>
-      buildAttendantSummaries(
-        performanceRecords,
-        attendants,
-        productionGoals,
-        dateRange,
-        "Ligação"
-      ),
-    [performanceRecords, attendants, productionGoals, dateRange]
-  );
-
-  const whatsappSummaries = useMemo(
-    () =>
-      buildAttendantSummaries(
-        performanceRecords,
-        attendants,
-        productionGoals,
-        dateRange,
-        "WhatsApp"
-      ),
-    [performanceRecords, attendants, productionGoals, dateRange]
   );
 
   const channelTotals = useMemo(
@@ -229,7 +200,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
           <p className="mt-1 text-muted-foreground">
-            Visão gerencial e métricas-chave do seu time
+            Visão rápida do período: totais, evolução e canais. O detalhe por pessoa fica em Desempenho
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -387,12 +358,19 @@ export default function Dashboard() {
       </motion.div>
 
       <motion.div variants={pageItemVariants}>
-        <PerformanceRankings
-          ligacaoSummaries={ligacaoSummaries}
-          whatsappSummaries={whatsappSummaries}
-          overallSummaries={attendantSummaries}
-          period={period}
-        />
+        <Link
+          href="/performance"
+          className="lumo-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/30"
+        >
+          <span className="flex items-center gap-3">
+            <Trophy className="h-5 w-5 text-amber-500" />
+            <span>
+              <span className="block text-sm font-semibold text-foreground">Ranking e produtividade por colaboradora</span>
+              <span className="block text-xs text-muted-foreground">Veja quem mais atendeu, a meta e o TMA em Desempenho</span>
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </motion.div>
 
       <motion.details variants={pageItemVariants} className="lumo-panel-sm overflow-hidden">
