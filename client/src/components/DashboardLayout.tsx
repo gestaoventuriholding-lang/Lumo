@@ -267,8 +267,8 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
             "relative rounded-lg text-sm",
             !isIconOnly && "h-9",
             isActive
-              ? "font-semibold text-white hover:bg-transparent hover:text-white data-[active=true]:bg-transparent data-[active=true]:text-white"
-              : "font-medium text-slate-300 hover:bg-white/10 hover:text-white data-[active=true]:bg-white/10 data-[active=true]:text-white"
+              ? "font-semibold text-white hover:bg-transparent hover:text-white active:bg-transparent active:text-white data-[active=true]:bg-transparent data-[active=true]:text-white"
+              : "font-medium text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/10 active:text-white data-[active=true]:bg-white/10 data-[active=true]:text-white"
           )}
         >
           {isActive && (
