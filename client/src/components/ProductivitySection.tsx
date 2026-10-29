@@ -1,5 +1,17 @@
-import { useMemo } from "react";
-import { Info } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Info, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -9,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { summarizeProductivity } from "@/lib/productivityMetrics";
+import { summarizeProductivity, type ProductivitySummaryRow } from "@/lib/productivityMetrics";
 import { formatBrDate, formatPercent, formatSecondsShort } from "@/lib/reportFormat";
 import type { ProductivityRecord } from "@/types/productivity";
 
@@ -17,10 +29,12 @@ interface ProductivitySectionProps {
   records: ProductivityRecord[];
   attendantIds: Set<number>;
   range: { start: string; end: string; label: string };
+  onRemove: (recordIds: number[]) => void;
 }
 
 /** Tempo logado, pausas e ocupação, vindos dos relatórios de produtividade importados */
-export default function ProductivitySection({ records, attendantIds, range }: ProductivitySectionProps) {
+export default function ProductivitySection({ records, attendantIds, range, onRemove }: ProductivitySectionProps) {
+  const [toRemove, setToRemove] = useState<ProductivitySummaryRow | null>(null);
   const summary = useMemo(
     () => summarizeProductivity(records, range, attendantIds),
     [records, range.start, range.end, attendantIds]
@@ -61,6 +75,7 @@ export default function ProductivitySection({ records, attendantIds, range }: Pr
                 <TableHead className="text-right">% Pausa</TableHead>
                 <TableHead className="text-right">Ocupação</TableHead>
                 <TableHead className="text-right">Atend./hora</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -78,12 +93,49 @@ export default function ProductivitySection({ records, attendantIds, range }: Pr
                   <TableCell className="text-right tabular-nums">
                     {row.perHour != null ? row.perHour.toLocaleString("pt-BR") : "—"}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      aria-label={`Excluir dados importados de ${row.attendantName}`}
+                      onClick={() => setToRemove(row)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       </CardContent>
+      <AlertDialog open={toRemove != null} onOpenChange={(open) => !open && setToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Excluir os dados importados de {toRemove?.attendantName}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove só os relatórios de produtividade desta pessoa ({toRemove?.channel}) que aparecem
+              neste período. Os dados dos outros colaboradores não mudam. Para voltar, importe o relatório de novo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!toRemove) return;
+                onRemove(toRemove.recordIds);
+                toast.success("Dados excluídos", { description: toRemove.attendantName });
+                setToRemove(null);
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

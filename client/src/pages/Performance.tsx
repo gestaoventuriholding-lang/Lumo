@@ -105,6 +105,7 @@ export default function Performance() {
     attendants,
     performanceRecords: records,
     productivityRecords,
+    removeProductivityRecords,
     productionGoals,
     addPerformanceRecord,
     updatePerformanceRecord,
@@ -472,6 +473,7 @@ export default function Performance() {
           records={productivityRecords}
           attendantIds={attendantIds}
           range={displayRange}
+          onRemove={removeProductivityRecords}
         />
       </motion.div>
 

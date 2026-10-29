@@ -13,6 +13,8 @@ export interface ProductivitySummaryRow {
   pausePercent?: number;
   occupancy?: number;
   perHour?: number;
+  /** Registros que formam esta linha (para excluir só desta pessoa) */
+  recordIds: number[];
   /** Algum registro cobre um período maior que o filtro (total de relatório mensal, por exemplo) */
   extendsOutsideRange: boolean;
 }
@@ -102,6 +104,7 @@ export function summarizeProductivity(
         loginSeconds && loginSeconds > 0
           ? Math.round((attendances / (loginSeconds / 3600)) * 100) / 100
           : undefined,
+      recordIds: list.map((r) => r.id),
       extendsOutsideRange,
     });
   });

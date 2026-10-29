@@ -79,6 +79,8 @@ interface LumoDataContextValue {
   addPerformanceRecord: (record: DailyPerformanceRecord) => void;
   updatePerformanceRecord: (id: number, data: Partial<DailyPerformanceRecord>) => void;
   removePerformanceRecord: (id: number) => void;
+  /** Exclui relatórios de produtividade de uma pessoa (e os registros diários do mesmo dia, se forem de relatório por dia) */
+  removeProductivityRecords: (ids: number[]) => void;
   importPerformance: (
     plan: ImportPlan,
     options: ImportBatchOptions,
@@ -373,6 +375,33 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     [attendants, performanceRecords]
   );
 
+  const removeProductivityRecords = useCallback(
+    (ids: number[]) => {
+      if (ids.length === 0) return;
+      const idSet = new Set(ids);
+      const removed = productivityRecords.filter((p) => idSet.has(p.id));
+      const nextProductivity = productivityRecords.filter((p) => !idSet.has(p.id));
+      // relatório por dia (período de 1 dia) também gerou o registro diário de desempenho
+      const nextPerformance = performanceRecords.filter(
+        (r) =>
+          !removed.some(
+            (p) =>
+              p.periodStart === p.periodEnd &&
+              p.attendantId === r.attendantId &&
+              p.channel === r.channel &&
+              p.periodStart === r.date
+          )
+      );
+      setProductivityRecordsState(nextProductivity);
+      saveProductivityRecords(nextProductivity);
+      if (nextPerformance.length !== performanceRecords.length) {
+        setPerformanceRecordsState(nextPerformance);
+        savePerformanceRecords(nextPerformance);
+      }
+    },
+    [productivityRecords, performanceRecords]
+  );
+
   const importProductivityReport = useCallback(
     (report: ProductivityReport, options: ProductivityImportOptions): ProductivityImportResult => {
       const outcome = executeProductivityImport(
@@ -444,6 +473,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       addPerformanceRecord,
       updatePerformanceRecord,
       removePerformanceRecord,
+      removeProductivityRecords,
       importPerformance,
       importProductivityReport,
       setProductionGoals,
@@ -472,6 +502,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       addPerformanceRecord,
       updatePerformanceRecord,
       removePerformanceRecord,
+      removeProductivityRecords,
       importPerformance,
       importProductivityReport,
       setProductionGoals,
