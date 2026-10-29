@@ -62,7 +62,7 @@ export default function LoginPage({ initialMode = "signin" }: { initialMode?: Mo
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-lg">
+      <div className="w-full max-w-sm rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-8 shadow-lg backdrop-blur-xl">
         <div className="mb-8 flex justify-center">
           <ElosLogo tone="onLight" />
         </div>

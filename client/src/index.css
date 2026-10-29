@@ -59,6 +59,10 @@
 
 :root {
   --ui-scale: 0.9;
+  /* Vidro: fundo translúcido + desfoque (usado nos painéis e cards) */
+  --glass-bg: rgb(255 255 255 / 0.68);
+  --glass-border: rgb(255 255 255 / 0.65);
+  --glass-blur: blur(14px) saturate(1.35);
   /* Identidade Elos: #0B1F44 marinho, #3366FF azul, #7BA7FF azul claro, #E6EDF7 gelo */
   --primary: #3366ff;
   --primary-foreground: #ffffff;
@@ -103,6 +107,8 @@
 
 .dark {
   color-scheme: dark;
+  --glass-bg: rgb(14 37 82 / 0.62);
+  --glass-border: rgb(255 255 255 / 0.1);
   --primary: #4d7cff;
   --primary-foreground: #ffffff;
   --sidebar-primary: #4d7cff;
@@ -224,17 +230,21 @@
   }
 
   .lumo-panel {
-    background-color: var(--card);
+    background-color: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
     color: var(--card-foreground);
-    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+    border: 1px solid var(--glass-border);
     border-radius: 1rem;
     box-shadow: var(--shadow-raised);
   }
 
   .lumo-panel-sm {
-    background-color: var(--card);
+    background-color: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
     color: var(--card-foreground);
-    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+    border: 1px solid var(--glass-border);
     border-radius: 0.75rem;
     box-shadow: var(--shadow-surface);
   }
@@ -242,7 +252,7 @@
   .lumo-stat {
     border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
     border-radius: 0.5rem;
-    background: color-mix(in srgb, var(--muted) 22%, var(--card));
+    background: color-mix(in srgb, var(--muted) 30%, var(--glass-bg));
     box-shadow: var(--shadow-surface);
   }
 
