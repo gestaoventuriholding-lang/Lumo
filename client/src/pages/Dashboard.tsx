@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { motion, pageContainerVariants, pageItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import AnimatedNumber from "@/components/AnimatedNumber";
+import { mergePeriodTotals } from "@/lib/periodTotals";
 import { Users, TrendingUp, Target, AlertCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExportModal from "@/components/ExportModal";
@@ -57,7 +58,12 @@ export default function Dashboard() {
   const [analysisNote, setAnalysisNote] = useState(() => loadAnalysisNote());
   const { period, dateRange } = usePeriodFilter();
 
-  const { attendants, performanceRecords, absences, productionGoals } = useLumoData();
+  const { attendants, performanceRecords: dailyRecords, productivityRecords, absences, productionGoals } = useLumoData();
+  // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
+  const performanceRecords = useMemo(
+    () => mergePeriodTotals(dailyRecords, productivityRecords, dateRange),
+    [dailyRecords, productivityRecords, dateRange]
+  );
 
   const dashboardStats = useMemo(
     () => buildDashboardStats(attendants, performanceRecords, productionGoals, dateRange),

@@ -24,6 +24,7 @@ import { useLumoData } from "@/contexts/LumoDataContext";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
 import type { DashboardPeriod } from "@/lib/dateRangeFilter";
 import { getMonthString } from "@/lib/dateRangeFilter";
+import { mergePeriodTotals } from "@/lib/periodTotals";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import {
   buildManagementReportPreview,
@@ -50,7 +51,7 @@ export default function ManagementReportButton({
   size = "default",
   className,
 }: ManagementReportButtonProps) {
-  const { attendants, performanceRecords, productionGoals } = useLumoData();
+  const { attendants, performanceRecords: dailyRecords, productivityRecords, productionGoals } = useLumoData();
   const { period, selectedDay, selectedWeek, selectedMonth } = usePeriodFilter();
 
   const [open, setOpen] = useState(false);
@@ -79,6 +80,11 @@ export default function ManagementReportButton({
   const dateRange = useMemo(
     () => resolveManagementReportDateRange({ period: reportPeriod, periodValue }),
     [reportPeriod, periodValue]
+  );
+
+  const performanceRecords = useMemo(
+    () => mergePeriodTotals(dailyRecords, productivityRecords, dateRange),
+    [dailyRecords, productivityRecords, dateRange]
   );
 
   const attendantsInRange = useMemo(

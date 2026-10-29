@@ -51,6 +51,7 @@ import { motion } from "@/lib/motionVariants";
 import { Plus, Edit2, Trash2, Clock, Phone, Users, Upload, Target } from "lucide-react";
 import ImportModal from "@/components/ImportModal";
 import ProductivitySection from "@/components/ProductivitySection";
+import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PerformanceRankings from "@/components/PerformanceRankings";
@@ -147,21 +148,27 @@ export default function Performance() {
     [records, displayRange]
   );
 
+  // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
+  const summaryRecords = useMemo(
+    () => mergePeriodTotals(records, productivityRecords, displayRange),
+    [records, productivityRecords, displayRange]
+  );
+
   const attendantSummaries = useMemo(
-    () => buildAttendantSummaries(records, attendants, productionGoals, displayRange),
-    [records, attendants, productionGoals, displayRange]
+    () => buildAttendantSummaries(summaryRecords, attendants, productionGoals, displayRange),
+    [summaryRecords, attendants, productionGoals, displayRange]
   );
 
   const ligacaoSummaries = useMemo(
     () =>
-      buildAttendantSummaries(records, attendants, productionGoals, displayRange, "Ligação"),
-    [records, attendants, productionGoals, displayRange]
+      buildAttendantSummaries(summaryRecords, attendants, productionGoals, displayRange, "Ligação"),
+    [summaryRecords, attendants, productionGoals, displayRange]
   );
 
   const whatsappSummaries = useMemo(
     () =>
-      buildAttendantSummaries(records, attendants, productionGoals, displayRange, "WhatsApp"),
-    [records, attendants, productionGoals, displayRange]
+      buildAttendantSummaries(summaryRecords, attendants, productionGoals, displayRange, "WhatsApp"),
+    [summaryRecords, attendants, productionGoals, displayRange]
   );
 
   const kpis = useMemo(() => {

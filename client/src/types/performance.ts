@@ -8,6 +8,8 @@ export interface DailyPerformanceRecord {
   channel: AttendanceChannel;
   attendancesCount: number;
   averageTimeMinutes: number;
+  /** Só em totais de período vindos de relatório (não gravado): quantos dias úteis o total cobre */
+  periodDays?: number;
   createdAt: string;
   updatedAt: string;
 }

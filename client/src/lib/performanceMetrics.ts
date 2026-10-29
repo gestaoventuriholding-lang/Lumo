@@ -104,6 +104,16 @@ export function getDailyTarget(
   return goal?.dailyTarget ?? 0;
 }
 
+/** Meta do registro: meta diária × dias cobertos (total de período) */
+function getRecordTarget(record: DailyPerformanceRecord, productionGoals: ProductionGoal[]): number {
+  return getDailyTarget(record.channel, productionGoals) * Math.max(1, record.periodDays ?? 1);
+}
+
+/** Totais de período não têm dia próprio: ficam fora dos gráficos diários */
+function withoutPeriodTotals(records: DailyPerformanceRecord[]): DailyPerformanceRecord[] {
+  return records.filter((record) => (record.periodDays ?? 1) <= 1);
+}
+
 export function recordsToIndicators(
   records: DailyPerformanceRecord[],
   attendants: Attendant[],
@@ -114,7 +124,7 @@ export function recordsToIndicators(
 
   return periodRecords.map((record) => {
     const attendant = attendants.find((a) => a.id === record.attendantId);
-    const dailyTarget = getDailyTarget(record.channel, productionGoals);
+    const dailyTarget = getRecordTarget(record, productionGoals);
     const produced = record.attendancesCount;
     const difference = produced - dailyTarget;
     const percentage = dailyTarget > 0 ? (produced / dailyTarget) * 100 : 0;
@@ -226,7 +236,7 @@ export function buildAttendantSummaries(
       totalAttendances;
 
     const totalTarget = attendantRecords.reduce(
-      (sum, record) => sum + getDailyTarget(record.channel, productionGoals),
+      (sum, record) => sum + getRecordTarget(record, productionGoals),
       0
     );
     const averagePercentage =
@@ -329,7 +339,7 @@ export function buildProductivityTrend(
   productionGoals: ProductionGoal[],
   range: DateRange
 ): ProductivityTrendPoint[] {
-  const periodRecords = filterRecordsByRange(records, range);
+  const periodRecords = filterRecordsByRange(withoutPeriodTotals(records), range);
   const byDate = new Map<string, DailyPerformanceRecord[]>();
 
   for (const record of periodRecords) {
@@ -394,7 +404,7 @@ export function buildAttendancesTrend(
   records: DailyPerformanceRecord[],
   range: DateRange
 ): AttendancesTrendPoint[] {
-  const periodRecords = filterVolumeRecordsByRange(records, range);
+  const periodRecords = filterVolumeRecordsByRange(withoutPeriodTotals(records), range);
   const byDate = new Map<string, { attendances: number; ligacao: number; whatsapp: number }>();
 
   for (const record of periodRecords) {
