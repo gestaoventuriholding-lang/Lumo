@@ -83,9 +83,9 @@ template do Manus foram removidos).
 - Visual novo: **azul claro, estilo glassmorfismo** (vidro translúcido com desfoque sobre fundo
   azul-céu, com tema escuro também). Hoje o app ainda está no visual antigo (azul royal, Inter).
   Os tokens de cor ficam em `client/src/index.css`.
-- Trazer telas de **operação ao vivo**, a partir do protótipo `prototipos/central-operacao.html`
-  (painel com KPIs do momento, atendimentos em andamento com ficha do paciente, status dos agentes,
-  filas com nível de serviço, consulta rápida com ramais e procedimentos).
+- O Elos é **gestão das pessoas com dados de relatórios** (importados, como o REL090). **Não terá nada ao
+  vivo**: sem painel em tempo real, filas ou integração com telefonia. O protótipo
+  `prototipos/central-operacao.html` não vai ser implementado.
 - Canais da central: Ligação e WhatsApp. Contexto: laboratório/clínica.
 
 ## Pendências conhecidas

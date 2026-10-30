@@ -49,14 +49,27 @@ describe("mergePeriodTotals", () => {
     expect(mergePeriodTotals([], [total], week)).toHaveLength(0);
   });
 
-  it("não duplica quem já tem registros diários no período", () => {
-    const daily = [
-      {
-        id: 1, attendantId: 1, attendantName: "Ellen", date: "2026-10-05", channel: "WhatsApp" as const,
-        attendancesCount: 50, averageTimeMinutes: 4, createdAt: "", updatedAt: "",
-      },
-    ];
-    expect(mergePeriodTotals(daily, [total], month)).toHaveLength(1);
+  const manual = {
+    id: 1, attendantId: 1, attendantName: "Ellen", date: "2026-10-05", channel: "WhatsApp" as const,
+    attendancesCount: 50, averageTimeMinutes: 4, createdAt: "", updatedAt: "",
+  };
+
+  it("lançamento manual soma ao total do relatório sem derrubá-lo", () => {
+    const merged = mergePeriodTotals([manual], [total], month);
+    expect(merged).toHaveLength(2);
+    expect(buildChannelAttendanceTotals(merged, month).whatsapp).toBe(1486 + 50);
+  });
+
+  it("a meta do dia lançado à mão não conta em dobro", () => {
+    const goal = { channel: "WhatsApp", status: "Ativo", dailyTarget: 70 } as ProductionGoal;
+    const merged = mergePeriodTotals([manual], [total], month);
+    const [row] = buildAttendantSummaries(merged, [ellen], [goal], month, "WhatsApp");
+    expect(row.averagePercentage).toBeCloseTo(((1486 + 50) / (70 * 21)) * 100, 1);
+  });
+
+  it("não duplica quando já existe relatório por dia dentro do período", () => {
+    const dayReport: ProductivityRecord = { ...total, id: 8, periodStart: "2026-10-05", periodEnd: "2026-10-05", attendancesCount: 50 };
+    expect(mergePeriodTotals([manual], [total, dayReport], month)).toHaveLength(1);
   });
 
   it("meta multiplica pelos dias úteis e o total fica fora do gráfico diário", () => {

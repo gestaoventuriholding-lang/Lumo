@@ -361,7 +361,7 @@ export default function Performance() {
           <ManagementReportButton className="gap-2" />
           <Button onClick={openCreateModal} className="gap-2">
             <Plus className="h-4 w-4" />
-            Registrar Atendimento
+            Lançamento manual
           </Button>
         </div>
       </motion.div>
@@ -646,10 +646,10 @@ export default function Performance() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingId ? "Editar Registro" : "Registrar Atendimento do Dia"}
+              {editingId ? "Editar lançamento" : "Lançamento manual do dia"}
             </DialogTitle>
             <DialogDescription>
-              Informe quantos atendimentos o colaborador realizou e o tempo médio por atendimento
+              Use só para ajustes que não estão no relatório. O lançamento soma ao que foi importado: informe os atendimentos a acrescentar e o tempo médio deles
             </DialogDescription>
           </DialogHeader>
 
