@@ -35,6 +35,7 @@ import {
 } from "@/lib/productivityImport";
 import type { ProductivityReport } from "@/lib/reportParser";
 import type { ProductivityLimit, ProductivityRecord } from "@/types/productivity";
+import type { WorkingHoursOption } from "@/types/attendant";
 import {
   executePerformanceImport,
   type ImportBatchOptions,
@@ -43,6 +44,7 @@ import {
 } from "@/lib/spreadsheetImport";
 import { appendImportLog } from "@/lib/importLogStorage";
 import { loadProductivityLimits, saveProductivityLimits } from "@/lib/productivityLimitsStorage";
+import { loadWorkingHoursOptions, saveWorkingHoursOptions } from "@/lib/workingHoursStorage";
 import {
   loadProductionGoals,
   loadRoleGoals,
@@ -63,6 +65,7 @@ interface LumoDataContextValue {
   productionGoals: ProductionGoal[];
   roleGoals: RoleGoal[];
   productivityLimits: ProductivityLimit[];
+  workingHoursOptions: WorkingHoursOption[];
 
   addAttendant: (input: AttendantInput) => Attendant;
   updateAttendant: (id: number, input: AttendantInput) => void;
@@ -97,6 +100,7 @@ interface LumoDataContextValue {
   setProductionGoals: (goals: ProductionGoal[]) => void;
   setRoleGoals: (goals: RoleGoal[]) => void;
   setProductivityLimits: (limits: ProductivityLimit[]) => void;
+  setWorkingHoursOptions: (options: WorkingHoursOption[]) => void;
 
   todayIndicators: PerformanceIndicator[];
 }
@@ -119,6 +123,9 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     loadProductionGoals()
   );
   const [roleGoals, setRoleGoalsState] = useState<RoleGoal[]>(() => loadRoleGoals());
+  const [workingHoursOptions, setWorkingHoursOptionsState] = useState<WorkingHoursOption[]>(() =>
+    loadWorkingHoursOptions()
+  );
   const [productivityLimits, setProductivityLimitsState] = useState<ProductivityLimit[]>(() =>
     loadProductivityLimits()
   );
@@ -449,6 +456,11 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     saveRoleGoals(goals);
   }, []);
 
+  const setWorkingHoursOptions = useCallback((options: WorkingHoursOption[]) => {
+    setWorkingHoursOptionsState(options);
+    saveWorkingHoursOptions(options);
+  }, []);
+
   const setProductivityLimits = useCallback((limits: ProductivityLimit[]) => {
     setProductivityLimitsState(limits);
     saveProductivityLimits(limits);
@@ -471,6 +483,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       productionGoals,
       roleGoals,
       productivityLimits,
+      workingHoursOptions,
       addAttendant,
       updateAttendant,
       removeAttendant,
@@ -491,6 +504,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       setProductionGoals,
       setRoleGoals,
       setProductivityLimits,
+      setWorkingHoursOptions,
       todayIndicators,
     }),
     [
@@ -502,6 +516,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       productionGoals,
       roleGoals,
       productivityLimits,
+      workingHoursOptions,
       addAttendant,
       updateAttendant,
       removeAttendant,
@@ -522,6 +537,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       setProductionGoals,
       setRoleGoals,
       setProductivityLimits,
+      setWorkingHoursOptions,
       todayIndicators,
     ]
   );

@@ -18,4 +18,11 @@ export interface Attendant {
   registrationDate: string;
 }
 
+/** Carga horária cadastrada em Configurações (ex.: 6h20, 12x36) */
+export interface WorkingHoursOption {
+  id: number;
+  label: string;
+  createdAt: string;
+}
+
 export type AttendantInput = Omit<Attendant, "id" | "registrationDate">;

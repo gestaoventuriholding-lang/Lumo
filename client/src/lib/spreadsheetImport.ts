@@ -1655,7 +1655,7 @@ export function executePerformanceImport(
           name: row.attendantName.trim(),
           role: "Atendente",
           serviceChannel,
-          workingHours: "08h00",
+          workingHours: "",
           jornadaStart: "",
           jornadaEnd: "",
           observation: "Importado automaticamente",

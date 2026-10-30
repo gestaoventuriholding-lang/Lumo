@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,8 +43,6 @@ import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
 const ATTENDANT_ROLE = "Atendente";
 
-const workingHoursOptions = ["06h20", "08h00", "12x36", "Personalizado"];
-
 const serviceChannelOptions: { value: Attendant["serviceChannel"]; label: string }[] = [
   { value: "Ligação", label: "Ligação" },
   { value: "WhatsApp", label: "WhatsApp" },
@@ -56,8 +55,14 @@ function serviceChannelBadgeClass(channel: Attendant["serviceChannel"]): string 
 }
 
 export default function Attendants() {
-  const { attendants, addAttendant, updateAttendant, removeAttendant, removeAttendants } =
-    useLumoData();
+  const {
+    attendants,
+    workingHoursOptions,
+    addAttendant,
+    updateAttendant,
+    removeAttendant,
+    removeAttendants,
+  } = useLumoData();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -134,6 +139,14 @@ export default function Attendants() {
       observation: "",
     });
   };
+
+  // a carga atual do colaborador continua escolhível mesmo se saiu da lista de Configurações
+  const hoursChoices = useMemo(() => {
+    const labels = workingHoursOptions.map((o) => o.label);
+    return formData.workingHours && !labels.includes(formData.workingHours)
+      ? [...labels, formData.workingHours]
+      : labels;
+  }, [workingHoursOptions, formData.workingHours]);
 
   const handleSave = () => {
     if (!formData.name || !formData.workingHours || !formData.serviceChannel) {
@@ -341,7 +354,7 @@ export default function Attendants() {
                       </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary dark:bg-primary/20">
-                          {attendant.workingHours}
+                          {attendant.workingHours || "—"}
                         </span>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
@@ -509,13 +522,22 @@ export default function Attendants() {
                   <SelectValue placeholder="Selecione a carga horária" />
                 </SelectTrigger>
                 <SelectContent>
-                  {workingHoursOptions.map((hours) => (
+                  {hoursChoices.map((hours) => (
                     <SelectItem key={hours} value={hours}>
                       {hours}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {workingHoursOptions.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma carga horária cadastrada.{" "}
+                  <Link href="/settings" className="font-medium text-primary underline-offset-2 hover:underline">
+                    Cadastre em Configurações
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
 
             {/* Jornada */}

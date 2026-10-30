@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "@/lib/motionVariants";
 import { Input } from "@/components/ui/input";
-import { Bell, Shield, LogOut, Target, Moon, Trash2 } from "lucide-react";
+import { Bell, Clock, Shield, LogOut, Target, Moon, Trash2 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
@@ -14,6 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GoalsManagement from "@/components/GoalsManagement";
 import ProductivityLimitsCard from "@/components/ProductivityLimitsCard";
+import WorkingHoursCard from "@/components/WorkingHoursCard";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
   AlertDialog,
@@ -215,6 +216,26 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
             <GoalsManagement />
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Cargas horárias disponíveis no cadastro de colaboradores */}
+      <motion.div variants={pageItemVariants}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Cargas horárias</CardTitle>
+                <CardDescription>
+                  Cadastre as cargas horárias da sua central para escolher ao cadastrar colaboradores
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <WorkingHoursCard />
           </CardContent>
         </Card>
       </motion.div>

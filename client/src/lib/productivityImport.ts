@@ -112,7 +112,7 @@ export function executeProductivityImport(
           name: row.attendantName.trim(),
           role: "Atendente",
           serviceChannel: toAttendantServiceChannel(options.channel) ?? "Ligação",
-          workingHours: "08h00",
+          workingHours: "",
           jornadaStart: "",
           jornadaEnd: "",
           observation: "Importado automaticamente",
