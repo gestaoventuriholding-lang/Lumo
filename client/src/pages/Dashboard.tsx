@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -48,6 +47,94 @@ import { chartTooltipContentStyle } from "@/lib/alertColors";
 function EmptySection({ message }: { message: string }) {
   return (
     <p className="py-10 text-center text-sm text-muted-foreground">{message}</p>
+  );
+}
+
+const CHANNEL_SERIES = [
+  { key: "ligacao", label: "Ligação", color: "#3b82f6" },
+  { key: "whatsapp", label: "WhatsApp", color: "#10b981" },
+] as const;
+
+type TrendPoint = ReturnType<typeof buildAttendancesTrend>[number];
+
+function TrendTooltip({ active, payload }: { active?: boolean; payload?: { payload: TrendPoint }[] }) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+  return (
+    <div style={chartTooltipContentStyle} className="min-w-44 space-y-1.5 px-3 py-2 text-sm">
+      <p className="font-semibold text-foreground">{point.label}</p>
+      {CHANNEL_SERIES.map((series) => (
+        <p key={series.key} className="flex items-center justify-between gap-4 text-muted-foreground">
+          <span className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: series.color }} />
+            {series.label}
+          </span>
+          <span className="font-medium tabular-nums text-foreground">
+            {point[series.key].toLocaleString("pt-BR")}
+          </span>
+        </p>
+      ))}
+      <p className="flex justify-between gap-4 border-t border-border/60 pt-1.5 font-semibold text-foreground">
+        <span>Total</span>
+        <span className="tabular-nums">{point.attendances.toLocaleString("pt-BR")}</span>
+      </p>
+    </div>
+  );
+}
+
+/** Volume por dia, empilhado por canal: barras mostram quantidade; canal sem dados no período some */
+function AttendancesTrendChart({ data }: { data: TrendPoint[] }) {
+  const visible = CHANNEL_SERIES.filter((series) => data.some((point) => point[series.key] > 0));
+  const hidden = CHANNEL_SERIES.filter((series) => !visible.includes(series));
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+        {visible.map((series) => (
+          <span key={series.key} className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: series.color }} />
+            {series.label}
+          </span>
+        ))}
+        {hidden.length > 0 && (
+          <span className="text-xs">Sem registros de {hidden.map((s) => s.label).join(" e ")} no período</span>
+        )}
+      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/50" />
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            interval="preserveStartEnd"
+            minTickGap={16}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            width={44}
+            tickFormatter={(v: number) => v.toLocaleString("pt-BR")}
+          />
+          <Tooltip content={<TrendTooltip />} cursor={{ fill: "rgba(51,102,255,0.08)" }} />
+          {visible.map((series, index) => (
+            <Bar
+              key={series.key}
+              dataKey={series.key}
+              stackId="canais"
+              fill={series.color}
+              maxBarSize={48}
+              stroke="var(--card, #fff)"
+              strokeWidth={index > 0 ? 2 : 0}
+              radius={index === visible.length - 1 ? [4, 4, 0, 0] : 0}
+              isAnimationActive
+              animationDuration={CHART_DRAW_MS}
+            />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -253,61 +340,7 @@ export default function Dashboard() {
             </div>
           </div>
           {attendancesTrend.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={attendancesTrend}>
-                <defs>
-                  <linearGradient id="ligacaoGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.22} />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="whatsappGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.22} />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/60" />
-                <XAxis dataKey="label" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value} atendimentos`,
-                    name === "ligacao" ? "Ligação" : name === "whatsapp" ? "WhatsApp" : name,
-                  ]}
-                  contentStyle={chartTooltipContentStyle}
-                />
-                <Legend
-                  formatter={(value) =>
-                    value === "ligacao" ? "Ligação" : value === "whatsapp" ? "WhatsApp" : value
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="ligacao"
-                  name="ligacao"
-                  stroke="#3b82f6"
-                  strokeWidth={2.5}
-                  fill="url(#ligacaoGradient)"
-                  dot={false}
-                  isAnimationActive
-                  animationDuration={CHART_DRAW_MS}
-                  animationEasing="ease-in-out"
-                  activeDot={{ r: 5 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="whatsapp"
-                  name="whatsapp"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  fill="url(#whatsappGradient)"
-                  dot={false}
-                  isAnimationActive
-                  animationDuration={CHART_DRAW_MS}
-                  animationEasing="ease-in-out"
-                  activeDot={{ r: 5 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <AttendancesTrendChart data={attendancesTrend} />
           ) : (
             <EmptySection message="Registre atendimentos em Desempenho para visualizar a evolução." />
           )}
