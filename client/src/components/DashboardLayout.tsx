@@ -29,6 +29,7 @@ import NotificationCenter from "./NotificationCenter";
 import { ElosLogo } from "./ElosLogo";
 import { useLumoData } from "@/contexts/LumoDataContext";
 import { buildPerformanceAlerts } from "@/lib/performanceMetrics";
+import { buildProductivityAlerts } from "@/lib/productivityLimits";
 import type { PerformanceAlert } from "@/types/goals";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -112,10 +113,13 @@ function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
-  const { todayIndicators } = useLumoData();
+  const { todayIndicators, productivityRecords, productivityLimits } = useLumoData();
   const performanceAlerts = useMemo(
-    () => buildPerformanceAlerts(todayIndicators),
-    [todayIndicators]
+    () => [
+      ...buildPerformanceAlerts(todayIndicators),
+      ...buildProductivityAlerts(productivityRecords, productivityLimits),
+    ],
+    [todayIndicators, productivityRecords, productivityLimits]
   );
   const [location, setLocation] = useLocation();
   const { isMobile, openMobile, setOpenMobile } = useSidebar();

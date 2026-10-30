@@ -23,6 +23,7 @@ import ManagementReportButton from "@/components/ManagementReportButton";
 import DetailedAnalysisSummary from "@/components/DetailedAnalysisSummary";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
+import { describeChange, previousRange } from "@/lib/periodComparison";
 import DashboardKpiCard from "@/components/DashboardKpiCard";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
 import {
@@ -118,6 +119,15 @@ export default function Dashboard() {
     ]
   );
 
+  const previous = useMemo(() => {
+    const range = previousRange(dateRange);
+    const records = mergePeriodTotals(dailyRecords, productivityRecords, range);
+    return {
+      name: range.name,
+      stats: buildDashboardStats(attendants, records, productionGoals, { ...range }),
+    };
+  }, [dailyRecords, productivityRecords, attendants, productionGoals, dateRange]);
+
   const channelTotal = channelDistribution.reduce((sum, item) => sum + item.value, 0);
   const formatCount = (value: number) => value.toLocaleString("pt-BR");
 
@@ -144,6 +154,7 @@ export default function Dashboard() {
           ? `${formatCount(channelTotals.ligacao)} Ligação · ${formatCount(channelTotals.whatsapp)} WhatsApp`
           : "Sem registros no período",
       footnote: `${dashboardStats.attendantsWithRecords} colaboradores com registros`,
+      delta: describeChange(channelTotals.total, previous.stats.totalAttendances, previous.name),
       trend: "up" as const,
       icon: TrendingUp,
       iconBg: "bg-emerald-50 dark:bg-emerald-500/15",
@@ -158,6 +169,12 @@ export default function Dashboard() {
           ? `${dashboardStats.averagePercentage.toFixed(0)}%`
           : "—",
       comparison: "média de atingimento da equipe",
+      delta: describeChange(
+        dashboardStats.averagePercentage,
+        previous.stats.averagePercentage,
+        previous.name,
+        { unit: "points" }
+      ),
       trend: dashboardStats.averagePercentage >= 85 ? ("up" as const) : ("down" as const),
       icon: Target,
       iconBg: "bg-violet-50 dark:bg-violet-500/15",

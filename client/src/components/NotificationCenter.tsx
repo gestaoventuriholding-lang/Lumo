@@ -99,9 +99,9 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
       <PopoverContent align="end" className="w-[min(24rem,calc(100vw-2rem))] p-0">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
-            <h3 className="font-semibold text-foreground text-sm">Alertas de hoje</h3>
+            <h3 className="font-semibold text-foreground text-sm">Alertas</h3>
             <p className="text-xs text-muted-foreground">
-              Colaboradores abaixo ou próximos da meta
+              Metas de produção e limites de pausa e ocupação
             </p>
           </div>
           {unreadCount > 0 && (
@@ -133,7 +133,7 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          {alert.percentage.toFixed(1)}% da meta · {alert.role}
+                          {alert.footer ?? `${alert.percentage.toFixed(1)}% da meta · ${alert.role}`}
                         </p>
                       </div>
                       <button
@@ -162,10 +162,10 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
               <div className="py-8 px-4 text-center">
                 <Bell className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
                 <p className="text-sm font-medium text-foreground">
-                  Nenhum alerta hoje
+                  Nenhum alerta
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Todos os colaboradores registrados estão dentro da meta.
+                  Todos estão dentro das metas e dos limites.
                 </p>
               </div>
             )}

@@ -28,6 +28,7 @@ export const KEYS = {
   preferences: "lumo-user-preferences",
   analysisNote: "lumo-analysis-note",
   productivity: "lumo-productivity-reports",
+  productivityLimits: "lumo-productivity-limits",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -229,6 +230,24 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       id: num(r.id),
       channel: str(r.channel),
       dailyTarget: num(r.daily_target),
+      status: str(r.status),
+      createdAt: str(r.created_at).slice(0, 10),
+      updatedAt: str(r.updated_at).slice(0, 10),
+    }),
+  },
+  [KEYS.productivityLimits]: {
+    table: "productivity_limits",
+    order: "created_at",
+    toRow: (l) => ({
+      id: l.id,
+      metric: l.metric,
+      limit_value: num(l.value),
+      status: l.status ?? "Ativo",
+    }),
+    fromRow: (r) => ({
+      id: num(r.id),
+      metric: str(r.metric),
+      value: num(r.limit_value),
       status: str(r.status),
       createdAt: str(r.created_at).slice(0, 10),
       updatedAt: str(r.updated_at).slice(0, 10),
@@ -518,6 +537,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     fetchAll("import_logs", "created_at"),
     // tolerante: se a tabela nova ainda não existir no banco, o resto do app continua funcionando
     fetchAll("productivity_reports", "period_start").catch((): Row[] => []),
+    fetchAll("productivity_limits", "created_at").catch((): Row[] => []),
   ]);
   const attendantNames = new Map(attendantRows.map((r) => [num(r.id), str(r.name)]));
   const ctx = { attendantNames };
@@ -531,6 +551,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     KEYS.roleGoals,
     KEYS.importLog,
     KEYS.productivity,
+    KEYS.productivityLimits,
   ];
   const allRows = [attendantRows, ...otherRows];
   keysInOrder.forEach((key, index) => {

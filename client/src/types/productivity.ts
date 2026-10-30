@@ -1,4 +1,17 @@
-import type { AttendanceChannel } from "./goals";
+import type { AttendanceChannel, GoalStatus } from "./goals";
+
+/** Indicadores do relatório que podem ter limite: os valores são sempre porcentagens (0 a 100) */
+export type ProductivityLimitMetric = "pause_unproductive_percent" | "pause_percent" | "occupancy_min";
+
+export interface ProductivityLimit {
+  id: number;
+  metric: ProductivityLimitMetric;
+  /** Máximo permitido (pausas) ou mínimo esperado (ocupação), em % */
+  value: number;
+  status: GoalStatus;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /** Produtividade de um colaborador em um período (relatório por dia = período de 1 dia) */
 export interface ProductivityRecord {

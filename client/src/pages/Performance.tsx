@@ -50,6 +50,8 @@ import type { DailyPerformanceRecord } from "@/types/performance";
 import { motion } from "@/lib/motionVariants";
 import { Plus, Edit2, Trash2, Clock, Phone, Users, Target } from "lucide-react";
 import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
+import ChangeBadge from "@/components/ChangeBadge";
+import { describeChange, kpisFromSummaries, previousRange } from "@/lib/periodComparison";
 import ProductivitySection from "@/components/ProductivitySection";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
@@ -105,6 +107,7 @@ export default function Performance() {
     attendants,
     performanceRecords: records,
     productivityRecords,
+    productivityLimits,
     removeProductivityRecords,
     productionGoals,
     addPerformanceRecord,
@@ -171,34 +174,15 @@ export default function Performance() {
     [summaryRecords, attendants, productionGoals, displayRange]
   );
 
-  const kpis = useMemo(() => {
-    const withData = attendantSummaries.filter((summary) => summary.totalAttendances > 0);
+  const kpis = useMemo(() => kpisFromSummaries(attendantSummaries), [attendantSummaries]);
 
-    if (withData.length === 0) {
-      return {
-        totalAttendances: 0,
-        averageTime: 0,
-        attendantsCount: 0,
-        averagePercentage: 0,
-      };
-    }
-
-    const totalAttendances = withData.reduce((sum, summary) => sum + summary.totalAttendances, 0);
-    const weightedTime =
-      withData.reduce(
-        (sum, summary) => sum + summary.averageTimeMinutes * summary.totalAttendances,
-        0
-      ) / totalAttendances;
-    const averagePercentage =
-      withData.reduce((sum, summary) => sum + summary.averagePercentage, 0) / withData.length;
-
-    return {
-      totalAttendances,
-      averageTime: weightedTime,
-      attendantsCount: withData.length,
-      averagePercentage,
-    };
-  }, [attendantSummaries]);
+  const previousInfo = useMemo(() => previousRange(displayRange), [displayRange]);
+  const previousKpis = useMemo(() => {
+    const prevRecords = mergePeriodTotals(records, productivityRecords, previousInfo);
+    return kpisFromSummaries(
+      buildAttendantSummaries(prevRecords, attendants, productionGoals, { ...previousInfo })
+    );
+  }, [records, productivityRecords, attendants, productionGoals, previousInfo]);
 
   const summaryRows = useMemo(
     () =>
@@ -414,6 +398,7 @@ export default function Performance() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold"><AnimatedNumber value={kpis.totalAttendances} /></p>
+            <ChangeBadge className="mt-1" change={describeChange(kpis.totalAttendances, previousKpis.totalAttendances, previousInfo.name)} />
           </CardContent>
         </Card>
 </motion.div>
@@ -430,6 +415,7 @@ export default function Performance() {
             <p className="text-2xl font-bold">
               <AnimatedText text={kpis.averageTime > 0 ? formatAverageTime(kpis.averageTime) : "—"} />
             </p>
+            <ChangeBadge className="mt-1" change={describeChange(kpis.averageTime, previousKpis.averageTime, previousInfo.name, { lowerIsBetter: true })} />
           </CardContent>
         </Card>
 </motion.div>
@@ -460,6 +446,7 @@ export default function Performance() {
             <p className="text-2xl font-bold">
               <AnimatedText text={kpis.averagePercentage > 0 ? `${Math.round(kpis.averagePercentage)}%` : "—"} />
             </p>
+            <ChangeBadge className="mt-1" change={describeChange(kpis.averagePercentage, previousKpis.averagePercentage, previousInfo.name, { unit: "points" })} />
           </CardContent>
         </Card>
 </motion.div>
@@ -470,6 +457,7 @@ export default function Performance() {
           records={productivityRecords}
           attendantIds={attendantIds}
           range={displayRange}
+          limits={productivityLimits}
           onRemove={removeProductivityRecords}
         />
       </motion.div>

@@ -13,6 +13,7 @@ import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import GoalsManagement from "@/components/GoalsManagement";
+import ProductivityLimitsCard from "@/components/ProductivityLimitsCard";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
   AlertDialog,
@@ -214,6 +215,26 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
             <GoalsManagement />
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Limites de pausa e ocupação do relatório de produtividade */}
+      <motion.div variants={pageItemVariants}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Target className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Limites de pausa e ocupação</CardTitle>
+                <CardDescription>
+                  Defina o que é aceitável nos relatórios importados e receba alertas de quem passar
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ProductivityLimitsCard />
           </CardContent>
         </Card>
       </motion.div>

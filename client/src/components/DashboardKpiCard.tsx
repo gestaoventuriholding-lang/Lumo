@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { motion, cardItemVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { AnimatedText } from "@/components/AnimatedNumber";
 import type { LucideIcon } from "lucide-react";
+import ChangeBadge from "@/components/ChangeBadge";
+import type { Change } from "@/lib/periodComparison";
 
 type SparkPoint = { v: number };
 
@@ -11,6 +13,8 @@ interface DashboardKpiCardProps {
   value: string;
   comparison: string;
   footnote?: string;
+  /** Variação frente ao período anterior */
+  delta?: Change;
   trend: "up" | "down" | "neutral";
   icon: LucideIcon;
   iconBg: string;
@@ -24,6 +28,7 @@ export default function DashboardKpiCard({
   value,
   comparison,
   footnote,
+  delta,
   trend,
   icon: Icon,
   iconBg,
@@ -72,6 +77,7 @@ export default function DashboardKpiCard({
       >
         {comparison}
       </p>
+      {delta ? <ChangeBadge change={delta} className="mt-1" /> : null}
       {footnote ? <p className="mt-1 text-xs text-muted-foreground">{footnote}</p> : null}
     </motion.div>
   );

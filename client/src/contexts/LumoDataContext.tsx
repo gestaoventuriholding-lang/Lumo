@@ -34,7 +34,7 @@ import {
   type ProductivityImportResult,
 } from "@/lib/productivityImport";
 import type { ProductivityReport } from "@/lib/reportParser";
-import type { ProductivityRecord } from "@/types/productivity";
+import type { ProductivityLimit, ProductivityRecord } from "@/types/productivity";
 import {
   executePerformanceImport,
   type ImportBatchOptions,
@@ -42,6 +42,7 @@ import {
   type ImportPlan,
 } from "@/lib/spreadsheetImport";
 import { appendImportLog } from "@/lib/importLogStorage";
+import { loadProductivityLimits, saveProductivityLimits } from "@/lib/productivityLimitsStorage";
 import {
   loadProductionGoals,
   loadRoleGoals,
@@ -61,6 +62,7 @@ interface LumoDataContextValue {
   calendarEvents: CalendarEvent[];
   productionGoals: ProductionGoal[];
   roleGoals: RoleGoal[];
+  productivityLimits: ProductivityLimit[];
 
   addAttendant: (input: AttendantInput) => Attendant;
   updateAttendant: (id: number, input: AttendantInput) => void;
@@ -94,6 +96,7 @@ interface LumoDataContextValue {
 
   setProductionGoals: (goals: ProductionGoal[]) => void;
   setRoleGoals: (goals: RoleGoal[]) => void;
+  setProductivityLimits: (limits: ProductivityLimit[]) => void;
 
   todayIndicators: PerformanceIndicator[];
 }
@@ -116,6 +119,9 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     loadProductionGoals()
   );
   const [roleGoals, setRoleGoalsState] = useState<RoleGoal[]>(() => loadRoleGoals());
+  const [productivityLimits, setProductivityLimitsState] = useState<ProductivityLimit[]>(() =>
+    loadProductivityLimits()
+  );
 
   const setAttendants = useCallback((updater: Attendant[] | ((prev: Attendant[]) => Attendant[])) => {
     setAttendantsState((prev) => {
@@ -443,6 +449,11 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     saveRoleGoals(goals);
   }, []);
 
+  const setProductivityLimits = useCallback((limits: ProductivityLimit[]) => {
+    setProductivityLimitsState(limits);
+    saveProductivityLimits(limits);
+  }, []);
+
   const today = todayRange();
 
   const todayIndicators = useMemo(
@@ -459,6 +470,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       calendarEvents,
       productionGoals,
       roleGoals,
+      productivityLimits,
       addAttendant,
       updateAttendant,
       removeAttendant,
@@ -478,6 +490,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       importProductivityReport,
       setProductionGoals,
       setRoleGoals,
+      setProductivityLimits,
       todayIndicators,
     }),
     [
@@ -488,6 +501,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       calendarEvents,
       productionGoals,
       roleGoals,
+      productivityLimits,
       addAttendant,
       updateAttendant,
       removeAttendant,
@@ -507,6 +521,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
       importProductivityReport,
       setProductionGoals,
       setRoleGoals,
+      setProductivityLimits,
       todayIndicators,
     ]
   );

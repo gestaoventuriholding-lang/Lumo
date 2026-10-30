@@ -11,6 +11,9 @@ export interface ProductivitySummaryRow {
   loginSeconds?: number;
   pauseSeconds?: number;
   pausePercent?: number;
+  pauseUnproductiveSeconds?: number;
+  /** Pausa improdutiva em % do tempo logado */
+  pauseUnproductivePercent?: number;
   occupancy?: number;
   perHour?: number;
   /** Registros que formam esta linha (para excluir só desta pessoa) */
@@ -62,6 +65,7 @@ export function summarizeProductivity(
     const attendances = list.reduce((acc, r) => acc + r.attendancesCount, 0);
     const loginSeconds = sum(list.map((r) => r.loginSeconds));
     const pauseSeconds = sum(list.map((r) => r.pauseSeconds));
+    const pauseUnproductiveSeconds = sum(list.map((r) => r.pauseUnproductiveSeconds));
 
     const tmaWeight = list.filter((r) => r.tmaSeconds != null && r.attendancesCount > 0);
     const tmaTotal = tmaWeight.reduce((acc, r) => acc + (r.tmaSeconds ?? 0) * r.attendancesCount, 0);
@@ -98,6 +102,11 @@ export function summarizeProductivity(
       pausePercent:
         loginSeconds && loginSeconds > 0 && pauseSeconds != null
           ? Math.round((pauseSeconds / loginSeconds) * 1000) / 10
+          : undefined,
+      pauseUnproductiveSeconds,
+      pauseUnproductivePercent:
+        loginSeconds && loginSeconds > 0 && pauseUnproductiveSeconds != null
+          ? Math.round((pauseUnproductiveSeconds / loginSeconds) * 1000) / 10
           : undefined,
       occupancy: occBase > 0 ? Math.round((occTotal / occBase) * 100) / 100 : undefined,
       perHour:

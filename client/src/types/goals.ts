@@ -62,6 +62,8 @@ export interface PerformanceAlert {
   produced: number;
   percentage: number;
   message: string;
+  /** Texto curto no rodapé do alerta (padrão: "% da meta · função") */
+  footer?: string;
   alertLevel: AlertLevel;
   timestamp: string;
   read: boolean;
