@@ -597,7 +597,7 @@ export default function Performance() {
             <CardHeader>
               <CardTitle>Atendimentos por Colaborador</CardTitle>
               <CardDescription>
-                {displayRange.label} · Barras laranja = Ligação · Barras cinza = WhatsApp
+                {displayRange.label} · Barras laranja = Ligação · Barras neutras = WhatsApp
               </CardDescription>
             </CardHeader>
             <CardContent>

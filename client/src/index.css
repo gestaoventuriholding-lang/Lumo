@@ -86,6 +86,7 @@
   --chart-4: #d4d1cc;
   --chart-5: #9a9794;
   --chart-grid: #e7e5e1;
+  --channel-whatsapp: #1a1a1a; /* segundo canal: preto da marca (claro no modo escuro) */
   --sidebar: #ffffff;
   --sidebar-foreground: #141414;
   --sidebar-primary: #ff6b00;
@@ -123,6 +124,7 @@
   --primary-foreground: #141414;
   --ring: #ff8a00;
   --chart-grid: #2a2a2a;
+  --channel-whatsapp: #f2f1ef;
   --sidebar: #1e1e1e;
   --sidebar-foreground: #f2f1ef;
   --sidebar-primary: #ff8a00;

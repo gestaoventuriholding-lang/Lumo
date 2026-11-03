@@ -13,7 +13,7 @@ export const chartColors = {
   series: [PRIMARY, "#6B6866", "#A3A09C", "#D4D1CC", "#9A9794"],
   /** Canais da central */
   ligacao: PRIMARY,
-  whatsapp: "#6B6866",
+  whatsapp: "var(--channel-whatsapp)",
   /** Estados */
   positive: "#2F7D5B",
   warning: "#B7791F",

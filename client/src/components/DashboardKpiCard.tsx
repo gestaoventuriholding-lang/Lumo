@@ -21,6 +21,10 @@ interface DashboardKpiCardProps {
   iconColor: string;
   sparkColor: string;
   sparkData: SparkPoint[];
+  /** "dark" é o cartão de destaque: fundo preto da marca, número laranja */
+  variant?: "light" | "dark";
+  /** 0 a 100: mostra uma barra de progresso laranja */
+  progress?: number;
 }
 
 export default function DashboardKpiCard({
@@ -35,15 +39,26 @@ export default function DashboardKpiCard({
   iconColor,
   sparkColor,
   sparkData,
+  variant = "light",
+  progress,
 }: DashboardKpiCardProps) {
+  const dark = variant === "dark";
   return (
-    <motion.div variants={cardItemVariants} className="ellos-panel-sm p-4 transition-[box-shadow,border-color] duration-200 hover:border-primary/30 hover:shadow-raised">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", iconBg)}>
-          <Icon className={cn("h-5 w-5", iconColor)} />
+    <motion.div
+      variants={cardItemVariants}
+      className={cn(
+        "ellos-panel-sm relative overflow-hidden p-5 transition-colors duration-200",
+        dark
+          ? "border-[#1a1a1a] bg-[#1a1a1a] text-white dark:border-border"
+          : "border-t-[3px] border-t-primary hover:border-primary/40"
+      )}
+    >
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className={cn("flex h-11 w-11 items-center justify-center rounded-lg", dark ? "bg-white/10" : iconBg)}>
+          <Icon className={cn("h-[22px] w-[22px]", dark ? "text-primary" : iconColor)} />
         </div>
         {sparkData.length > 1 && (
-          <div className="h-10 w-[72px] shrink-0">
+          <div className="h-11 w-24 shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sparkData}>
                 <Area
@@ -51,8 +66,8 @@ export default function DashboardKpiCard({
                   dataKey="v"
                   stroke={sparkColor}
                   fill={sparkColor}
-                  fillOpacity={0.12}
-                  strokeWidth={1.5}
+                  fillOpacity={dark ? 0.25 : 0.18}
+                  strokeWidth={2}
                   dot={false}
                   isAnimationActive
                   animationDuration={CHART_DRAW_MS}
@@ -63,22 +78,33 @@ export default function DashboardKpiCard({
           </div>
         )}
       </div>
-      <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <p className="font-display mt-1 text-2xl font-bold text-foreground">
+      <p className={cn("text-sm font-medium", dark ? "text-white/70" : "text-muted-foreground")}>{title}</p>
+      <p className={cn("font-display mt-1 text-3xl font-bold", dark ? "text-primary" : "text-foreground")}>
         <AnimatedText text={value} />
       </p>
+      {progress !== undefined && (
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-primary-soft">
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+          />
+        </div>
+      )}
       <p
         className={cn(
-          "mt-2 text-xs font-medium",
-          trend === "up" && "text-success",
-          trend === "down" && "text-danger",
-          trend === "neutral" && "text-muted-foreground"
+          "mt-3 text-xs font-medium",
+          dark && "text-white/70",
+          !dark && trend === "up" && "text-success",
+          !dark && trend === "down" && "text-danger",
+          !dark && trend === "neutral" && "text-muted-foreground"
         )}
       >
         {comparison}
       </p>
       {delta ? <ChangeBadge change={delta} className="mt-1" /> : null}
-      {footnote ? <p className="mt-1 text-xs text-muted-foreground">{footnote}</p> : null}
+      {footnote ? (
+        <p className={cn("mt-1 text-xs", dark ? "text-white/60" : "text-muted-foreground")}>{footnote}</p>
+      ) : null}
     </motion.div>
   );
 }

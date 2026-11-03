@@ -14,7 +14,17 @@ import {
 import { motion, pageContainerVariants, pageItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import { mergePeriodTotals } from "@/lib/periodTotals";
-import { Users, TrendingUp, Target, AlertCircle, Download, ArrowRight, Trophy } from "lucide-react";
+import {
+  Users,
+  TrendingUp,
+  Target,
+  AlertCircle,
+  Download,
+  ArrowRight,
+  Trophy,
+  BarChart3,
+  PieChart as PieIcon,
+} from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import ExportModal from "@/components/ExportModal";
@@ -225,9 +235,9 @@ export default function Dashboard() {
       comparison: `${attendants.length} cadastrados no sistema`,
       trend: "neutral" as const,
       icon: Users,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
-      sparkColor: chartColors.series[1],
+      iconBg: "bg-primary-soft",
+      iconColor: "text-primary",
+      sparkColor: chartColors.primary,
       sparkData: attendanceSpark,
     },
     {
@@ -241,10 +251,11 @@ export default function Dashboard() {
       delta: describeChange(channelTotals.total, previous.stats.totalAttendances, previous.name),
       trend: "up" as const,
       icon: TrendingUp,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
+      iconBg: "bg-primary-soft",
+      iconColor: "text-primary",
       sparkColor: chartColors.primary,
       sparkData: attendanceSpark,
+      variant: "dark" as const,
     },
     {
       title: periodMetaLabel(period),
@@ -261,10 +272,11 @@ export default function Dashboard() {
       ),
       trend: dashboardStats.averagePercentage >= 85 ? ("up" as const) : ("down" as const),
       icon: Target,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
-      sparkColor: chartColors.series[1],
+      iconBg: "bg-primary-soft",
+      iconColor: "text-primary",
+      sparkColor: chartColors.primary,
       sparkData: productivitySpark,
+      progress: dashboardStats.averagePercentage,
     },
     {
       title: "Dias de Ausência",
@@ -272,9 +284,9 @@ export default function Dashboard() {
       comparison: "total no período selecionado",
       trend: totalAbsenceDays > 0 ? ("down" as const) : ("neutral" as const),
       icon: AlertCircle,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
-      sparkColor: chartColors.series[1],
+      iconBg: "bg-primary-soft",
+      iconColor: "text-primary",
+      sparkColor: chartColors.primary,
       sparkData: [],
     },
   ];
@@ -296,13 +308,18 @@ export default function Dashboard() {
     >
       <motion.div
         variants={pageItemVariants}
-        className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+        className="flex flex-col gap-4 rounded-lg border border-primary/20 bg-primary-soft p-6 lg:flex-row lg:items-center lg:justify-between"
       >
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-          <p className="mt-1 text-muted-foreground">
-            Visão rápida do período: totais, evolução e canais. O detalhe por pessoa fica em Desempenho
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground sm:flex">
+            <BarChart3 className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <p className="mt-1 text-muted-foreground">
+              Visão rápida do período: totais, evolução e canais. O detalhe por pessoa fica em Desempenho
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
           <ManagementReportButton variant="outline" className="gap-2 bg-card" />
@@ -330,7 +347,10 @@ export default function Dashboard() {
 
       <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="ellos-panel-sm p-5 xl:col-span-2">
-          <div className="mb-4 flex items-start justify-between gap-2">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+              <BarChart3 className="h-5 w-5 text-primary" />
+            </div>
             <div>
               <h2 className="text-base font-bold text-foreground">Evolução de Atendimentos</h2>
               <p className="text-sm text-muted-foreground">Volume diário por canal no período</p>
@@ -344,9 +364,14 @@ export default function Dashboard() {
         </div>
 
         <div className="ellos-panel-sm p-5">
-          <div className="mb-2">
-            <h2 className="text-base font-bold text-foreground">Distribuição por Canal</h2>
-            <p className="text-sm text-muted-foreground">Ligação e WhatsApp no período</p>
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+              <PieIcon className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">Distribuição por Canal</h2>
+              <p className="text-sm text-muted-foreground">Ligação e WhatsApp no período</p>
+            </div>
           </div>
           {channelDistribution.length > 0 ? (
             <div className="relative">
@@ -407,21 +432,23 @@ export default function Dashboard() {
       <motion.div variants={pageItemVariants}>
         <Link
           href="/performance"
-          className="ellos-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/30"
+          className="ellos-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:border-primary/40"
         >
           <span className="flex items-center gap-3">
-            <Trophy className="h-5 w-5 text-muted-foreground" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Trophy className="h-5 w-5" />
+            </span>
             <span>
               <span className="block text-sm font-semibold text-foreground">Ranking e produtividade por colaboradora</span>
               <span className="block text-xs text-muted-foreground">Veja quem mais atendeu, a meta e o TMA em Desempenho</span>
             </span>
           </span>
-          <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="h-[18px] w-[18px] text-primary transition-transform group-hover:translate-x-0.5" />
         </Link>
       </motion.div>
 
       <motion.details variants={pageItemVariants} className="ellos-panel-sm overflow-hidden">
-        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-foreground">
+        <summary className="cursor-pointer border-l-[3px] border-l-primary px-5 py-4 text-sm font-semibold text-foreground">
           Análise detalhada
         </summary>
         <div className="border-t border-border/60 px-5 pb-5 pt-4">
