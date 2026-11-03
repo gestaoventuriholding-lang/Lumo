@@ -283,21 +283,21 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           className={cn(
             "relative h-9 gap-3 rounded-lg px-3 text-sm group-data-[collapsible=icon]:size-auto! group-data-[collapsible=icon]:h-9! group-data-[collapsible=icon]:w-full! group-data-[collapsible=icon]:px-3!",
             isActive
-              ? "font-semibold text-white hover:bg-transparent hover:text-white active:bg-transparent active:text-white data-[active=true]:bg-transparent data-[active=true]:text-white"
-              : "font-medium text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/10 active:text-white data-[active=true]:bg-white/10 data-[active=true]:text-white"
+              ? "font-semibold text-primary hover:bg-transparent hover:text-primary active:bg-transparent active:text-primary data-[active=true]:bg-transparent data-[active=true]:text-primary"
+              : "font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:bg-accent active:text-foreground data-[active=true]:bg-accent data-[active=true]:text-foreground"
           )}
         >
           {isActive && (
             <motion.span
               layoutId="sidebar-active-pill"
-              className="absolute inset-0 rounded-lg bg-blue-600 shadow-md shadow-blue-600/25"
+              className="absolute inset-0 rounded-lg bg-primary-soft"
               transition={{ duration: 0.3, ease: smoothEase }}
             />
           )}
           <item.icon
             className={cn(
-              "relative h-4 w-4",
-              isActive ? "text-white" : "text-slate-400 group-hover/menu-button:text-white"
+              "relative h-[18px] w-[18px]",
+              isActive ? "text-primary" : "text-muted-foreground group-hover/menu-button:text-foreground"
             )}
           />
           <span className={cn("relative whitespace-nowrap", labelClass)}>{item.label}</span>
@@ -347,10 +347,10 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           </SidebarMenu>
           <button
             onClick={(event) => toggleTheme?.(event.currentTarget)}
-            className="flex h-9 w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-sm text-slate-300 transition-colors hover:bg-white/10 hover:text-white active:bg-white/10"
+            className="flex h-9 w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent"
             title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
           >
-            <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
+            <span className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
                   key={theme}
@@ -360,7 +360,7 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
                   exit={{ rotate: 90, scale: 0.6, opacity: 0 }}
                   transition={{ duration: 0.2, ease: smoothEase }}
                 >
-                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
                 </motion.span>
               </AnimatePresence>
             </span>
@@ -369,16 +369,16 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
             </span>
           </button>
           <div className="flex w-full items-center gap-2 overflow-hidden rounded-lg px-0.5 py-1">
-            <Avatar className="h-9 w-9 shrink-0 border border-slate-700 bg-slate-800">
-              <AvatarFallback className="bg-blue-600 text-sm font-bold text-white">
+            <Avatar className="h-9 w-9 shrink-0 border border-border bg-muted">
+              <AvatarFallback className="bg-muted text-sm font-semibold text-foreground">
                 {(user?.name ?? "Gestor").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className={cn("min-w-0 flex-1", labelClass)}>
-              <p className="truncate text-sm font-medium leading-none text-white">
+              <p className="truncate text-sm font-medium leading-none text-foreground">
                 {user?.name || "Gestor"}
               </p>
-              <p className="mt-1 truncate text-xs text-slate-400">
+              <p className="mt-1 truncate text-xs text-muted-foreground">
                 {isAdmin ? "Administrador" : "Usuário"}
               </p>
             </div>
@@ -389,18 +389,18 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
               aria-label="Sair"
               tabIndex={isIconOnly ? -1 : 0}
               className={cn(
-                "shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white",
+                "shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
                 labelClass
               )}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-[18px] w-[18px]" />
             </button>
           </div>
         </SidebarFooter>
       </Sidebar>
       {!isMobile && !isIconOnly && (
         <div
-          className="absolute top-0 hidden h-full w-1 cursor-col-resize transition-colors hover:bg-blue-500/40 md:block"
+          className="absolute top-0 hidden h-full w-1 cursor-col-resize transition-colors hover:bg-border md:block"
           onMouseDown={() => setIsResizing(true)}
           onMouseEnter={handleSidebarEnter}
           style={{ left: "calc(var(--sidebar-width) - 4px)", zIndex: 60 }}
@@ -430,9 +430,9 @@ const LayoutMain = memo(function LayoutMain({
         isStructurePage && "h-svh max-h-svh overflow-hidden"
       )}
     >
-      <div className="z-40 flex h-12 shrink-0 items-center justify-between border-b border-border bg-card/85 px-3 backdrop-blur-md shadow-surface md:px-4">
+      <div className="z-40 flex h-12 shrink-0 items-center justify-between border-b border-border bg-card px-3 md:px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-base font-medium tracking-tight text-foreground">
+          <span className="font-display truncate text-base font-semibold text-foreground">
             {pageTitle}
           </span>
         </div>

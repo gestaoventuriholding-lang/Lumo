@@ -134,7 +134,7 @@ export default function GoalsManagement({ onDataChange }: GoalsManagementProps) 
               </div>
               <Button
                 onClick={() => handleOpenProductionModal()}
-                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shrink-0"
+                className="gap-2 shrink-0"
                 size="sm"
               >
                 <Plus className="h-4 w-4" />
@@ -177,7 +177,7 @@ export default function GoalsManagement({ onDataChange }: GoalsManagementProps) 
                             {goal.channel}
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm font-semibold text-blue-600">
+                            <span className="text-sm font-semibold text-foreground">
                               {goal.dailyTarget}
                             </span>
                           </TableCell>
@@ -185,7 +185,7 @@ export default function GoalsManagement({ onDataChange }: GoalsManagementProps) 
                             <span
                               className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                                 goal.status === "Ativo"
-                                  ? "bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400"
+                                  ? "bg-success/10 text-success"
                                   : "bg-muted text-muted-foreground"
                               }`}
                             >
@@ -198,19 +198,19 @@ export default function GoalsManagement({ onDataChange }: GoalsManagementProps) 
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleOpenProductionModal(goal)}
-                                className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                className="p-2 hover:bg-accent rounded-lg transition-colors"
                                 title="Editar"
                               >
-                                <Edit2 className="h-4 w-4 text-blue-600" />
+                                <Edit2 className="h-[18px] w-[18px] text-muted-foreground" />
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setDeleteConfirmId(goal.id)}
-                                className="p-2 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                                className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
                                 title="Excluir"
                               >
-                                <Trash2 className="h-4 w-4 text-red-600" />
+                                <Trash2 className="h-[18px] w-[18px] text-danger" />
                               </motion.button>
                             </div>
                           </TableCell>
@@ -316,7 +316,7 @@ export default function GoalsManagement({ onDataChange }: GoalsManagementProps) 
               <Button variant="outline" onClick={() => setIsProductionModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSaveProductionGoal} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={handleSaveProductionGoal}>
                 Salvar
               </Button>
             </div>

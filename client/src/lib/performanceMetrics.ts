@@ -10,6 +10,7 @@ import type {
 import type { DailyPerformanceRecord } from "@/types/performance";
 import type { DateRange } from "@/lib/dateRangeFilter";
 import { getLocalDateString } from "@/lib/performanceStorage";
+import { chartColors } from "@/lib/chartTheme";
 import { isChannelSummaryImportRow, normalizeName } from "@/lib/spreadsheetImport";
 
 function getAlertLevel(percentage: number): AlertLevel {
@@ -444,11 +445,11 @@ export function buildAttendancesTrend(
     }));
 }
 
-const TEAM_CHART_COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899"];
+const TEAM_CHART_COLORS = chartColors.series;
 
 export const CHANNEL_CHART_COLORS = {
-  ligacao: "#3b82f6",
-  whatsapp: "#10b981",
+  ligacao: chartColors.ligacao,
+  whatsapp: chartColors.whatsapp,
 } as const;
 
 export function buildChannelDistribution(

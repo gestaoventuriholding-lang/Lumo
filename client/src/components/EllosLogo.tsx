@@ -1,79 +1,39 @@
-import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 type EllosLogoProps = {
   className?: string;
-  /** "mark" mostra só o símbolo; "full" mostra símbolo + nome */
+  /** "mark" mostra só o "e"; "full" mostra o nome inteiro */
   variant?: "full" | "mark";
-  /** "onDark": para fundos azul-marinho (menu lateral). "onLight": segue o tema da página */
-  tone?: "onDark" | "onLight";
-  /** Esconde o nome com fade (menu lateral recolhido); o símbolo continua no mesmo lugar */
+  /** Esconde "llos" com fade (menu lateral recolhido); o "e" continua no mesmo lugar */
   collapsed?: boolean;
 };
 
-const BRAND_BLUE = "#3366FF";
-const BRAND_NAVY = "#0B1F44";
-
-/** Dois elos entrelaçados: um azul e um claro (branco no escuro, marinho no claro) */
-export function EllosMark({
-  className,
-  tone = "onDark",
-}: {
-  className?: string;
-  tone?: "onDark" | "onLight";
-}) {
-  const clipId = useId();
-  const halo = tone === "onDark" ? BRAND_NAVY : "var(--card)";
-  const linkColor = tone === "onDark" ? "text-white" : "text-[#0B1F44] dark:text-white";
-
+/**
+ * Wordmark provisório em texto: "ellos" minúsculo, Manrope 700, com o "e" em laranja.
+ * Quando os arquivos /brand/ellos-symbol.svg e /brand/ellos-logo.svg forem adicionados em
+ * client/public/brand/, troque o conteúdo deste componente por <img> apontando para eles.
+ */
+export function EllosLogo({ className, variant = "full", collapsed = false }: EllosLogoProps) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      fill="none"
+    <span
       role="img"
       aria-label="Ellos"
-      className={cn("shrink-0", linkColor, className)}
+      className={cn(
+        "font-display inline-flex select-none items-baseline text-[1.65rem] font-bold leading-none text-foreground",
+        className
+      )}
     >
-      <defs>
-        <clipPath id={clipId}>
-          <rect x="24" y="0" width="30" height="48" />
-        </clipPath>
-      </defs>
-      <g transform="rotate(-45 24 24)" strokeWidth="5.5" strokeLinecap="round">
-        <rect x="7" y="20" width="34" height="17" rx="8.5" stroke={BRAND_BLUE} />
-        <rect x="7" y="11" width="34" height="17" rx="8.5" stroke={halo} strokeWidth="9.5" />
-        <rect x="7" y="11" width="34" height="17" rx="8.5" stroke="currentColor" />
-        <g clipPath={`url(#${clipId})`}>
-          <rect x="7" y="20" width="34" height="17" rx="8.5" stroke={halo} strokeWidth="9.5" />
-          <rect x="7" y="20" width="34" height="17" rx="8.5" stroke={BRAND_BLUE} />
-        </g>
-      </g>
-    </svg>
-  );
-}
-
-export function EllosLogo({
-  className,
-  variant = "full",
-  tone = "onDark",
-  collapsed = false,
-}: EllosLogoProps) {
-  if (variant === "mark") {
-    return <EllosMark tone={tone} className={cn("h-9 w-9", className)} />;
-  }
-
-  return (
-    <span className={cn("inline-flex items-center gap-2 select-none", className)}>
-      <EllosMark tone={tone} className="h-9 w-9" />
-      <span
-        className={cn(
-          "text-[1.65rem] font-semibold leading-none tracking-tight transition-[opacity,transform] duration-200 ease-out",
-          collapsed ? "-translate-x-2 opacity-0" : "translate-x-0 opacity-100 delay-100",
-          tone === "onDark" ? "text-white" : "text-[#0B1F44] dark:text-white"
-        )}
-      >
-        Ellos
-      </span>
+      <span className="text-primary">e</span>
+      {variant === "full" && (
+        <span
+          className={cn(
+            "transition-[opacity,transform] duration-200 ease-out",
+            collapsed ? "-translate-x-2 opacity-0" : "translate-x-0 opacity-100 delay-100"
+          )}
+        >
+          llos
+        </span>
+      )}
     </span>
   );
 }

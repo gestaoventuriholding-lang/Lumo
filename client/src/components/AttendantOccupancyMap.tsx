@@ -22,15 +22,15 @@ const NAME_COLUMN = "w-[210px] shrink-0";
 const CHANNEL_STYLE = {
   Ligação: {
     icon: Phone,
-    rgb: "51 102 255",
-    chip: "bg-[#3366FF]/12 text-[#3366FF] dark:bg-[#7BA7FF]/15 dark:text-[#7BA7FF]",
-    bar: "from-[#3366FF] to-[#7BA7FF]",
+    rgb: "232 89 12",
+    chip: "bg-primary-soft text-primary",
+    bar: "bg-primary",
   },
   WhatsApp: {
     icon: MessageCircle,
-    rgb: "16 185 129",
-    chip: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300",
-    bar: "from-emerald-500 to-teal-300",
+    rgb: "107 104 102",
+    chip: "bg-muted text-muted-foreground",
+    bar: "bg-muted-foreground",
   },
 } as const;
 
@@ -73,14 +73,14 @@ function Stat({
       className={cn(
         "flex items-center gap-2.5 rounded-xl border px-3 py-2",
         tone === "warn"
-          ? "border-amber-400/40 bg-amber-400/10"
-          : "border-border/60 bg-muted/30"
+          ? "border-warning/40 bg-warning/10"
+          : "border-border bg-card"
       )}
     >
       <Icon
         className={cn(
           "h-4 w-4 shrink-0",
-          tone === "warn" ? "text-amber-600 dark:text-amber-300" : "text-muted-foreground"
+          tone === "warn" ? "text-warning" : "text-muted-foreground"
         )}
       />
       <div className="leading-tight">
@@ -221,7 +221,7 @@ function OccupancySection({ data }: { data: OccupancyMapData }) {
                       className={cn(
                         "flex flex-1 items-center justify-center rounded-md text-xs font-bold transition-transform",
                         isGap
-                          ? "bg-amber-400/25 text-amber-700 dark:text-amber-300"
+                          ? "bg-warning/20 text-warning"
                           : isEdge
                             ? "bg-muted/30 text-muted-foreground/50"
                             : "text-foreground",
@@ -248,7 +248,7 @@ function OccupancySection({ data }: { data: OccupancyMapData }) {
                 {hoverSlot == null ? (
                   "Passe o mouse sobre os horários para ver quem está escalado."
                 ) : hoverNames.length === 0 ? (
-                  <span className="font-medium text-amber-700 dark:text-amber-300">
+                  <span className="font-medium text-warning">
                     {slotRangeLabel(data.slots[hoverSlot].minutes)} · ninguém escalado
                   </span>
                 ) : (
@@ -288,13 +288,13 @@ function OccupancySection({ data }: { data: OccupancyMapData }) {
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className={cn("h-2.5 w-6 rounded-full bg-gradient-to-r", style.bar)} /> Horário de trabalho
+            <span className={cn("h-2.5 w-6 rounded-full", style.bar)} /> Horário de trabalho
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-amber-400/40" /> Faixa sem ninguém escalado
+            <span className="h-2.5 w-2.5 rounded-sm bg-warning/30" /> Faixa sem ninguém escalado
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-0.5 rounded bg-rose-500" /> Agora
+            <span className="h-3 w-0.5 rounded bg-foreground" /> Agora
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-muted-foreground/50" /> Jornada
@@ -381,7 +381,7 @@ function OccupancyRowView({
         {row.hasSchedule ? (
           <motion.div
             className={cn(
-              "absolute top-1/2 h-6 -translate-y-1/2 origin-left rounded-full bg-gradient-to-r shadow-sm",
+              "absolute top-1/2 h-6 -translate-y-1/2 origin-left rounded-full",
               style.bar
             )}
             style={{ left: `${left}%`, width: `${width}%` }}
@@ -395,7 +395,7 @@ function OccupancyRowView({
         )}
         {showNow && (
           <span
-            className="absolute inset-y-0 z-10 w-0.5 rounded bg-rose-500/80"
+            className="absolute inset-y-0 z-10 w-0.5 rounded bg-foreground/80"
             style={{ left: `${nowPct}%` }}
           />
         )}

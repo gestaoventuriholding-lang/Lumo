@@ -80,7 +80,7 @@ export default function StructureElementFrame({
               type="button"
               aria-label="Girar elemento"
               title="Arraste para girar"
-              className="flex h-4 w-4 shrink-0 cursor-grab items-center justify-center rounded-full bg-blue-600 text-white active:cursor-grabbing"
+              className="flex h-4 w-4 shrink-0 cursor-grab items-center justify-center rounded-full bg-primary text-primary-foreground active:cursor-grabbing"
               onMouseDown={(e) => {
                 e.stopPropagation();
                 onRotateStart(e);
@@ -134,7 +134,7 @@ export default function StructureElementFrame({
             type="button"
             aria-label={`Redimensionar ${handle}`}
             className={cn(
-              "absolute z-30 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-600 shadow-sm",
+              "absolute z-30 h-2.5 w-2.5 rounded-full border-2 border-white bg-primary",
               HANDLE_CLASS[handle]
             )}
             onMouseDown={(e) => {

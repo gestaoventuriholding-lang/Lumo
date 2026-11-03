@@ -29,9 +29,9 @@ import type { AlertLevel } from "@/types/goals";
 import type { ProductivityLimit, ProductivityRecord } from "@/types/productivity";
 
 const levelText: Record<AlertLevel, string> = {
-  green: "font-semibold text-emerald-600 dark:text-emerald-400",
-  yellow: "font-semibold text-amber-600 dark:text-amber-400",
-  red: "font-semibold text-red-600 dark:text-red-400",
+  green: "font-semibold text-success",
+  yellow: "font-semibold text-warning",
+  red: "font-semibold text-danger",
 };
 
 function levelClass(level?: AlertLevel): string {

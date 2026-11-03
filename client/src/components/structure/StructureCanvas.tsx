@@ -307,7 +307,7 @@ export default function StructureCanvas({
     <div
       ref={containerRef}
       className={`relative min-h-0 flex-1 overflow-hidden bg-card transition-colors ${
-        isDragOver ? "bg-blue-500/[0.03]" : ""
+        isDragOver ? "bg-primary-soft" : ""
       } ${activeTool === "wall" ? "cursor-crosshair" : ""}`}
       onDragOver={(e) => {
         e.preventDefault();
@@ -318,7 +318,7 @@ export default function StructureCanvas({
       onClick={() => onSelect(null)}
     >
       {isDragOver && (
-        <div className="pointer-events-none absolute inset-0 z-10 border-2 border-dashed border-blue-400/40" />
+        <div className="pointer-events-none absolute inset-0 z-10 border-2 border-dashed border-primary/40" />
       )}
 
       {activeTool === "wall" && (
@@ -349,8 +349,8 @@ export default function StructureCanvas({
       >
         {sorted.length === 0 ? (
           <div className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center p-10 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
-              <LayoutGrid className="h-6 w-6 text-blue-600" />
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+              <LayoutGrid className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-sm font-semibold text-foreground">Layout vazio</p>
             <p className="mt-1 max-w-xs text-xs leading-relaxed text-muted-foreground">
@@ -384,7 +384,7 @@ export default function StructureCanvas({
               y1={wallPreview.y1}
               x2={wallPreview.x2}
               y2={wallPreview.y2}
-              stroke="#2563eb"
+              stroke="#FF6B00"
               strokeWidth={12}
               strokeLinecap="butt"
               opacity={0.45}

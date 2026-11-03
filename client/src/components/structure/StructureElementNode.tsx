@@ -120,9 +120,9 @@ export default function StructureElementNode({
     return (
       <StructureElementFrame
         {...frameProps}
-        contentClassName="rounded-lg border-2 border-dashed border-blue-300/70 bg-blue-50/30"
+        contentClassName="rounded-lg border-2 border-dashed border-border bg-muted/40"
       >
-        <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700/80">
+        <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {element.label}
         </p>
       </StructureElementFrame>
@@ -164,7 +164,7 @@ export default function StructureElementNode({
   if (element.type === "sector") {
     return (
       <StructureElementFrame {...frameProps} contentClassName={structureSectorFrame}>
-        <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-blue-700/90">
+        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-foreground">
           {element.label}
         </p>
       </StructureElementFrame>
@@ -193,7 +193,7 @@ export default function StructureElementNode({
     return (
       <StructureElementFrame
         {...frameProps}
-        contentClassName="rounded border-2 border-amber-500/40 bg-amber-50/80"
+        contentClassName="rounded border-2 border-warning/40 bg-warning/10"
       />
     );
   }

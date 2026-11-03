@@ -215,7 +215,7 @@ export default function CalendarPage() {
             Compromissos, reuniões e acontecimentos da equipe
           </p>
         </div>
-        <Button onClick={() => openCreateModal()} className="gap-2 bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => openCreateModal()} className="gap-2">
           <Plus className="h-4 w-4" />
           Novo evento
         </Button>
@@ -602,7 +602,7 @@ export default function CalendarPage() {
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleSave}>
               {editingId ? "Salvar alterações" : "Adicionar evento"}
             </Button>
           </div>

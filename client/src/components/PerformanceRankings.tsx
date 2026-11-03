@@ -41,9 +41,9 @@ function savePrefs(prefs: { channel: RankingChannel; criterion: RankingCriterion
 }
 
 const positionStyles = [
-  "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
-  "bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-100",
-  "bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-300",
+  "bg-foreground text-background",
+  "bg-muted text-foreground",
+  "bg-muted text-foreground",
   "bg-muted text-muted-foreground",
 ];
 
@@ -61,9 +61,9 @@ function PositionBadge({ position }: { position: number }) {
 }
 
 const toneText = {
-  green: "text-emerald-600 dark:text-emerald-400",
-  yellow: "text-amber-600 dark:text-amber-400",
-  red: "text-red-600 dark:text-red-400",
+  green: "text-success",
+  yellow: "text-warning",
+  red: "text-danger",
   muted: "text-muted-foreground",
 } as const;
 
@@ -74,7 +74,7 @@ function GoalBar({ value, scale }: { value: number; scale: number }) {
   const goalAt = (100 / scale) * 100;
   const filled = Math.min(100, (Math.min(value, 100) / scale) * 100);
   const extra = value > 100 ? ((value - 100) / scale) * 100 : 0;
-  const color = value >= 100 ? "bg-emerald-500" : value >= 85 ? "bg-amber-500" : "bg-red-500";
+  const color = value >= 100 ? "bg-success" : value >= 85 ? "bg-warning" : "bg-danger";
 
   return (
     <div className="flex min-w-[150px] items-center gap-2.5">
@@ -82,7 +82,7 @@ function GoalBar({ value, scale }: { value: number; scale: number }) {
         <div className={cn("absolute inset-y-0 left-0 rounded-full", color)} style={{ width: `${filled}%` }} />
         {extra > 0 && (
           <div
-            className="absolute inset-y-0 rounded-r-full bg-gradient-to-r from-emerald-400 to-cyan-300"
+            className="absolute inset-y-0 rounded-r-full bg-success"
             style={{ left: `${goalAt}%`, width: `${extra}%` }}
           />
         )}
@@ -165,7 +165,7 @@ function RankingTable({
           type="button"
           onClick={onToggle}
           aria-expanded={expanded}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-blue-600 transition-colors hover:bg-muted/50 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-primary transition-colors hover:bg-muted hover:text-primary-hover"
         >
           {expanded ? `Mostrar só o top ${TOP_COUNT}` : `Ver todos (${ranked.length})`}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
@@ -212,7 +212,7 @@ export default function PerformanceRankings({
     <div className="ellos-panel-sm p-5">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-          <Trophy className="h-4 w-4 text-amber-500" />
+          <Trophy className="h-[18px] w-[18px] text-muted-foreground" />
           Ranking
         </h2>
         <div className="flex flex-wrap items-center gap-2">

@@ -20,7 +20,7 @@ export default function PeriodTotalsNotice({ range }: { range: { start: string; 
   return (
     <div
       role="status"
-      className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100"
+      className="flex items-start gap-3 rounded-lg border border-border bg-muted p-3 text-sm text-foreground"
     >
       <Info className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="space-y-1">

@@ -1,6 +1,7 @@
 import type { Absence, AbsenceType } from "@/types/absence";
 import type { DateRange } from "@/lib/dateRangeFilter";
 import { countAbsenceDays } from "@/lib/absenceStorage";
+import { absenceChartColors } from "@/lib/chartTheme";
 
 export const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
   vacation: "Férias",
@@ -8,11 +9,7 @@ export const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
   personal: "Motivo Pessoal",
 };
 
-export const ABSENCE_TYPE_COLORS: Record<AbsenceType, string> = {
-  vacation: "#8b5cf6",
-  sick: "#ef4444",
-  personal: "#3b82f6",
-};
+export const ABSENCE_TYPE_COLORS: Record<AbsenceType, string> = absenceChartColors;
 
 function overlapsRange(absence: Absence, range: DateRange): boolean {
   return absence.startDate <= range.end && absence.endDate >= range.start;

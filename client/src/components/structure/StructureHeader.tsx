@@ -40,7 +40,7 @@ export default function StructureHeader({ onSave, onAddElement }: StructureHeade
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white">
+            <Button size="sm" className="gap-1.5">
               <Plus className="h-4 w-4" />
               Novo elemento
               <ChevronDown className="h-3.5 w-3.5 opacity-80" />

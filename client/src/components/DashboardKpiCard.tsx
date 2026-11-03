@@ -52,7 +52,7 @@ export default function DashboardKpiCard({
                   stroke={sparkColor}
                   fill={sparkColor}
                   fillOpacity={0.12}
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   dot={false}
                   isAnimationActive
                   animationDuration={CHART_DRAW_MS}
@@ -64,14 +64,14 @@ export default function DashboardKpiCard({
         )}
       </div>
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
+      <p className="font-display mt-1 text-2xl font-bold text-foreground">
         <AnimatedText text={value} />
       </p>
       <p
         className={cn(
           "mt-2 text-xs font-medium",
-          trend === "up" && "text-emerald-600 dark:text-emerald-400",
-          trend === "down" && "text-red-600 dark:text-red-400",
+          trend === "up" && "text-success",
+          trend === "down" && "text-danger",
           trend === "neutral" && "text-muted-foreground"
         )}
       >

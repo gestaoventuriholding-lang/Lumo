@@ -58,9 +58,9 @@ export default function StructureEditorSidebar({
                       e.dataTransfer.effectAllowed = "copy";
                     }}
                     title={`Arraste para o layout ou clique para adicionar: ${tool.label}`}
-                    className="flex cursor-grab flex-col items-center gap-1 rounded-md border border-border/50 px-1 py-2 text-center text-xs hover:border-blue-400/60 hover:bg-muted/40 active:cursor-grabbing"
+                    className="flex cursor-grab flex-col items-center gap-1 rounded-md border border-border/50 px-1 py-2 text-center text-xs hover:border-primary/60 hover:bg-muted active:cursor-grabbing"
                   >
-                    <tool.icon className="h-4 w-4 text-blue-600" />
+                    <tool.icon className="h-[18px] w-[18px] text-muted-foreground" />
                     <span className="w-full truncate">{tool.label}</span>
                   </button>
                 ))}
@@ -94,7 +94,7 @@ export default function StructureEditorSidebar({
                     className={cn(
                       "group flex items-center gap-1.5 rounded-md px-2 py-2 text-sm",
                       selectedId === element.id
-                        ? "bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200"
+                        ? "bg-primary-soft text-primary"
                         : "hover:bg-muted/40"
                     )}
                   >

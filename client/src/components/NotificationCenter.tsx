@@ -84,12 +84,12 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
           aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`}
         >
           {criticalCount > 0 ? (
-            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <AlertCircle className="h-5 w-5 text-danger" />
           ) : (
             <Bell className="h-5 w-5 text-primary" />
           )}
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold h-5 w-5 rounded-full flex items-center justify-center">
+            <span className="absolute top-0 right-0 bg-danger text-white text-xs font-semibold h-5 w-5 rounded-full flex items-center justify-center">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}

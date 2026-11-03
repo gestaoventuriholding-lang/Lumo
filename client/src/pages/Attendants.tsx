@@ -50,8 +50,8 @@ const serviceChannelOptions: { value: Attendant["serviceChannel"]; label: string
 
 function serviceChannelBadgeClass(channel: Attendant["serviceChannel"]): string {
   return channel === "WhatsApp"
-    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-    : "bg-blue-500/15 text-blue-700 dark:text-blue-300";
+    ? "bg-muted text-muted-foreground"
+    : "bg-primary-soft text-primary";
 }
 
 export default function Attendants() {
@@ -235,7 +235,7 @@ export default function Attendants() {
           </div>
           <Button
             onClick={() => handleOpenModal()}
-            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="gap-2"
           >
             <Plus className="h-4 w-4" />
             Novo Colaborador
@@ -372,19 +372,19 @@ export default function Attendants() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleOpenModal(attendant)}
-                            className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 hover:bg-accent rounded-lg transition-colors"
                             title="Editar"
                           >
-                            <Edit2 className="h-4 w-4 text-blue-600" />
+                            <Edit2 className="h-[18px] w-[18px] text-muted-foreground" />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setDeleteConfirm(attendant.id)}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
                             title="Excluir"
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-[18px] w-[18px] text-danger" />
                           </motion.button>
                         </div>
                       </TableCell>
@@ -428,11 +428,6 @@ export default function Attendants() {
                 variant={currentPage === page ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentPage(page)}
-                className={
-                  currentPage === page
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : ""
-                }
               >
                 {page}
               </Button>
@@ -605,7 +600,7 @@ export default function Attendants() {
             </Button>
             <Button
               onClick={handleSave}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1"
             >
               {editingId ? "Atualizar" : "Adicionar"}
             </Button>
@@ -630,8 +625,8 @@ export default function Attendants() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-red-100 dark:bg-red-950/40 rounded-full p-3">
-                <AlertCircle className="h-6 w-6 text-red-600" />
+              <div className="bg-danger/10 rounded-full p-3">
+                <AlertCircle className="h-6 w-6 text-danger" />
               </div>
               <div>
                 <h3 className="font-bold text-lg text-foreground">
@@ -679,8 +674,8 @@ export default function Attendants() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-red-100 dark:bg-red-950/40 rounded-full p-3">
-                <AlertCircle className="h-6 w-6 text-red-600" />
+              <div className="bg-danger/10 rounded-full p-3">
+                <AlertCircle className="h-6 w-6 text-danger" />
               </div>
               <div>
                 <h3 className="font-bold text-lg text-foreground">

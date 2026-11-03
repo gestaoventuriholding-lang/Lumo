@@ -20,15 +20,15 @@ import { pageContainerVariants, pageItemVariants, staggerContainerVariants, card
 import AnimatedNumber from "@/components/AnimatedNumber";
 
 const absenceTypes = {
-  vacation: { label: "Férias", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-  sick: { label: "Licença Médica", color: "bg-red-500/20 text-red-400 border-red-500/30" },
-  personal: { label: "Motivo Pessoal", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+  vacation: { label: "Férias", color: "bg-muted text-foreground border-border" },
+  sick: { label: "Licença Médica", color: "bg-danger/10 text-danger border-danger/30" },
+  personal: { label: "Motivo Pessoal", color: "bg-muted text-muted-foreground border-border" },
 };
 
 const statusConfig = {
-  approved: { label: "Aprovado", color: "bg-green-500/20 text-green-400 border-green-500/30" },
-  pending: { label: "Pendente", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  rejected: { label: "Rejeitado", color: "bg-red-500/20 text-red-400 border-red-500/30" },
+  approved: { label: "Aprovado", color: "bg-success/10 text-success border-success/30" },
+  pending: { label: "Pendente", color: "bg-warning/10 text-warning border-warning/30" },
+  rejected: { label: "Rejeitado", color: "bg-danger/10 text-danger border-danger/30" },
 };
 
 const emptyForm = {
@@ -373,7 +373,7 @@ export default function Absences() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground"><AnimatedNumber value={absencesThisMonth} /></p>
+            <p className="font-display text-2xl font-bold text-foreground"><AnimatedNumber value={absencesThisMonth} /></p>
           </CardContent>
         </Card>
 </motion.div>
@@ -387,7 +387,7 @@ export default function Absences() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-amber-400"><AnimatedNumber value={pendingCount} /></p>
+            <p className="font-display text-2xl font-bold text-warning"><AnimatedNumber value={pendingCount} /></p>
           </CardContent>
         </Card>
 </motion.div>
@@ -401,7 +401,7 @@ export default function Absences() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-400"><AnimatedNumber value={approvedVacations} /></p>
+            <p className="font-display text-2xl font-bold text-success"><AnimatedNumber value={approvedVacations} /></p>
           </CardContent>
         </Card>
 </motion.div>
@@ -515,7 +515,7 @@ export default function Absences() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-red-100 dark:bg-red-950/40 rounded-full p-3">
+              <div className="bg-danger/10 rounded-full p-3">
                 <AlertCircle className="h-6 w-6 text-destructive" />
               </div>
               <div>

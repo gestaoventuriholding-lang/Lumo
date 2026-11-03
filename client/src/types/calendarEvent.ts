@@ -35,15 +35,15 @@ export const CALENDAR_EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
 };
 
 export const CALENDAR_EVENT_TYPE_COLORS: Record<CalendarEventType, string> = {
-  meeting: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",
-  appointment: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30",
-  event: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-  reminder: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  meeting: "bg-primary-soft text-primary border-primary/30",
+  appointment: "bg-muted text-foreground border-border",
+  event: "bg-success/10 text-success border-success/30",
+  reminder: "bg-warning/10 text-warning border-warning/30",
 };
 
 export const CALENDAR_EVENT_TYPE_DOT: Record<CalendarEventType, string> = {
-  meeting: "bg-blue-500",
-  appointment: "bg-violet-500",
-  event: "bg-emerald-500",
-  reminder: "bg-amber-500",
+  meeting: "bg-primary",
+  appointment: "bg-foreground",
+  event: "bg-success",
+  reminder: "bg-warning",
 };

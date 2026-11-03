@@ -19,6 +19,13 @@ import { previewProductivityImport } from "@/lib/productivityImport";
 import type { AttendanceChannel } from "@/types/goals";
 import { CHART_DRAW_MS, motion, pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
+  chartAxisProps,
+  chartColors,
+  chartCursor,
+  chartGridProps,
+  chartTooltipContentStyle,
+} from "@/lib/chartTheme";
+import {
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle,
   Loader2, BarChart3, Phone, MessageSquare, Users,
   TrendingUp, Clock, RefreshCw, ChevronRight, Settings2,
@@ -45,23 +52,23 @@ interface SheetData {
 
 // Todos os campos possíveis do sistema
 const ALL_FIELDS = [
-  { key: "col_data",            label: "📅 Data",                     group: "base" },
-  { key: "col_nome_agente",     label: "👤 Nome do Agente",            group: "base" },
-  { key: "col_recebidas",       label: "📥 Recebidas / Oferecidas",    group: "voz" },
-  { key: "col_atendidas",       label: "✅ Atendidas",                  group: "voz" },
-  { key: "col_sem_atendimento", label: "❌ Sem Atendimento",            group: "voz" },
-  { key: "col_recuperadas",     label: "🔄 Únicas Recuperadas",         group: "voz" },
-  { key: "col_atend_apos_recup",label: "📈 % Atend. após Recuperação",  group: "voz" },
-  { key: "col_taxa_perda",      label: "📉 Taxa de Perda",              group: "voz" },
-  { key: "col_pct_atend",       label: "% Atendimento",                group: "voz" },
-  { key: "col_tma",             label: "⏱ TMA",                        group: "tempo" },
-  { key: "col_login",           label: "🕐 Login (tempo logado)",       group: "tempo" },
-  { key: "col_pausa",           label: "⏸ Pausa (tempo)",               group: "tempo" },
-  { key: "col_pct_pausa",       label: "% Pausa",                      group: "tempo" },
-  { key: "col_atend_hora",      label: "⚡ Atend. / Hora",              group: "prod"  },
-  { key: "col_lig_ativas",      label: "📤 Ligações Ativas",            group: "prod"  },
-  { key: "col_entrada_chat",    label: "💬 Entrada (chat)",             group: "chat"  },
-  { key: "col_saida_chat",      label: "💬 Saída (chat)",               group: "chat"  },
+  { key: "col_data",            label: "Data",                       group: "base" },
+  { key: "col_nome_agente",     label: "Nome do Agente",             group: "base" },
+  { key: "col_recebidas",       label: "Recebidas / Oferecidas",     group: "voz" },
+  { key: "col_atendidas",       label: "Atendidas",                  group: "voz" },
+  { key: "col_sem_atendimento", label: "Sem Atendimento",            group: "voz" },
+  { key: "col_recuperadas",     label: "Únicas Recuperadas",         group: "voz" },
+  { key: "col_atend_apos_recup",label: "% Atend. após Recuperação",  group: "voz" },
+  { key: "col_taxa_perda",      label: "Taxa de Perda",              group: "voz" },
+  { key: "col_pct_atend",       label: "% Atendimento",              group: "voz" },
+  { key: "col_tma",             label: "TMA",                        group: "tempo" },
+  { key: "col_login",           label: "Login (tempo logado)",       group: "tempo" },
+  { key: "col_pausa",           label: "Pausa (tempo)",              group: "tempo" },
+  { key: "col_pct_pausa",       label: "% Pausa",                    group: "tempo" },
+  { key: "col_atend_hora",      label: "Atend. / Hora",              group: "prod"  },
+  { key: "col_lig_ativas",      label: "Ligações Ativas",            group: "prod"  },
+  { key: "col_entrada_chat",    label: "Entrada (chat)",             group: "chat"  },
+  { key: "col_saida_chat",      label: "Saída (chat)",               group: "chat"  },
 ] as const;
 
 type FieldKey = typeof ALL_FIELDS[number]["key"];
@@ -188,13 +195,13 @@ function StepBar({ current }: { current: Step }) {
     <div className="flex items-center gap-2 flex-wrap">
       {steps.map((s, i) => (
         <div key={s.id} className="flex items-center gap-2">
-          <div className={`flex items-center gap-1.5 text-sm font-medium ${i < idx ? "text-green-600" : i === idx ? "text-primary" : "text-muted-foreground"}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i < idx ? "bg-green-100 text-green-600" : i === idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+          <div className={`flex items-center gap-1.5 text-sm font-medium ${i < idx ? "text-success" : i === idx ? "text-foreground" : "text-muted-foreground"}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${i < idx ? "bg-success/10 text-success" : i === idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
               {i < idx ? "✓" : i + 1}
             </div>
             {s.label}
           </div>
-          {i < steps.length - 1 && <div className={`h-px w-6 ${i < idx ? "bg-green-300" : "bg-border"}`} />}
+          {i < steps.length - 1 && <div className={`h-px w-6 ${i < idx ? "bg-success/40" : "bg-border"}`} />}
         </div>
       ))}
     </div>
@@ -207,7 +214,7 @@ function KpiCard({ icon, label, value, sub, color }: { icon: React.ReactNode; la
       <CardContent className="pt-5">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${color}`}>{icon}</div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-        <p className="text-2xl font-bold mt-1"><AnimatedText text={value} /></p>
+        <p className="font-display text-2xl font-bold mt-1"><AnimatedText text={value} /></p>
         <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </CardContent>
     </Card>
@@ -216,10 +223,9 @@ function KpiCard({ icon, label, value, sub, color }: { icon: React.ReactNode; la
 
 function RankRow({ rank, nome, value, max, suffix }: { rank: number; nome: string; value: number; max: number; suffix: string }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
-  const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : String(rank);
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm w-6 text-center">{medal}</span>
+      <span className="text-sm w-6 text-center font-semibold text-muted-foreground">{rank}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{nome}</p>
         <div className="h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
@@ -315,10 +321,10 @@ function SheetConfigurator({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="voz_diario">📞 Voz — Diário (REL067)</SelectItem>
-                <SelectItem value="voz_produtividade">📞 Voz — Produtividade (REL025)</SelectItem>
-                <SelectItem value="chat_diario">💬 Chat — Diário (REL091)</SelectItem>
-                <SelectItem value="chat_produtividade">💬 Chat — Produtividade (REL090)</SelectItem>
+                <SelectItem value="voz_diario">Voz — Diário (REL067)</SelectItem>
+                <SelectItem value="voz_produtividade">Voz — Produtividade (REL025)</SelectItem>
+                <SelectItem value="chat_diario">Chat — Diário (REL091)</SelectItem>
+                <SelectItem value="chat_produtividade">Chat — Produtividade (REL090)</SelectItem>
                 <SelectItem value="outro">⏭ Ignorar esta aba</SelectItem>
               </SelectContent>
             </Select>
@@ -369,7 +375,7 @@ function SheetConfigurator({
                         </Select>
                         <button
                           onClick={() => toggleField(field.key as FieldKey)}
-                          className="text-muted-foreground hover:text-red-500 transition-colors text-xs font-medium"
+                          className="text-muted-foreground hover:text-danger transition-colors text-xs font-medium"
                         >
                           ✕
                         </button>
@@ -476,10 +482,10 @@ function VozDashboard({ data }: { data: ParsedRecord[] }) {
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <KpiCard icon={<Phone className="w-4 h-4 text-blue-600" />} label="Recebidas" value={total.toLocaleString("pt-BR")} sub="no período" color="bg-blue-50 dark:bg-blue-950" />
-        <KpiCard icon={<CheckCircle2 className="w-4 h-4 text-green-600" />} label="Atendidas" value={totalAte.toLocaleString("pt-BR")} sub="no período" color="bg-green-50 dark:bg-green-950" />
-        <KpiCard icon={<TrendingUp className="w-4 h-4 text-yellow-600" />} label="% Atendimento" value={pct + "%"} sub="taxa média" color="bg-yellow-50 dark:bg-yellow-950" />
-        <KpiCard icon={<BarChart3 className="w-4 h-4 text-purple-600" />} label="Média/Dia" value={(total / data.length).toFixed(0)} sub="ligações/dia" color="bg-purple-50 dark:bg-purple-950" />
+        <KpiCard icon={<Phone className="w-[18px] h-[18px] text-muted-foreground" />} label="Recebidas" value={total.toLocaleString("pt-BR")} sub="no período" color="bg-muted" />
+        <KpiCard icon={<CheckCircle2 className="w-[18px] h-[18px] text-muted-foreground" />} label="Atendidas" value={totalAte.toLocaleString("pt-BR")} sub="no período" color="bg-muted" />
+        <KpiCard icon={<TrendingUp className="w-[18px] h-[18px] text-muted-foreground" />} label="% Atendimento" value={pct + "%"} sub="taxa média" color="bg-muted" />
+        <KpiCard icon={<BarChart3 className="w-[18px] h-[18px] text-muted-foreground" />} label="Média/Dia" value={(total / data.length).toFixed(0)} sub="ligações/dia" color="bg-muted" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
@@ -487,12 +493,12 @@ function VozDashboard({ data }: { data: ParsedRecord[] }) {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
-                <Tooltip /><Legend />
-                <Line type="monotone" dataKey="Recebidas" stroke="#2563EB" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
-                <Line type="monotone" dataKey="Atendidas" stroke="#10B981" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
-                <Line type="monotone" dataKey="Sem Atend." stroke="#EF4444" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
+                <CartesianGrid {...chartGridProps} />
+                <XAxis dataKey="data" {...chartAxisProps} /><YAxis {...chartAxisProps} />
+                <Tooltip contentStyle={chartTooltipContentStyle} cursor={chartCursor} /><Legend />
+                <Line type="monotone" dataKey="Recebidas" stroke={chartColors.series[0]} strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
+                <Line type="monotone" dataKey="Atendidas" stroke={chartColors.series[1]} strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
+                <Line type="monotone" dataKey="Sem Atend." stroke={chartColors.series[2]} strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -503,9 +509,9 @@ function VozDashboard({ data }: { data: ParsedRecord[] }) {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={[{ name: "Atendidas", value: totalAte }, { name: "Não atendidas", value: total - totalAte }]} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value">
-                  <Cell fill="#10B981" /><Cell fill="#EF4444" />
+                  <Cell fill={chartColors.primary} /><Cell fill={chartColors.neutralSoft} />
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={chartTooltipContentStyle} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -537,7 +543,7 @@ function VozDashboard({ data }: { data: ParsedRecord[] }) {
                       <TableCell className="text-right">{r.atendidas ?? "—"}</TableCell>
                       <TableCell className="text-right">{r.sem_atendimento ?? "—"}</TableCell>
                       <TableCell className="text-right">{r.recuperadas ?? "—"}</TableCell>
-                      <TableCell className={`text-right font-semibold ${p > 80 ? "text-green-600" : p > 60 ? "text-yellow-600" : "text-red-600"}`}>{p.toFixed(1)}%</TableCell>
+                      <TableCell className={`text-right font-semibold ${p > 80 ? "text-success" : p > 60 ? "text-warning" : "text-danger"}`}>{p.toFixed(1)}%</TableCell>
                       <TableCell className="text-right text-muted-foreground">{r.taxa_perda != null ? (r.taxa_perda > 1 ? r.taxa_perda : r.taxa_perda * 100).toFixed(2) + "%" : "—"}</TableCell>
                     </TableRow>
                   );
@@ -560,16 +566,16 @@ function ChatDashboard({ data }: { data: ParsedRecord[] }) {
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <KpiCard icon={<MessageSquare className="w-4 h-4 text-blue-600" />} label="Total Chats" value={total.toLocaleString("pt-BR")} sub="no período" color="bg-blue-50 dark:bg-blue-950" />
-        <KpiCard icon={<Clock className="w-4 h-4 text-green-600" />} label="TMA Médio" value={tmaMedia + " min"} sub="tempo médio" color="bg-green-50 dark:bg-green-950" />
-        <KpiCard icon={<BarChart3 className="w-4 h-4 text-purple-600" />} label="Média/Dia" value={(total / data.length).toFixed(0)} sub="chats/dia" color="bg-purple-50 dark:bg-purple-950" />
+        <KpiCard icon={<MessageSquare className="w-[18px] h-[18px] text-muted-foreground" />} label="Total Chats" value={total.toLocaleString("pt-BR")} sub="no período" color="bg-muted" />
+        <KpiCard icon={<Clock className="w-[18px] h-[18px] text-muted-foreground" />} label="TMA Médio" value={tmaMedia + " min"} sub="tempo médio" color="bg-muted" />
+        <KpiCard icon={<BarChart3 className="w-[18px] h-[18px] text-muted-foreground" />} label="Média/Dia" value={(total / data.length).toFixed(0)} sub="chats/dia" color="bg-muted" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card><CardHeader><CardTitle className="text-sm">Volume por Dia</CardTitle></CardHeader>
-          <CardContent><ResponsiveContainer width="100%" height={220}><BarChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Bar dataKey="Chats" fill="#2563EB" radius={[4,4,0,0]} /></BarChart></ResponsiveContainer></CardContent>
+          <CardContent><ResponsiveContainer width="100%" height={220}><BarChart data={chartData}><CartesianGrid {...chartGridProps} /><XAxis dataKey="data" {...chartAxisProps} /><YAxis {...chartAxisProps} /><Tooltip contentStyle={chartTooltipContentStyle} cursor={chartCursor} /><Bar dataKey="Chats" fill={chartColors.primary} radius={[4,4,0,0]} /></BarChart></ResponsiveContainer></CardContent>
         </Card>
         <Card><CardHeader><CardTitle className="text-sm">TMA por Dia (min)</CardTitle></CardHeader>
-          <CardContent><ResponsiveContainer width="100%" height={220}><LineChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="data" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Line type="monotone" dataKey="TMA" stroke="#F59E0B" strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" /></LineChart></ResponsiveContainer></CardContent>
+          <CardContent><ResponsiveContainer width="100%" height={220}><LineChart data={chartData}><CartesianGrid {...chartGridProps} /><XAxis dataKey="data" {...chartAxisProps} /><YAxis {...chartAxisProps} /><Tooltip contentStyle={chartTooltipContentStyle} cursor={chartCursor} /><Line type="monotone" dataKey="TMA" stroke={chartColors.primary} strokeWidth={2} dot={false} animationDuration={CHART_DRAW_MS} animationEasing="ease-in-out" /></LineChart></ResponsiveContainer></CardContent>
         </Card>
       </div>
     </>
@@ -807,7 +813,7 @@ export default function ImportPage() {
               <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
                 <span className="font-medium text-sm flex-1">{fileName}</span>
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <CheckCircle2 className="w-4 h-4 text-success" />
               </div>
             )}
             {sheetNames.length > 0 && (
@@ -832,7 +838,7 @@ export default function ImportPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <CheckCircle2 className="w-4 h-4 text-success" />
                   Relatório reconhecido automaticamente
                 </CardTitle>
                 <Badge variant="outline" className="text-xs">{fileName}</Badge>
@@ -878,7 +884,7 @@ export default function ImportPage() {
             <div className="space-y-2 w-80">
               {progressLogs.map((log, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />{log}
+                  <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />{log}
                 </div>
               ))}
             </div>
@@ -911,10 +917,10 @@ export default function ImportPage() {
                 <TabsList className="flex-wrap h-auto gap-1 mb-6">
                   {sheetNames.map((name) => {
                     const cfg = sheetConfigs[name];
-                    const emoji = !cfg?.ativo ? "⏭" : cfg.tipo.includes("voz") ? "📞" : cfg.tipo.includes("chat") ? "💬" : "❓";
+                    const kind = !cfg?.ativo ? "" : cfg.tipo.includes("voz") ? "Voz · " : cfg.tipo.includes("chat") ? "Chat · " : "";
                     return (
                       <TabsTrigger key={name} value={name} className="text-xs gap-1.5">
-                        {emoji} {name}
+                        {kind}{name}
                         {!cfg?.ativo && <span className="opacity-40 text-xs">(ignorada)</span>}
                       </TabsTrigger>
                     );

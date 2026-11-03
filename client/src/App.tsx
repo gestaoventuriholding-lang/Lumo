@@ -5,7 +5,6 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
 import { MotionConfig } from "framer-motion";
 import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVariants";
-import AnimatedBackground from "./components/AnimatedBackground";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { EllosDataProvider } from "./contexts/EllosDataContext";
@@ -99,7 +98,6 @@ function App() {
   return (
     <ErrorBoundary>
       <MotionConfig reducedMotion="user">
-      <AnimatedBackground />
       <ThemeProvider defaultTheme="light" switchable>
         <TooltipProvider>
           <Toaster />

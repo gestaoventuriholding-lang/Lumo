@@ -57,15 +57,15 @@ export default function ProductivityReportReview({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/30">
+      <div className="rounded-lg border border-success/30 bg-success/10 p-4">
         <div className="flex items-start gap-2">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-green-900 dark:text-green-300">
+            <p className="text-sm font-medium text-foreground">
               Reconheci o relatório {report.reportCode ? `${report.reportCode} — ` : ""}
               {report.title}
             </p>
-            <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               {report.rows.length} colaborador{report.rows.length === 1 ? "" : "es"} encontrado
               {report.rows.length === 1 ? "" : "s"}.{" "}
               {report.mode === "daily"
@@ -86,8 +86,8 @@ export default function ProductivityReportReview({
       </div>
 
       {report.warnings.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
-          <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-300">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
+          <ul className="space-y-1 text-sm text-warning">
             {report.warnings.map((warning) => (
               <li key={warning} className="flex items-start gap-2">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

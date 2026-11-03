@@ -7,8 +7,8 @@ export default function ChangeBadge({ change, className }: { change: Change; cla
     <p
       className={cn(
         "text-xs font-medium",
-        change.tone === "good" && "text-emerald-600 dark:text-emerald-400",
-        change.tone === "bad" && "text-red-600 dark:text-red-400",
+        change.tone === "good" && "text-success",
+        change.tone === "bad" && "text-danger",
         change.tone === "neutral" && "text-muted-foreground",
         className
       )}

@@ -28,7 +28,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
-import { chartTooltipContentStyle } from "@/lib/alertColors";
+import {
+  chartAxisProps,
+  chartColors,
+  chartCursor,
+  chartGridProps,
+  chartTooltipContentStyle,
+} from "@/lib/chartTheme";
 import { toast } from "sonner";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
@@ -397,7 +403,7 @@ export default function Performance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold"><AnimatedNumber value={kpis.totalAttendances} /></p>
+            <p className="font-display text-2xl font-bold"><AnimatedNumber value={kpis.totalAttendances} /></p>
             <ChangeBadge className="mt-1" change={describeChange(kpis.totalAttendances, previousKpis.totalAttendances, previousInfo.name)} />
           </CardContent>
         </Card>
@@ -412,7 +418,7 @@ export default function Performance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
+            <p className="font-display text-2xl font-bold">
               <AnimatedText text={kpis.averageTime > 0 ? formatAverageTime(kpis.averageTime) : "—"} />
             </p>
             <ChangeBadge className="mt-1" change={describeChange(kpis.averageTime, previousKpis.averageTime, previousInfo.name, { lowerIsBetter: true })} />
@@ -429,7 +435,7 @@ export default function Performance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold"><AnimatedNumber value={kpis.attendantsCount} /></p>
+            <p className="font-display text-2xl font-bold"><AnimatedNumber value={kpis.attendantsCount} /></p>
           </CardContent>
         </Card>
 </motion.div>
@@ -443,7 +449,7 @@ export default function Performance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
+            <p className="font-display text-2xl font-bold">
               <AnimatedText text={kpis.averagePercentage > 0 ? `${Math.round(kpis.averagePercentage)}%` : "—"} />
             </p>
             <ChangeBadge className="mt-1" change={describeChange(kpis.averagePercentage, previousKpis.averagePercentage, previousInfo.name, { unit: "points" })} />
@@ -559,10 +565,10 @@ export default function Performance() {
                             <span
                               className={
                                 row.averagePercentage >= 90
-                                  ? "font-bold text-green-600 dark:text-green-400"
+                                  ? "font-bold text-success"
                                   : row.averagePercentage >= 80
-                                    ? "font-bold text-yellow-600 dark:text-yellow-400"
-                                    : "font-bold text-red-600 dark:text-red-400"
+                                    ? "font-bold text-warning"
+                                    : "font-bold text-danger"
                               }
                             >
                               {Math.round(row.averagePercentage)}%
@@ -591,16 +597,17 @@ export default function Performance() {
             <CardHeader>
               <CardTitle>Atendimentos por Colaborador</CardTitle>
               <CardDescription>
-                {displayRange.label} · Barras azuis = Ligação · Barras verdes = WhatsApp
+                {displayRange.label} · Barras laranja = Ligação · Barras cinza = WhatsApp
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={chartData} barGap={4} barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="name" />
-                  <YAxis allowDecimals={false} />
+                  <CartesianGrid {...chartGridProps} />
+                  <XAxis dataKey="name" {...chartAxisProps} />
+                  <YAxis allowDecimals={false} {...chartAxisProps} />
                   <Tooltip
+                    cursor={chartCursor}
                     contentStyle={chartTooltipContentStyle}
                     formatter={(value: number, name: string) => {
                       const goal = name === "Ligação" ? ligacaoGoal : whatsappGoal;
@@ -611,18 +618,18 @@ export default function Performance() {
                   <Legend />
                   <ReferenceLine
                     y={ligacaoGoal}
-                    stroke="#1d4ed8"
+                    stroke={chartColors.ligacao}
                     strokeDasharray="8 4"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                   />
                   <ReferenceLine
                     y={whatsappGoal}
-                    stroke="#059669"
+                    stroke={chartColors.whatsapp}
                     strokeDasharray="8 4"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                   />
-                  <Bar dataKey="ligacao" fill="#2563eb" name="Ligação" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="whatsapp" fill="#10b981" name="WhatsApp" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ligacao" fill={chartColors.ligacao} name="Ligação" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="whatsapp" fill={chartColors.whatsapp} name="WhatsApp" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

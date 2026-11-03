@@ -42,7 +42,13 @@ import {
 } from "@/lib/dateRangeFilter";
 import { buildDetailedAnalysisReport } from "@/lib/detailedAnalysisSummary";
 import { loadAnalysisNote } from "@/lib/analysisNoteStorage";
-import { chartTooltipContentStyle } from "@/lib/alertColors";
+import {
+  chartAxisProps,
+  chartColors,
+  chartCursor,
+  chartGridProps,
+  chartTooltipContentStyle,
+} from "@/lib/chartTheme";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -51,8 +57,8 @@ function EmptySection({ message }: { message: string }) {
 }
 
 const CHANNEL_SERIES = [
-  { key: "ligacao", label: "Ligação", color: "#3b82f6" },
-  { key: "whatsapp", label: "WhatsApp", color: "#10b981" },
+  { key: "ligacao", label: "Ligação", color: chartColors.ligacao },
+  { key: "whatsapp", label: "WhatsApp", color: chartColors.whatsapp },
 ] as const;
 
 type TrendPoint = ReturnType<typeof buildAttendancesTrend>[number];
@@ -101,23 +107,14 @@ function AttendancesTrendChart({ data }: { data: TrendPoint[] }) {
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/50" />
-          <XAxis
-            dataKey="label"
-            tick={{ fontSize: 12 }}
-            axisLine={false}
-            tickLine={false}
-            interval="preserveStartEnd"
-            minTickGap={16}
-          />
+          <CartesianGrid {...chartGridProps} />
+          <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
           <YAxis
-            tick={{ fontSize: 12 }}
-            axisLine={false}
-            tickLine={false}
+            {...chartAxisProps}
             width={44}
             tickFormatter={(v: number) => v.toLocaleString("pt-BR")}
           />
-          <Tooltip content={<TrendTooltip />} cursor={{ fill: "rgba(51,102,255,0.08)" }} />
+          <Tooltip content={<TrendTooltip />} cursor={chartCursor} />
           {visible.map((series, index) => (
             <Bar
               key={series.key}
@@ -228,9 +225,9 @@ export default function Dashboard() {
       comparison: `${attendants.length} cadastrados no sistema`,
       trend: "neutral" as const,
       icon: Users,
-      iconBg: "bg-blue-50 dark:bg-blue-500/15",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      sparkColor: "#3b82f6",
+      iconBg: "bg-muted",
+      iconColor: "text-muted-foreground",
+      sparkColor: chartColors.series[1],
       sparkData: attendanceSpark,
     },
     {
@@ -244,9 +241,9 @@ export default function Dashboard() {
       delta: describeChange(channelTotals.total, previous.stats.totalAttendances, previous.name),
       trend: "up" as const,
       icon: TrendingUp,
-      iconBg: "bg-emerald-50 dark:bg-emerald-500/15",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      sparkColor: "#10b981",
+      iconBg: "bg-muted",
+      iconColor: "text-muted-foreground",
+      sparkColor: chartColors.primary,
       sparkData: attendanceSpark,
     },
     {
@@ -264,9 +261,9 @@ export default function Dashboard() {
       ),
       trend: dashboardStats.averagePercentage >= 85 ? ("up" as const) : ("down" as const),
       icon: Target,
-      iconBg: "bg-violet-50 dark:bg-violet-500/15",
-      iconColor: "text-violet-600 dark:text-violet-400",
-      sparkColor: "#8b5cf6",
+      iconBg: "bg-muted",
+      iconColor: "text-muted-foreground",
+      sparkColor: chartColors.series[1],
       sparkData: productivitySpark,
     },
     {
@@ -275,9 +272,9 @@ export default function Dashboard() {
       comparison: "total no período selecionado",
       trend: totalAbsenceDays > 0 ? ("down" as const) : ("neutral" as const),
       icon: AlertCircle,
-      iconBg: "bg-orange-50 dark:bg-orange-500/15",
-      iconColor: "text-orange-600 dark:text-orange-400",
-      sparkColor: "#f97316",
+      iconBg: "bg-muted",
+      iconColor: "text-muted-foreground",
+      sparkColor: chartColors.series[1],
       sparkData: [],
     },
   ];
@@ -378,7 +375,7 @@ export default function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-6">
-                <p className="text-2xl font-bold text-foreground"><AnimatedNumber value={channelTotal} /></p>
+                <p className="font-display text-2xl font-bold text-foreground"><AnimatedNumber value={channelTotal} /></p>
                 <p className="text-xs text-muted-foreground">total</p>
               </div>
               <div className="space-y-2">
@@ -413,7 +410,7 @@ export default function Dashboard() {
           className="ellos-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/30"
         >
           <span className="flex items-center gap-3">
-            <Trophy className="h-5 w-5 text-amber-500" />
+            <Trophy className="h-5 w-5 text-muted-foreground" />
             <span>
               <span className="block text-sm font-semibold text-foreground">Ranking e produtividade por colaboradora</span>
               <span className="block text-xs text-muted-foreground">Veja quem mais atendeu, a meta e o TMA em Desempenho</span>

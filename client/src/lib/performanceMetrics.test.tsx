@@ -8,6 +8,7 @@ import {
   buildChannelDistribution,
   type AttendantPerformanceSummary,
 } from "./performanceMetrics";
+import { chartColors } from "./chartTheme";
 import type { Attendant } from "@/types/attendant";
 import type { DailyPerformanceRecord } from "@/types/performance";
 
@@ -238,8 +239,8 @@ describe("channel attendance breakdown", () => {
   it("builds channel distribution for dashboard", () => {
     const distribution = buildChannelDistribution(records, range);
     expect(distribution).toEqual([
-      { name: "Ligação", value: 100, color: "#3b82f6" },
-      { name: "WhatsApp", value: 50, color: "#10b981" },
+      { name: "Ligação", value: 100, color: chartColors.ligacao },
+      { name: "WhatsApp", value: 50, color: chartColors.whatsapp },
     ]);
   });
 

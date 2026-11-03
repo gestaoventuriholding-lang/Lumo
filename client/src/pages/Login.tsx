@@ -62,10 +62,13 @@ export default function LoginPage({ initialMode = "signin" }: { initialMode?: Mo
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-8 shadow-lg backdrop-blur-xl">
-        <div className="mb-8 flex justify-center">
-          <EllosLogo tone="onLight" />
+      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8 shadow-surface">
+        <div className="flex justify-center">
+          <EllosLogo />
         </div>
+        <p className="mb-8 mt-2 text-center text-sm text-muted-foreground">
+          Pessoas conectadas. Resultados mais fortes.
+        </p>
         <h1 className="text-center text-xl font-semibold text-foreground">{title}</h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">{subtitle}</p>
 

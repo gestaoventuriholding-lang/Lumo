@@ -1,8 +1,9 @@
 # Ellos — contexto para o Claude Code
 
 O produto se chama **Ellos** (antes Lumo, depois Elos): sistema de gestão de central de atendimento (call center) da Venturi Tecnologia.
-Identidade visual: marinho #0B1F44, azul #3366FF, azul claro #7BA7FF, gelo #E6EDF7, branco; fonte Inter; logo em
-`client/src/components/EllosLogo.tsx`. O nome mudou em todo o código: chaves de armazenamento (`ellos-*`), classes CSS
+Identidade visual: neutros quentes + laranja da prancha de marca (#FF6B00; #FF8A00 no modo escuro), fontes Inter
+(interface) e Manrope (títulos, KPIs e logo); logo provisório em texto em `client/src/components/EllosLogo.tsx`
+(trocar por `client/public/brand/ellos-symbol.svg` e `ellos-logo.svg` quando os arquivos existirem). O nome mudou em todo o código: chaves de armazenamento (`ellos-*`), classes CSS
 (`ellos-*`), `EllosDataContext`. No primeiro acesso, `migrateLegacyStorageKeys()` (`storageMigration.ts`) copia as
 chaves antigas `lumo-*` para `ellos-*`, então ninguém perde dados nem sessão. **Continuam com o nome antigo** só as peças
 externas: repositório GitHub, projeto Vercel, domínio `lumo.venturiholding.com.br` e projeto Supabase `lumo`.
@@ -81,9 +82,11 @@ template do Manus foram removidos).
 - Não reintroduza nada do Manus (login, plugins `vite-plugin-manus-runtime`, `debug-collector`).
 
 ## Direção de produto (o que a Amanda pediu)
-- Visual novo: **azul claro, estilo glassmorfismo** (vidro translúcido com desfoque sobre fundo
-  azul-céu, com tema escuro também). Hoje o app ainda está no visual antigo (azul royal, Inter).
-  Os tokens de cor ficam em `client/src/index.css`.
+- Visual: sóbrio, claro e escuro, **sem gradiente, glow, vidro (blur), sombra colorida nem emoji**. Laranja só em
+  botão primário, item ativo do menu, link e série principal dos gráficos (menos de 10% da tela). Raio 8px
+  (badge 6px), sombra única `0 1px 2px`, ícones lucide com traço 1.5. Números sempre `tabular-nums`.
+  Tokens de cor em `client/src/index.css` (usar `success`, `warning`, `danger`, `primary-soft`; nada de
+  `blue-600` e similares). Cores de gráfico só em `client/src/lib/chartTheme.ts`.
 - O Ellos é **gestão das pessoas com dados de relatórios** (importados, como o REL090). **Não terá nada ao
   vivo**: sem painel em tempo real, filas ou integração com telefonia. O protótipo
   `prototipos/central-operacao.html` não vai ser implementado.

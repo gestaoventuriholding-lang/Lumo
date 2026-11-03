@@ -66,7 +66,7 @@ export default function StructureEditorToolbar({
             size="sm"
             className={cn(
               "h-8 gap-1.5 px-2.5 text-xs font-medium",
-              activeTool === tool.id && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+              activeTool === tool.id && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary"
             )}
             onClick={() => onToolChange(tool.id)}
           >
@@ -82,7 +82,7 @@ export default function StructureEditorToolbar({
           variant="ghost"
           size="sm"
           aria-pressed={showGrid}
-          className={cn("h-8 gap-1.5 px-2.5 text-xs", showGrid && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-blue-950/40 dark:text-blue-300")}
+          className={cn("h-8 gap-1.5 px-2.5 text-xs", showGrid && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary")}
           onClick={() => onShowGridChange(!showGrid)}
           title="Mostrar ou ocultar a grade"
         >
@@ -94,7 +94,7 @@ export default function StructureEditorToolbar({
           variant="ghost"
           size="sm"
           aria-pressed={snapToGrid}
-          className={cn("h-8 gap-1.5 px-2.5 text-xs", snapToGrid && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-blue-950/40 dark:text-blue-300")}
+          className={cn("h-8 gap-1.5 px-2.5 text-xs", snapToGrid && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary")}
           onClick={() => onSnapToGridChange(!snapToGrid)}
           title="Encaixar elementos na grade ao mover e redimensionar. Desligado, você posiciona livremente"
         >

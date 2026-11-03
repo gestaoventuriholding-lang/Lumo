@@ -8,7 +8,7 @@ import {
   type ManagementReportRankingRow,
 } from "@/lib/managementReport";
 
-const BRAND = { r: 37, g: 99, b: 235 };
+const BRAND = { r: 255, g: 107, b: 0 };
 const MARGIN = 14;
 const PAGE_WIDTH = 210;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
