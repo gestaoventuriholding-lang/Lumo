@@ -1,7 +1,7 @@
 import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { ProductivityLimit } from "@/types/productivity";
 
-const STORAGE_KEY = "lumo-productivity-limits";
+const STORAGE_KEY = "ellos-productivity-limits";
 
 export function loadProductivityLimits(): ProductivityLimit[] {
   try {

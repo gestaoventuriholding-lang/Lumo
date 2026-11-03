@@ -47,6 +47,8 @@ export interface StructureElement {
   textContent?: string;
   /** Giro em graus (sentido horário) em torno do centro do elemento */
   rotation?: number;
+  /** Cor escolhida no editor (hex); sem ela vale a cor padrão do tipo */
+  color?: string;
 }
 
 export interface StructureMovementLog {

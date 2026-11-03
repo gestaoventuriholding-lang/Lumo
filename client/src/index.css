@@ -63,7 +63,7 @@
   --glass-bg: rgb(255 255 255 / 0.68);
   --glass-border: rgb(255 255 255 / 0.65);
   --glass-blur: blur(14px) saturate(1.35);
-  /* Identidade Elos: #0B1F44 marinho, #3366FF azul, #7BA7FF azul claro, #E6EDF7 gelo */
+  /* Identidade Ellos: #0B1F44 marinho, #3366FF azul, #7BA7FF azul claro, #E6EDF7 gelo */
   --primary: #3366ff;
   --primary-foreground: #ffffff;
   --sidebar-primary: #3366ff;
@@ -240,7 +240,7 @@
     }
   }
 
-  .lumo-panel {
+  .ellos-panel {
     background-color: var(--glass-bg);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
@@ -250,7 +250,7 @@
     box-shadow: var(--shadow-raised);
   }
 
-  .lumo-panel-sm {
+  .ellos-panel-sm {
     background-color: var(--glass-bg);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
@@ -260,25 +260,25 @@
     box-shadow: var(--shadow-surface);
   }
 
-  .lumo-stat {
+  .ellos-stat {
     border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
     border-radius: 0.5rem;
     background: color-mix(in srgb, var(--muted) 30%, var(--glass-bg));
     box-shadow: var(--shadow-surface);
   }
 
-  .lumo-inset {
+  .ellos-inset {
     background-color: color-mix(in srgb, var(--muted) 35%, var(--card));
     border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
     border-radius: 0.5rem;
   }
 
-  .lumo-page-canvas {
+  .ellos-page-canvas {
     /* transparente para deixar o fundo animado aparecer */
     background-color: transparent;
   }
 
-  .lumo-sidebar-shell {
+  .ellos-sidebar-shell {
     background-color: var(--sidebar-bg);
     border-color: var(--sidebar-border-token);
     color: #f8fafc;
@@ -288,18 +288,18 @@
   }
 
   /* aberto, o menu flutua sobre a página */
-  .lumo-sidebar-shell.lumo-sidebar-expanded {
+  .ellos-sidebar-shell.ellos-sidebar-expanded {
     box-shadow:
       inset -1px 0 0 rgba(123, 167, 255, 0.16),
       12px 0 44px -14px rgba(5, 15, 38, 0.6);
   }
 
-  .lumo-sidebar-shell.lumo-sidebar-expanded [data-slot="sidebar-inner"] {
+  .ellos-sidebar-shell.ellos-sidebar-expanded [data-slot="sidebar-inner"] {
     position: relative;
     overflow: hidden;
   }
 
-  .lumo-sidebar-shell.lumo-sidebar-expanded [data-slot="sidebar-inner"]::before {
+  .ellos-sidebar-shell.ellos-sidebar-expanded [data-slot="sidebar-inner"]::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -314,7 +314,7 @@
     );
   }
 
-  .lumo-sidebar-shell [data-sidebar="menu-button"] {
+  .ellos-sidebar-shell [data-sidebar="menu-button"] {
     transition:
       background-color 0.12s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.12s cubic-bezier(0.4, 0, 0.2, 1),
@@ -322,61 +322,61 @@
       box-shadow 0.12s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .lumo-sidebar-rail [data-sidebar="menu-button"]:hover {
+  .ellos-sidebar-rail [data-sidebar="menu-button"]:hover {
     transform: scale(1.08);
   }
 
-  .lumo-sidebar-shell [data-sidebar="menu-button"]:not([data-active="true"]):hover {
+  .ellos-sidebar-shell [data-sidebar="menu-button"]:not([data-active="true"]):hover {
     transform: translateX(2px);
   }
 
-  .lumo-sidebar-rail .lumo-sidebar-rail-action,
-  .lumo-sidebar-rail .lumo-sidebar-rail-profile [data-slot="avatar"] {
+  .ellos-sidebar-rail .ellos-sidebar-rail-action,
+  .ellos-sidebar-rail .ellos-sidebar-rail-profile [data-slot="avatar"] {
     transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .lumo-sidebar-rail .lumo-sidebar-rail-action:hover {
+  .ellos-sidebar-rail .ellos-sidebar-rail-action:hover {
     transform: scale(1.08);
   }
 
-  .lumo-sidebar-rail .lumo-sidebar-rail-profile:hover [data-slot="avatar"] {
+  .ellos-sidebar-rail .ellos-sidebar-rail-profile:hover [data-slot="avatar"] {
     transform: scale(1.05);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .lumo-sidebar-shell,
-    .lumo-sidebar-shell [data-sidebar="menu-button"],
-    .lumo-sidebar-rail .lumo-sidebar-rail-action,
-    .lumo-sidebar-rail .lumo-sidebar-rail-profile [data-slot="avatar"] {
+    .ellos-sidebar-shell,
+    .ellos-sidebar-shell [data-sidebar="menu-button"],
+    .ellos-sidebar-rail .ellos-sidebar-rail-action,
+    .ellos-sidebar-rail .ellos-sidebar-rail-profile [data-slot="avatar"] {
       transition: none;
     }
 
-    .lumo-sidebar-shell.lumo-sidebar-expanded [data-slot="sidebar-inner"]::before {
+    .ellos-sidebar-shell.ellos-sidebar-expanded [data-slot="sidebar-inner"]::before {
       animation: none;
     }
   }
 
-  .lumo-sidebar-rail [data-sidebar="header"],
-  .lumo-sidebar-rail [data-sidebar="footer"],
-  .lumo-sidebar-rail [data-sidebar="content"] {
+  .ellos-sidebar-rail [data-sidebar="header"],
+  .ellos-sidebar-rail [data-sidebar="footer"],
+  .ellos-sidebar-rail [data-sidebar="content"] {
     align-items: center;
     padding-inline: 0;
   }
 
-  .lumo-sidebar-rail [data-sidebar="menu"] {
+  .ellos-sidebar-rail [data-sidebar="menu"] {
     align-items: center;
     gap: 0.375rem;
     padding-inline: 0;
     width: 100%;
   }
 
-  .lumo-sidebar-rail [data-sidebar="menu-item"] {
+  .ellos-sidebar-rail [data-sidebar="menu-item"] {
     display: flex;
     justify-content: center;
     width: 100%;
   }
 
-  .lumo-sidebar-rail [data-sidebar="menu-button"] {
+  .ellos-sidebar-rail [data-sidebar="menu-button"] {
     width: 2rem !important;
     min-width: 2rem !important;
     max-width: 2rem !important;
@@ -387,11 +387,11 @@
     justify-content: center !important;
   }
 
-  .lumo-sidebar-rail [data-sidebar="menu-button"] > span {
+  .ellos-sidebar-rail [data-sidebar="menu-button"] > span {
     display: none !important;
   }
 
-  .lumo-sidebar-rail .lumo-sidebar-rail-action {
+  .ellos-sidebar-rail .ellos-sidebar-rail-action {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -401,7 +401,7 @@
     padding: 0;
   }
 
-  .lumo-sidebar-rail .lumo-sidebar-rail-profile {
+  .ellos-sidebar-rail .ellos-sidebar-rail-profile {
     display: flex;
     justify-content: center;
     width: 100%;
@@ -442,7 +442,7 @@
   --bg-wave-b: rgb(123 167 255 / 0.16);
 }
 
-.lumo-bg {
+.ellos-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
@@ -451,7 +451,7 @@
   background: linear-gradient(160deg, var(--bg-base-from), var(--bg-base-to));
 }
 
-.lumo-bg::before {
+.ellos-bg::before {
   /* brilho quente difuso no canto superior direito */
   content: "";
   position: absolute;
@@ -461,10 +461,10 @@
   height: 70vmax;
   border-radius: 50%;
   background: radial-gradient(circle, var(--bg-glow) 0%, transparent 68%);
-  animation: lumo-glow-drift 32s ease-in-out infinite alternate;
+  animation: ellos-glow-drift 32s ease-in-out infinite alternate;
 }
 
-.lumo-bg-wave {
+.ellos-bg-wave {
   position: absolute;
   left: -30vw;
   width: 160vw;
@@ -473,26 +473,26 @@
   will-change: transform;
 }
 
-.lumo-bg-wave-a {
+.ellos-bg-wave-a {
   bottom: -132vw;
   background: var(--bg-wave-a);
-  animation: lumo-wave-spin 38s linear infinite;
+  animation: ellos-wave-spin 38s linear infinite;
 }
 
-.lumo-bg-wave-b {
+.ellos-bg-wave-b {
   bottom: -139vw;
   background: var(--bg-wave-b);
   border-radius: 46%;
-  animation: lumo-wave-spin 26s linear infinite reverse;
+  animation: ellos-wave-spin 26s linear infinite reverse;
 }
 
-@keyframes lumo-wave-spin {
+@keyframes ellos-wave-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@keyframes lumo-glow-drift {
+@keyframes ellos-glow-drift {
   from {
     transform: translate3d(0, 0, 0) scale(1);
   }
@@ -502,8 +502,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lumo-bg::before,
-  .lumo-bg-wave {
+  .ellos-bg::before,
+  .ellos-bg-wave {
     animation: none;
   }
 }

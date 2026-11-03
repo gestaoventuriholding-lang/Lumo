@@ -20,7 +20,7 @@ import {
   savePeriodFilterState,
   type PeriodFilterState,
 } from "@/lib/periodFilterStorage";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 
 interface PeriodFilterContextValue {
   period: DashboardPeriod;
@@ -43,7 +43,7 @@ function persist(state: PeriodFilterState) {
 }
 
 export function PeriodFilterProvider({ children }: { children: ReactNode }) {
-  const { performanceRecords } = useLumoData();
+  const { performanceRecords } = useEllosData();
   const [state, setState] = useState<PeriodFilterState>(() => loadPeriodFilterState());
   const syncedLatestDay = useRef(false);
 

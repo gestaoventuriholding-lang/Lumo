@@ -56,7 +56,7 @@ import {
   todayRange,
 } from "@/lib/performanceMetrics";
 
-interface LumoDataContextValue {
+interface EllosDataContextValue {
   attendants: Attendant[];
   performanceRecords: DailyPerformanceRecord[];
   productivityRecords: ProductivityRecord[];
@@ -105,9 +105,9 @@ interface LumoDataContextValue {
   todayIndicators: PerformanceIndicator[];
 }
 
-const LumoDataContext = createContext<LumoDataContextValue | null>(null);
+const EllosDataContext = createContext<EllosDataContextValue | null>(null);
 
-export function LumoDataProvider({ children }: { children: ReactNode }) {
+export function EllosDataProvider({ children }: { children: ReactNode }) {
   const [attendants, setAttendantsState] = useState<Attendant[]>(() => loadAttendants());
   const [performanceRecords, setPerformanceRecordsState] = useState<DailyPerformanceRecord[]>(() =>
     loadPerformanceRecords()
@@ -473,7 +473,7 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     [performanceRecords, attendants, productionGoals, today.start, today.end]
   );
 
-  const value = useMemo<LumoDataContextValue>(
+  const value = useMemo<EllosDataContextValue>(
     () => ({
       attendants,
       performanceRecords,
@@ -542,13 +542,13 @@ export function LumoDataProvider({ children }: { children: ReactNode }) {
     ]
   );
 
-  return <LumoDataContext.Provider value={value}>{children}</LumoDataContext.Provider>;
+  return <EllosDataContext.Provider value={value}>{children}</EllosDataContext.Provider>;
 }
 
-export function useLumoData() {
-  const context = useContext(LumoDataContext);
+export function useEllosData() {
+  const context = useContext(EllosDataContext);
   if (!context) {
-    throw new Error("useLumoData must be used within LumoDataProvider");
+    throw new Error("useEllosData must be used within EllosDataProvider");
   }
   return context;
 }

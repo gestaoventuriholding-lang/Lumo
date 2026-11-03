@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Info } from "lucide-react";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { findHiddenPeriodTotals } from "@/lib/periodTotals";
 
 function formatDate(iso: string): string {
@@ -10,7 +10,7 @@ function formatDate(iso: string): string {
 
 /** Explica por que um relatório importado não aparece quando o filtro é menor que o período dele */
 export default function PeriodTotalsNotice({ range }: { range: { start: string; end: string } }) {
-  const { performanceRecords, productivityRecords } = useLumoData();
+  const { performanceRecords, productivityRecords } = useEllosData();
   const hidden = useMemo(
     () => findHiddenPeriodTotals(performanceRecords, productivityRecords, range),
     [performanceRecords, productivityRecords, range]

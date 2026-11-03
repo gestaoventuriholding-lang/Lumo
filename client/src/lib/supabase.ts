@@ -23,7 +23,7 @@ export function getSupabase(): SupabaseClient {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: "lumo-auth",
+        storageKey: "ellos-auth",
       },
     });
   }

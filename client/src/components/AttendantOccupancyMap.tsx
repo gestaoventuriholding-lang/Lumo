@@ -122,7 +122,7 @@ function OccupancySection({ data }: { data: OccupancyMapData }) {
 
   if (data.rows.length === 0) {
     return (
-      <section className="lumo-panel-sm overflow-hidden p-5">
+      <section className="ellos-panel-sm overflow-hidden p-5">
         <div className="flex items-center gap-3">
           <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", style.chip)}>
             <Icon className="h-4 w-4" />
@@ -149,7 +149,7 @@ function OccupancySection({ data }: { data: OccupancyMapData }) {
       : "sem jornadas definidas";
 
   return (
-    <section className="lumo-panel-sm overflow-hidden">
+    <section className="ellos-panel-sm overflow-hidden">
       <div className="space-y-4 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">

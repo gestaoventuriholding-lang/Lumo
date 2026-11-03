@@ -1,7 +1,7 @@
 import { isCloudEnabled, readJSON, removeKey, writeJSON } from "@/lib/cloudStore";
 import type { StructureLayout, StructureMovementLog } from "@/types/structure";
 
-const STORAGE_KEY = "lumo-structure-layout";
+const STORAGE_KEY = "ellos-structure-layout";
 const STORAGE_VERSION = 3;
 const VERSION_KEY = `${STORAGE_KEY}-version`;
 

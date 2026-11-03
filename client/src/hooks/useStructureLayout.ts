@@ -89,6 +89,52 @@ export function useStructureLayout() {
     [commit, persist]
   );
 
+  /** Aplica vários ajustes de uma vez (um único passo no desfazer, a menos que seja arraste ao vivo) */
+  const updateElements = useCallback(
+    (patches: Array<{ id: string; patch: Partial<StructureElement> }>, skipUndo = false) => {
+      if (patches.length === 0) return;
+      const apply = (prev: StructureLayout): StructureLayout => {
+        const byId = new Map(patches.map((item) => [item.id, item.patch]));
+        return {
+          ...prev,
+          elements: prev.elements.map((el) => (byId.has(el.id) ? { ...el, ...byId.get(el.id) } : el)),
+        };
+      };
+      if (skipUndo) {
+        setLayout((prev) => {
+          const next = { ...apply(prev), updatedAt: new Date().toISOString() };
+          persist(next);
+          return next;
+        });
+        return;
+      }
+      commit(apply);
+    },
+    [commit, persist]
+  );
+
+  const addElements = useCallback(
+    (items: StructureElement[]) => {
+      if (items.length === 0) return;
+      commit(
+        (prev) => ({ ...prev, elements: [...prev.elements, ...items] }),
+        items.length === 1 ? `${items[0].label} adicionado ao layout` : `${items.length} elementos adicionados ao layout`
+      );
+    },
+    [commit]
+  );
+
+  const removeElements = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return;
+      commit(
+        (prev) => ({ ...prev, elements: prev.elements.filter((el) => !ids.includes(el.id)) }),
+        ids.length === 1 ? undefined : `${ids.length} elementos removidos`
+      );
+    },
+    [commit]
+  );
+
   const addElement = useCallback(
     (element: StructureElement) => {
       commit(
@@ -163,6 +209,9 @@ export function useStructureLayout() {
     canUndo,
     canRedo,
     updateElement,
+    updateElements,
+    addElements,
+    removeElements,
     addElement,
     removeElement,
     undo,

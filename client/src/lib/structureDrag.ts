@@ -1,6 +1,6 @@
 import type { StructureElementType } from "@/types/structure";
 
-export const DRAG_MIME = "application/lumo-structure-element";
+export const DRAG_MIME = "application/ellos-structure-element";
 
 export function serializeDragPayload(type: StructureElementType, label?: string): string {
   return JSON.stringify({ type, label });

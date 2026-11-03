@@ -4,7 +4,7 @@ import {
   type UserPreferences,
 } from "@/types/userPreferences";
 
-const STORAGE_KEY = "lumo-user-preferences";
+const STORAGE_KEY = "ellos-user-preferences";
 
 export function loadUserPreferences(): UserPreferences {
   try {

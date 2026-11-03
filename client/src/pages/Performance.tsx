@@ -30,7 +30,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
 import { chartTooltipContentStyle } from "@/lib/alertColors";
 import { toast } from "sonner";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
 import {
   buildAttendantSummaries,
@@ -113,7 +113,7 @@ export default function Performance() {
     addPerformanceRecord,
     updatePerformanceRecord,
     removePerformanceRecord,
-  } = useLumoData();
+  } = useEllosData();
   const {
     period,
     dateRange,

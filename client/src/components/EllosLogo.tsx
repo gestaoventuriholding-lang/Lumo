@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { cn } from "@/lib/utils";
 
-type ElosLogoProps = {
+type EllosLogoProps = {
   className?: string;
   /** "mark" mostra só o símbolo; "full" mostra símbolo + nome */
   variant?: "full" | "mark";
@@ -15,7 +15,7 @@ const BRAND_BLUE = "#3366FF";
 const BRAND_NAVY = "#0B1F44";
 
 /** Dois elos entrelaçados: um azul e um claro (branco no escuro, marinho no claro) */
-export function ElosMark({
+export function EllosMark({
   className,
   tone = "onDark",
 }: {
@@ -31,7 +31,7 @@ export function ElosMark({
       viewBox="0 0 48 48"
       fill="none"
       role="img"
-      aria-label="Elos"
+      aria-label="Ellos"
       className={cn("shrink-0", linkColor, className)}
     >
       <defs>
@@ -52,19 +52,19 @@ export function ElosMark({
   );
 }
 
-export function ElosLogo({
+export function EllosLogo({
   className,
   variant = "full",
   tone = "onDark",
   collapsed = false,
-}: ElosLogoProps) {
+}: EllosLogoProps) {
   if (variant === "mark") {
-    return <ElosMark tone={tone} className={cn("h-9 w-9", className)} />;
+    return <EllosMark tone={tone} className={cn("h-9 w-9", className)} />;
   }
 
   return (
     <span className={cn("inline-flex items-center gap-2 select-none", className)}>
-      <ElosMark tone={tone} className="h-9 w-9" />
+      <EllosMark tone={tone} className="h-9 w-9" />
       <span
         className={cn(
           "text-[1.65rem] font-semibold leading-none tracking-tight transition-[opacity,transform] duration-200 ease-out",
@@ -72,7 +72,7 @@ export function ElosLogo({
           tone === "onDark" ? "text-white" : "text-[#0B1F44] dark:text-white"
         )}
       >
-        Elos
+        Ellos
       </span>
     </span>
   );

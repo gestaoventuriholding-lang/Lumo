@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { newId } from "@/lib/ids";
 import { LIMIT_DEFINITIONS } from "@/lib/productivityLimits";
 import type { ProductivityLimit, ProductivityLimitMetric } from "@/types/productivity";
@@ -25,7 +25,7 @@ function toDraft(limits: ProductivityLimit[]): Draft {
 
 /** Limites de pausa e ocupação: geram os alertas do relatório importado */
 export default function ProductivityLimitsCard() {
-  const { productivityLimits, setProductivityLimits } = useLumoData();
+  const { productivityLimits, setProductivityLimits } = useEllosData();
   const [draft, setDraft] = useState<Draft>(() => toDraft(productivityLimits));
 
   const update = (metric: ProductivityLimitMetric, patch: Partial<Draft[ProductivityLimitMetric]>) =>

@@ -1,4 +1,4 @@
-# Lumo
+# Ellos
 
 Sistema de gestão da central de atendimento da Venturi Tecnologia: atendentes, desempenho por canal
 (Ligação e WhatsApp), ausências, metas, calendário, mapa de posições e importação de planilhas.
@@ -36,7 +36,7 @@ então tudo que você alterar localmente vale para o sistema publicado.
 client/src/
   pages/        telas (Dashboard, Atendentes, Desempenho, Ausências, Calendário, Estruturas, Configurações, Login)
   components/   componentes e ui/ (shadcn)
-  contexts/     AuthContext (login), LumoDataContext (dados), preferências, filtro de período
+  contexts/     AuthContext (login), EllosDataContext (dados), preferências, filtro de período
   lib/          cloudStore.ts (sincronização com o Supabase), *Storage.ts, importação, relatórios
 supabase/migrations/   esquema do banco (SQL)
 prototipos/            protótipos de telas futuras

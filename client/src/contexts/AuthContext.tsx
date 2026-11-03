@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("ready");
       } catch (e) {
         if (cancelled) return;
-        console.error("[Elos] Falha ao carregar dados", e);
+        console.error("[Ellos] Falha ao carregar dados", e);
         setError("Não foi possível carregar os dados do servidor.");
         setStatus("error");
       }

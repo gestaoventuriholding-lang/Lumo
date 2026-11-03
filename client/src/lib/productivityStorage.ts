@@ -1,7 +1,7 @@
 import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { ProductivityRecord } from "@/types/productivity";
 
-const STORAGE_KEY = "lumo-productivity-reports";
+const STORAGE_KEY = "ellos-productivity-reports";
 
 export function loadProductivityRecords(): ProductivityRecord[] {
   try {

@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProductionGoal, AttendanceChannel, GoalStatus } from "@/types/goals";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
 const channels: AttendanceChannel[] = ["Ligação", "WhatsApp"];
@@ -41,7 +41,7 @@ interface GoalsManagementProps {
 }
 
 export default function GoalsManagement({ onDataChange }: GoalsManagementProps) {
-  const { productionGoals, setProductionGoals } = useLumoData();
+  const { productionGoals, setProductionGoals } = useEllosData();
   const [isProductionModalOpen, setIsProductionModalOpen] = useState(false);
   const [editingProductionId, setEditingProductionId] = useState<number | null>(null);
   const [productionFormData, setProductionFormData] = useState<

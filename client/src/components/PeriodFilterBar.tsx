@@ -35,7 +35,7 @@ export default function PeriodFilterBar({
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row sm:items-end gap-4 p-4 lumo-panel-sm",
+        "flex flex-col sm:flex-row sm:items-end gap-4 p-4 ellos-panel-sm",
         className
       )}
     >

@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { clearAllLumoOperationalData } from "@/lib/clearAllLumoData";
+import { clearAllEllosOperationalData } from "@/lib/clearAllEllosData";
 import { flushCloud } from "@/lib/cloudStore";
 
 export default function Settings() {
@@ -68,7 +68,7 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 rounded-lg lumo-inset hover:bg-muted/30 transition-colors">
+            <div className="flex items-center justify-between p-4 rounded-lg ellos-inset hover:bg-muted/30 transition-colors">
               <div>
                 <p className="font-medium text-foreground">Modo escuro</p>
                 <p className="text-sm text-muted-foreground">
@@ -99,7 +99,7 @@ export default function Settings() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               {/* Notifications */}
-              <div className="flex items-center justify-between p-4 rounded-lg lumo-inset hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-lg ellos-inset hover:bg-muted/30 transition-colors">
                 <div>
                   <p className="font-medium text-foreground">Notificações</p>
                   <p className="text-sm text-muted-foreground">
@@ -113,7 +113,7 @@ export default function Settings() {
               </div>
 
               {/* Email Reports */}
-              <div className="flex items-center justify-between p-4 rounded-lg lumo-inset hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-lg ellos-inset hover:bg-muted/30 transition-colors">
                 <div>
                   <p className="font-medium text-foreground">Relatórios por Email</p>
                   <p className="text-sm text-muted-foreground">
@@ -187,7 +187,7 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 rounded-lg lumo-inset">
+            <div className="p-4 rounded-lg ellos-inset">
               <p className="font-medium text-foreground mb-2">Autenticação</p>
               <p className="text-sm text-muted-foreground mb-3">
                 Sua conta está protegida com autenticação OAuth
@@ -317,7 +317,7 @@ export default function Settings() {
                     className="bg-destructive text-white hover:bg-destructive/90"
                     disabled={confirmText.trim().toUpperCase() !== "APAGAR"}
                     onClick={() => {
-                      clearAllLumoOperationalData();
+                      clearAllEllosOperationalData();
                       toast.success("Dados apagados. Recarregando…");
                       void flushCloud().then(() =>
                         window.setTimeout(() => window.location.reload(), 400)

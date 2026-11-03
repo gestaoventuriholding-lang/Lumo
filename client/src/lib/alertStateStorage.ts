@@ -1,7 +1,7 @@
 import { getLocalDateString } from "@/lib/performanceStorage";
 
 function storageKey(): string {
-  return `lumo-alert-state-${getLocalDateString()}`;
+  return `ellos-alert-state-${getLocalDateString()}`;
 }
 
 interface AlertState {

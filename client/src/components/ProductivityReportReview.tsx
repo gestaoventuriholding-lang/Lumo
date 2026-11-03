@@ -194,7 +194,7 @@ export default function ProductivityReportReview({
             onCheckedChange={(checked) => onCreateAttendantsChange(checked === true)}
           />
           <span className="text-sm leading-snug">
-            Criar colaboradores que ainda não existem no Elos
+            Criar colaboradores que ainda não existem no Ellos
             {preview.toCreate.length > 0 && ` (${preview.toCreate.length} neste arquivo)`}
           </span>
         </label>

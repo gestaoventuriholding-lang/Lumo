@@ -22,7 +22,7 @@ type PerformanceRankingsProps = {
 
 const TOP_COUNT = 3;
 
-const STORAGE_KEY = "lumo-ranking-prefs";
+const STORAGE_KEY = "ellos-ranking-prefs";
 
 function loadPrefs(): { channel?: RankingChannel; criterion?: RankingCriterion } {
   try {
@@ -209,7 +209,7 @@ export default function PerformanceRankings({
   ];
 
   return (
-    <div className="lumo-panel-sm p-5">
+    <div className="ellos-panel-sm p-5">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
           <Trophy className="h-4 w-4 text-amber-500" />

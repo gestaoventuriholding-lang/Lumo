@@ -154,7 +154,7 @@ describe("managementReportFilename", () => {
     });
 
     expect(managementReportFilename(data)).toBe(
-      "relatorio-gerencial-lumo-2026-06-02_2026-06-08.pdf"
+      "relatorio-gerencial-ellos-2026-06-02_2026-06-08.pdf"
     );
   });
 });

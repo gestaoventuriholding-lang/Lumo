@@ -1,8 +1,8 @@
 import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { ProductionGoal, RoleGoal } from "@/types/goals";
 
-const PRODUCTION_KEY = "lumo-production-goals";
-const ROLE_KEY = "lumo-role-goals";
+const PRODUCTION_KEY = "ellos-production-goals";
+const ROLE_KEY = "ellos-role-goals";
 
 export function loadProductionGoals(): ProductionGoal[] {
   try {

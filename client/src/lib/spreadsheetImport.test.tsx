@@ -88,7 +88,7 @@ describe("spreadsheetImport", () => {
     expect(plan.valid[1]?.averageTimeMinutes).toBeCloseTo(3.5, 1);
   });
 
-  it("handles exported lumo round-trip", async () => {
+  it("handles exported ellos round-trip", async () => {
     const csv = [
       "Colaborador,Data,Canal,Quantidade,Tempo Médio",
       "Ana Silva,09/06/2025,WhatsApp,10,3m 15s",

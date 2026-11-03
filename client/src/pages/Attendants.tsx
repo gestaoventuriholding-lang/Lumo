@@ -35,7 +35,7 @@ import {
   Trash,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import type { Attendant } from "@/types/attendant";
 import { formatJornada, isValidJornada } from "@/lib/attendantSchedule";
 import AttendantOccupancyMap from "@/components/AttendantOccupancyMap";
@@ -62,7 +62,7 @@ export default function Attendants() {
     updateAttendant,
     removeAttendant,
     removeAttendants,
-  } = useLumoData();
+  } = useEllosData();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -285,7 +285,7 @@ export default function Attendants() {
       {/* Table */}
       <motion.div
         variants={pageItemVariants}
-        className="lumo-panel overflow-hidden"
+        className="ellos-panel overflow-hidden"
       >
         <div className="overflow-x-auto">
           <Table>
@@ -626,7 +626,7 @@ export default function Attendants() {
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.95 }}
-            className="lumo-panel p-6 max-w-sm w-full"
+            className="ellos-panel p-6 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -675,7 +675,7 @@ export default function Attendants() {
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.95 }}
-            className="lumo-panel p-6 max-w-sm w-full"
+            className="ellos-panel p-6 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">

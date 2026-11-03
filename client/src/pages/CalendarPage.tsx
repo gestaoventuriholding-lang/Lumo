@@ -40,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import {
   buildMonthDays,
@@ -102,7 +102,7 @@ function formFromEvent(event: CalendarEvent): EventFormState {
 
 export default function CalendarPage() {
   const { calendarEvents, addCalendarEvent, updateCalendarEvent, removeCalendarEvent } =
-    useLumoData();
+    useEllosData();
 
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -222,7 +222,7 @@ export default function CalendarPage() {
       </motion.div>
 
       <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="lumo-panel-sm p-5 xl:col-span-2">
+        <div className="ellos-panel-sm p-5 xl:col-span-2">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <Button
@@ -351,7 +351,7 @@ export default function CalendarPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="lumo-panel-sm p-5">
+          <div className="ellos-panel-sm p-5">
             <div className="mb-4 flex items-start justify-between gap-2">
               <div>
                 <h2 className="text-base font-bold text-foreground">Agenda do dia</h2>
@@ -433,7 +433,7 @@ export default function CalendarPage() {
             )}
           </div>
 
-          <div className="lumo-panel-sm p-5">
+          <div className="ellos-panel-sm p-5">
             <h2 className="text-base font-bold text-foreground">Próximos eventos</h2>
             <p className="mb-4 text-sm text-muted-foreground">Agenda dos próximos dias</p>
             {upcomingEvents.length > 0 ? (

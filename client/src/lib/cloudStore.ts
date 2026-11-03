@@ -1,5 +1,5 @@
 /**
- * Armazenamento do Lumo.
+ * Armazenamento do Ellos.
  *
  * As telas continuam lendo e gravando de forma síncrona pelas funções
  * load/save de cada módulo de storage. Este módulo decide para onde isso vai:
@@ -17,19 +17,19 @@ import { newId } from "@/lib/ids";
 // Chaves (as mesmas que eram usadas no localStorage)
 // ---------------------------------------------------------------
 export const KEYS = {
-  attendants: "lumo-attendants",
-  performance: "lumo-performance-records",
-  absences: "lumo-absences",
-  calendar: "lumo-calendar-events",
-  productionGoals: "lumo-production-goals",
-  roleGoals: "lumo-role-goals",
-  importLog: "lumo-import-log",
-  structure: "lumo-structure-layout",
-  preferences: "lumo-user-preferences",
-  analysisNote: "lumo-analysis-note",
-  productivity: "lumo-productivity-reports",
-  productivityLimits: "lumo-productivity-limits",
-  workingHours: "lumo-working-hours",
+  attendants: "ellos-attendants",
+  performance: "ellos-performance-records",
+  absences: "ellos-absences",
+  calendar: "ellos-calendar-events",
+  productionGoals: "ellos-production-goals",
+  roleGoals: "ellos-role-goals",
+  importLog: "ellos-import-log",
+  structure: "ellos-structure-layout",
+  preferences: "ellos-user-preferences",
+  analysisNote: "ellos-analysis-note",
+  productivity: "ellos-productivity-reports",
+  productivityLimits: "ellos-productivity-limits",
+  workingHours: "ellos-working-hours",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -404,7 +404,7 @@ function structuredCloneSafe<T>(value: T): T {
 // ---------------------------------------------------------------
 function enqueue(task: () => Promise<void>) {
   queue = queue.then(task).catch((error: unknown) => {
-    console.error("[Elos] Falha ao salvar no banco", error);
+    console.error("[Ellos] Falha ao salvar no banco", error);
     if (!errorShown) {
       errorShown = true;
       toast.error(

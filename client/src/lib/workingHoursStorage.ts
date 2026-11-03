@@ -1,7 +1,7 @@
 import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { WorkingHoursOption } from "@/types/attendant";
 
-const STORAGE_KEY = "lumo-working-hours";
+const STORAGE_KEY = "ellos-working-hours";
 
 export function loadWorkingHoursOptions(): WorkingHoursOption[] {
   try {

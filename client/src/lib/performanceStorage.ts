@@ -1,7 +1,7 @@
 import { readJSON, writeJSON } from "@/lib/cloudStore";
 import type { DailyPerformanceRecord } from "@/types/performance";
 
-const STORAGE_KEY = "lumo-performance-records";
+const STORAGE_KEY = "ellos-performance-records";
 
 export function getLocalDateString(date = new Date()): string {
   const year = date.getFullYear();

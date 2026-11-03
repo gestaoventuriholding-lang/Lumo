@@ -3,12 +3,12 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { newId } from "@/lib/ids";
 
 /** Cargas horárias que aparecem ao cadastrar um colaborador. Começa vazia: cada central define as suas */
 export default function WorkingHoursCard() {
-  const { attendants, workingHoursOptions, setWorkingHoursOptions } = useLumoData();
+  const { attendants, workingHoursOptions, setWorkingHoursOptions } = useEllosData();
   const [label, setLabel] = useState("");
 
   const handleAdd = () => {

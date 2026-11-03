@@ -288,7 +288,7 @@ export default function Structure() {
 
       <motion.div
         variants={pageItemVariants}
-        className="flex min-h-0 flex-1 overflow-hidden rounded-lg lumo-panel"
+        className="flex min-h-0 flex-1 overflow-hidden rounded-lg ellos-panel"
       >
         <StructureEditorSidebar
           elements={layout.elements}

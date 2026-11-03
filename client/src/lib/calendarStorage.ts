@@ -5,7 +5,7 @@ import type {
   CalendarEventInput,
 } from "@/types/calendarEvent";
 
-const STORAGE_KEY = "lumo-calendar-events";
+const STORAGE_KEY = "ellos-calendar-events";
 
 export function loadCalendarEvents(): CalendarEvent[] {
   try {

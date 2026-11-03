@@ -1,5 +1,5 @@
 /**
- * Tipos para o sistema de Metas e Alertas do Lumo
+ * Tipos para o sistema de Metas e Alertas do Ellos
  */
 
 export type AttendanceChannel = "Ligação" | "WhatsApp" | "E-mail" | "Outros";

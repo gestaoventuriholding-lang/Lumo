@@ -1,5 +1,5 @@
 import { readText, writeText } from "@/lib/cloudStore";
-const STORAGE_KEY = "lumo-analysis-note";
+const STORAGE_KEY = "ellos-analysis-note";
 
 export function loadAnalysisNote(): string {
   try {

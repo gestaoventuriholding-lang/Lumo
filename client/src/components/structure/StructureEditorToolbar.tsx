@@ -56,7 +56,7 @@ export default function StructureEditorToolbar({
   onSnapToGridChange,
 }: StructureEditorToolbarProps) {
   return (
-    <div className="lumo-panel-sm flex shrink-0 items-center justify-between gap-3 px-3 py-2">
+    <div className="ellos-panel-sm flex shrink-0 items-center justify-between gap-3 px-3 py-2">
       <div className="flex items-center gap-1">
         {EDITOR_TOOLS.map((tool) => (
           <Button

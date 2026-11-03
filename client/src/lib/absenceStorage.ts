@@ -3,7 +3,7 @@ import type { Absence, AbsenceInput } from "@/types/absence";
 import type { Attendant } from "@/types/attendant";
 import { newId } from "@/lib/ids";
 
-const STORAGE_KEY = "lumo-absences";
+const STORAGE_KEY = "ellos-absences";
 
 export function countAbsenceDays(startDate: string, endDate: string): number {
   const start = new Date(`${startDate}T12:00:00`);

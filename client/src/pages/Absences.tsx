@@ -10,7 +10,7 @@ import { motion } from "@/lib/motionVariants";
 import { Plus, Calendar as CalendarIcon, Clock, AlertCircle, Edit2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { countAbsenceDays } from "@/lib/absenceStorage";
 import { getAbsencesForDate } from "@/lib/absenceMetrics";
 import { getLocalDateString } from "@/lib/performanceStorage";
@@ -47,7 +47,7 @@ export default function Absences() {
     updateAbsence,
     updateAbsenceStatus,
     removeAbsence,
-  } = useLumoData();
+  } = useEllosData();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [calendarFilterDate, setCalendarFilterDate] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState("all");
@@ -210,7 +210,7 @@ export default function Absences() {
               }}
               modifiers={{ absent: absentDates }}
               modifiersClassNames={{ absent: "bg-primary/20 font-semibold text-primary" }}
-              className="rounded-md border border-border lumo-inset"
+              className="rounded-md border border-border ellos-inset"
             />
             {calendarFilterDate && (
               <Button
@@ -511,7 +511,7 @@ export default function Absences() {
           onClick={() => setDeleteConfirm(null)}
         >
           <div
-            className="lumo-panel p-6 max-w-sm w-full"
+            className="ellos-panel p-6 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">

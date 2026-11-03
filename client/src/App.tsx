@@ -8,7 +8,7 @@ import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVarian
 import AnimatedBackground from "./components/AnimatedBackground";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { LumoDataProvider } from "./contexts/LumoDataContext";
+import { EllosDataProvider } from "./contexts/EllosDataContext";
 import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
 import ImportPage from "@/pages/Import";
@@ -105,13 +105,13 @@ function App() {
           <Toaster />
           <AuthProvider>
             <AuthGate>
-              <LumoDataProvider>
+              <EllosDataProvider>
                 <PeriodFilterProvider>
                   <UserPreferencesProvider>
                     <Router />
                   </UserPreferencesProvider>
                 </PeriodFilterProvider>
-              </LumoDataProvider>
+              </EllosDataProvider>
             </AuthGate>
           </AuthProvider>
         </TooltipProvider>

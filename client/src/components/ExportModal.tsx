@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Download, FileSpreadsheet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import { getMonthString } from "@/lib/dateRangeFilter";
 import {
@@ -59,7 +59,7 @@ export default function ExportModal({ open, onOpenChange }: ExportModalProps) {
     absences,
     productionGoals,
     roleGoals,
-  } = useLumoData();
+  } = useEllosData();
 
   const [datasets, setDatasets] = useState<ExportDataset[]>(["performance"]);
   const [periodType, setPeriodType] = useState<ExportPeriodType>("month");

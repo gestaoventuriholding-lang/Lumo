@@ -26,8 +26,8 @@ import {
 } from "react";
 import { useLocation } from "wouter";
 import NotificationCenter from "./NotificationCenter";
-import { ElosLogo } from "./ElosLogo";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { EllosLogo } from "./EllosLogo";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { buildPerformanceAlerts } from "@/lib/performanceMetrics";
 import { buildProductivityAlerts } from "@/lib/productivityLimits";
 import type { PerformanceAlert } from "@/types/goals";
@@ -113,7 +113,7 @@ function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
-  const { todayIndicators, productivityRecords, productivityLimits } = useLumoData();
+  const { todayIndicators, productivityRecords, productivityLimits } = useEllosData();
   const performanceAlerts = useMemo(
     () => [
       ...buildPerformanceAlerts(todayIndicators),
@@ -153,7 +153,7 @@ function DashboardLayoutContent({
       <AppSidebarPanel location={location} onNavigate={handleNavigate} setSidebarWidth={setSidebarWidth} />
 
       <LayoutMain
-        pageTitle={activeMenuItem?.label ?? "Elos"}
+        pageTitle={activeMenuItem?.label ?? "Ellos"}
         performanceAlerts={performanceAlerts}
         isStructurePage={isStructurePage}
       >
@@ -319,27 +319,27 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
         onMouseEnter={handleSidebarEnter}
         onMouseLeave={handleSidebarLeave}
         className={cn(
-          "lumo-sidebar-shell overflow-x-hidden border-r shadow-surface",
-          !isIconOnly && "lumo-sidebar-expanded"
+          "ellos-sidebar-shell overflow-x-hidden border-r shadow-surface",
+          !isIconOnly && "ellos-sidebar-expanded"
         )}
         disableTransition={isResizing}
       >
         <SidebarHeader
-          className="lumo-sidebar-shell h-14 justify-center border-b p-2"
+          className="ellos-sidebar-shell h-14 justify-center border-b p-2"
         >
           <div className="flex w-full items-center justify-start overflow-hidden px-0.5">
-            <ElosLogo variant="full" collapsed={isIconOnly} />
+            <EllosLogo variant="full" collapsed={isIconOnly} />
           </div>
         </SidebarHeader>
 
-        <SidebarContent className="lumo-sidebar-shell gap-0">
+        <SidebarContent className="ellos-sidebar-shell gap-0">
           <SidebarMenu className="px-2 py-3">
             {mainMenuItems.map((item) => renderMenuButton(item))}
           </SidebarMenu>
         </SidebarContent>
 
         <SidebarFooter
-          className="lumo-sidebar-shell mt-auto space-y-2 border-t p-2"
+          className="ellos-sidebar-shell mt-auto space-y-2 border-t p-2"
         >
           <SidebarMenu>
             {isAdmin && renderMenuButton(usersMenuItem)}
@@ -440,7 +440,7 @@ const LayoutMain = memo(function LayoutMain({
       </div>
       <main
         className={cn(
-          "lumo-page-canvas flex-1",
+          "ellos-page-canvas flex-1",
           isStructurePage
             ? "flex min-h-0 flex-col overflow-hidden p-2 md:p-3"
             : "p-3 sm:p-4 md:p-6"

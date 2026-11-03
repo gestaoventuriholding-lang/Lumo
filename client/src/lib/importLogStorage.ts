@@ -11,7 +11,7 @@ export interface ImportLogEntry {
   newDays: string[];
 }
 
-const STORAGE_KEY = "lumo-import-log";
+const STORAGE_KEY = "ellos-import-log";
 const MAX_ENTRIES = 30;
 
 export function loadImportLog(): ImportLogEntry[] {

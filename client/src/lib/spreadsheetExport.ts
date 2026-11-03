@@ -190,10 +190,10 @@ function sheetName(dataset: ExportDataset): string {
 
 function buildFileStem(period: ExportPeriod): string {
   const date = new Date().toISOString().slice(0, 10);
-  if (period.type === "all") return `lumo-exportacao-${date}`;
+  if (period.type === "all") return `ellos-exportacao-${date}`;
   const range = resolveExportDateRange(period);
-  if (!range) return `lumo-exportacao-${date}`;
-  return `lumo-exportacao-${range.start}_${range.end}`;
+  if (!range) return `ellos-exportacao-${date}`;
+  return `ellos-exportacao-${range.start}_${range.end}`;
 }
 
 function triggerDownload(blob: Blob, filename: string) {

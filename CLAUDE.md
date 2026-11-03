@@ -1,10 +1,11 @@
-# Lumo — contexto para o Claude Code
+# Ellos — contexto para o Claude Code
 
-O produto se chama **Elos** (antes Lumo): sistema de gestão de central de atendimento (call center) da Venturi Tecnologia.
+O produto se chama **Ellos** (antes Lumo, depois Elos): sistema de gestão de central de atendimento (call center) da Venturi Tecnologia.
 Identidade visual: marinho #0B1F44, azul #3366FF, azul claro #7BA7FF, gelo #E6EDF7, branco; fonte Inter; logo em
-`client/src/components/ElosLogo.tsx`. Só o texto visível mudou: chaves de armazenamento (`lumo-*`), classes CSS
-(`lumo-*`), `LumoDataContext`, o repositório e o projeto Supabase continuam com o nome antigo de propósito
-(renomear apagaria os dados já salvos nos navegadores).
+`client/src/components/EllosLogo.tsx`. O nome mudou em todo o código: chaves de armazenamento (`ellos-*`), classes CSS
+(`ellos-*`), `EllosDataContext`. No primeiro acesso, `migrateLegacyStorageKeys()` (`storageMigration.ts`) copia as
+chaves antigas `lumo-*` para `ellos-*`, então ninguém perde dados nem sessão. **Continuam com o nome antigo** só as peças
+externas: repositório GitHub, projeto Vercel, domínio `lumo.venturiholding.com.br` e projeto Supabase `lumo`.
 Dona do produto: Amanda Silva (CEO). Fale em português do Brasil.
 
 ## Onde tudo está
@@ -69,7 +70,7 @@ template do Manus foram removidos).
   gerencia usuários, pela Edge Function `gerenciar-usuarios` (aba Usuários).
 - `performance_records` e `absences` herdam o `owner_id` do atendente (gatilho `check_attendant_owner`).
 - O e-mail amanda.silva@venturiholding.com.br vira admin automaticamente ao criar a conta
-  (gatilho `lumo_grant_admin_on_signup`).
+  (gatilho `ellos_grant_admin_on_signup`).
 - Toda mudança de esquema vira um arquivo novo em `supabase/migrations/` e depois rode os advisors
   de segurança do Supabase.
 
@@ -83,7 +84,7 @@ template do Manus foram removidos).
 - Visual novo: **azul claro, estilo glassmorfismo** (vidro translúcido com desfoque sobre fundo
   azul-céu, com tema escuro também). Hoje o app ainda está no visual antigo (azul royal, Inter).
   Os tokens de cor ficam em `client/src/index.css`.
-- O Elos é **gestão das pessoas com dados de relatórios** (importados, como o REL090). **Não terá nada ao
+- O Ellos é **gestão das pessoas com dados de relatórios** (importados, como o REL090). **Não terá nada ao
   vivo**: sem painel em tempo real, filas ou integração com telefonia. O protótipo
   `prototipos/central-operacao.html` não vai ser implementado.
 - Canais da central: Ligação e WhatsApp. Contexto: laboratório/clínica.

@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AnimatedText } from "@/components/AnimatedNumber";
 import ProductivityReportReview from "@/components/ProductivityReportReview";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { parseProductivityWorkbook, type ProductivityReport } from "@/lib/reportParser";
 import { previewProductivityImport } from "@/lib/productivityImport";
 import type { AttendanceChannel } from "@/types/goals";
@@ -340,7 +340,7 @@ function SheetConfigurator({
                   <div className="rounded-lg border overflow-hidden">
                     {/* Header */}
                     <div className="grid grid-cols-[1fr_1fr_auto] bg-muted px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wide gap-4">
-                      <span>Campo do Elos</span>
+                      <span>Campo do Ellos</span>
                       <span>Coluna da planilha</span>
                       <span>Remover</span>
                     </div>
@@ -610,7 +610,7 @@ export default function ImportPage() {
   const [appData, setAppData] = useState<AppData>({ voz: [], vozProd: [], chat: [], chatProd: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, navigate] = useLocation();
-  const { attendants, productivityRecords, importProductivityReport } = useLumoData();
+  const { attendants, productivityRecords, importProductivityReport } = useEllosData();
   // Relatório de produtividade reconhecido sozinho (ex.: REL090): sem mapear colunas
   const [report, setReport] = useState<ProductivityReport | null>(null);
   const [reportChannel, setReportChannel] = useState<AttendanceChannel | "">("");
@@ -775,7 +775,7 @@ export default function ImportPage() {
       <motion.div variants={pageItemVariants} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Importar Relatório</h1>
-          <p className="text-muted-foreground text-sm mt-1">Envie o relatório: o Elos reconhece as colunas sozinho</p>
+          <p className="text-muted-foreground text-sm mt-1">Envie o relatório: o Ellos reconhece as colunas sozinho</p>
         </div>
       </motion.div>
 

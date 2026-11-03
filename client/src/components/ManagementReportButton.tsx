@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
 import type { DashboardPeriod } from "@/lib/dateRangeFilter";
 import { getMonthString } from "@/lib/dateRangeFilter";
@@ -51,7 +51,7 @@ export default function ManagementReportButton({
   size = "default",
   className,
 }: ManagementReportButtonProps) {
-  const { attendants, performanceRecords: dailyRecords, productivityRecords, productionGoals } = useLumoData();
+  const { attendants, performanceRecords: dailyRecords, productivityRecords, productionGoals } = useEllosData();
   const { period, selectedDay, selectedWeek, selectedMonth } = usePeriodFilter();
 
   const [open, setOpen] = useState(false);

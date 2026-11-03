@@ -33,7 +33,7 @@ import {
   buildDashboardStats,
   buildProductivityTrend,
 } from "@/lib/performanceMetrics";
-import { useLumoData } from "@/contexts/LumoDataContext";
+import { useEllosData } from "@/contexts/EllosDataContext";
 import { totalAbsenceDaysInRange } from "@/lib/absenceMetrics";
 import {
   periodAttendancesLabel,
@@ -147,7 +147,7 @@ export default function Dashboard() {
   const [analysisNote, setAnalysisNote] = useState(() => loadAnalysisNote());
   const { period, dateRange } = usePeriodFilter();
 
-  const { attendants, performanceRecords: dailyRecords, productivityRecords, absences, productionGoals } = useLumoData();
+  const { attendants, performanceRecords: dailyRecords, productivityRecords, absences, productionGoals } = useEllosData();
   // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
   const performanceRecords = useMemo(
     () => mergePeriodTotals(dailyRecords, productivityRecords, dateRange),
@@ -332,7 +332,7 @@ export default function Dashboard() {
       </motion.div>
 
       <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="lumo-panel-sm p-5 xl:col-span-2">
+        <div className="ellos-panel-sm p-5 xl:col-span-2">
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
               <h2 className="text-base font-bold text-foreground">Evolução de Atendimentos</h2>
@@ -346,7 +346,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="lumo-panel-sm p-5">
+        <div className="ellos-panel-sm p-5">
           <div className="mb-2">
             <h2 className="text-base font-bold text-foreground">Distribuição por Canal</h2>
             <p className="text-sm text-muted-foreground">Ligação e WhatsApp no período</p>
@@ -410,7 +410,7 @@ export default function Dashboard() {
       <motion.div variants={pageItemVariants}>
         <Link
           href="/performance"
-          className="lumo-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/30"
+          className="ellos-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/30"
         >
           <span className="flex items-center gap-3">
             <Trophy className="h-5 w-5 text-amber-500" />
@@ -423,7 +423,7 @@ export default function Dashboard() {
         </Link>
       </motion.div>
 
-      <motion.details variants={pageItemVariants} className="lumo-panel-sm overflow-hidden">
+      <motion.details variants={pageItemVariants} className="ellos-panel-sm overflow-hidden">
         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-foreground">
           Análise detalhada
         </summary>

@@ -10,7 +10,7 @@ export interface PeriodFilterState {
   drillDownDay: string;
 }
 
-const STORAGE_KEY = "lumo-period-filter";
+const STORAGE_KEY = "ellos-period-filter";
 
 export function defaultPeriodFilterState(): PeriodFilterState {
   const today = getLocalDateString();

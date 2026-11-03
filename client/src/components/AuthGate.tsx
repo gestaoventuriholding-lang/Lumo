@@ -35,7 +35,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
         <FullScreenMessage>
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="text-sm text-muted-foreground">
-            {auth.status === "loading" ? "Abrindo o Elos…" : "Carregando seus dados…"}
+            {auth.status === "loading" ? "Abrindo o Ellos…" : "Carregando seus dados…"}
           </p>
         </FullScreenMessage>
       );
@@ -46,9 +46,9 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     case "no-access":
       return (
         <FullScreenMessage>
-          <p className="text-base font-medium text-foreground">Esta conta ainda não tem acesso ao Elos.</p>
+          <p className="text-base font-medium text-foreground">Esta conta ainda não tem acesso ao Ellos.</p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Peça a quem administra o Elos para cadastrar o seu e-mail na aba Usuários.
+            Peça a quem administra o Ellos para cadastrar o seu e-mail na aba Usuários.
           </p>
           <Button variant="outline" onClick={() => void auth.signOut()}>
             Sair

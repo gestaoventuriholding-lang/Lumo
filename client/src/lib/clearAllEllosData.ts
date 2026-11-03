@@ -1,31 +1,31 @@
 import { flushCloud, isCloudEnabled, removeKey } from "@/lib/cloudStore";
 const OPERATIONAL_KEYS = [
-  "lumo-attendants",
-  "lumo-performance-records",
-  "lumo-productivity-reports",
-  "lumo-productivity-limits",
-  "lumo-absences",
-  "lumo-production-goals",
-  "lumo-role-goals",
-  "lumo-period-filter",
-  "lumo-import-log",
-  "lumo-structure-layout",
-  "lumo-structure-layout-version",
+  "ellos-attendants",
+  "ellos-performance-records",
+  "ellos-productivity-reports",
+  "ellos-productivity-limits",
+  "ellos-absences",
+  "ellos-production-goals",
+  "ellos-role-goals",
+  "ellos-period-filter",
+  "ellos-import-log",
+  "ellos-structure-layout",
+  "ellos-structure-layout-version",
 ] as const;
 
 const CLOUD_KEYS = new Set<string>([
-  "lumo-attendants",
-  "lumo-performance-records",
-  "lumo-productivity-reports",
-  "lumo-productivity-limits",
-  "lumo-absences",
-  "lumo-production-goals",
-  "lumo-role-goals",
-  "lumo-import-log",
-  "lumo-structure-layout",
+  "ellos-attendants",
+  "ellos-performance-records",
+  "ellos-productivity-reports",
+  "ellos-productivity-limits",
+  "ellos-absences",
+  "ellos-production-goals",
+  "ellos-role-goals",
+  "ellos-import-log",
+  "ellos-structure-layout",
 ]);
 
-export type ClearedLumoDataArea =
+export type ClearedEllosDataArea =
   | "attendants"
   | "performance"
   | "absences"
@@ -35,16 +35,16 @@ export type ClearedLumoDataArea =
   | "importLog"
   | "alertState";
 
-export interface ClearAllLumoDataResult {
+export interface ClearAllEllosDataResult {
   clearedKeys: string[];
   clearedAlertStateKeys: number;
 }
 
 /**
- * Remove todos os dados operacionais do Lumo. Mantém tema, login e preferências de UI.
+ * Remove todos os dados operacionais do Ellos. Mantém tema, login e preferências de UI.
  * Com login, apaga também no banco (para o admin, isso inclui os dados de todos os usuários).
  */
-export function clearAllLumoOperationalData(): ClearAllLumoDataResult {
+export function clearAllEllosOperationalData(): ClearAllEllosDataResult {
   const clearedKeys: string[] = [];
   for (const key of OPERATIONAL_KEYS) {
     if (isCloudEnabled()) {
@@ -65,7 +65,7 @@ export function clearAllLumoOperationalData(): ClearAllLumoDataResult {
   let clearedAlertStateKeys = 0;
   for (let i = localStorage.length - 1; i >= 0; i--) {
     const key = localStorage.key(i);
-    if (key?.startsWith("lumo-alert-state-")) {
+    if (key?.startsWith("ellos-alert-state-")) {
       localStorage.removeItem(key);
       clearedAlertStateKeys++;
     }
@@ -73,8 +73,8 @@ export function clearAllLumoOperationalData(): ClearAllLumoDataResult {
   return { clearedKeys, clearedAlertStateKeys };
 }
 
-export async function resetLumoAppData(): Promise<ClearAllLumoDataResult> {
-  const result = clearAllLumoOperationalData();
+export async function resetEllosAppData(): Promise<ClearAllEllosDataResult> {
+  const result = clearAllEllosOperationalData();
   await flushCloud();
   window.location.reload();
   return result;

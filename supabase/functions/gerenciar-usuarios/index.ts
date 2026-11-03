@@ -1,4 +1,4 @@
-// Elos: gerencia quem pode entrar. Só administradores podem chamar.
+// Ellos: gerencia quem pode entrar. Só administradores podem chamar.
 // Usa a chave de serviço (disponível só aqui, nunca no navegador) para criar contas com e-mail e senha.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 

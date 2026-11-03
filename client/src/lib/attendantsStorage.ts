@@ -4,7 +4,7 @@ import type { AttendanceChannel } from "@/types/goals";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import { newId } from "@/lib/ids";
 
-const STORAGE_KEY = "lumo-attendants";
+const STORAGE_KEY = "ellos-attendants";
 
 export function loadAttendants(): Attendant[] {
   try {

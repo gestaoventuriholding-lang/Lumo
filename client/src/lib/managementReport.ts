@@ -280,7 +280,7 @@ export function managementReportFilename(data: ManagementReportData): string {
       : data.channelFilter === "Ligação"
         ? "-ligacao"
         : "-whatsapp";
-  return `relatorio-gerencial-lumo-${stamp}${channelSuffix}.pdf`;
+  return `relatorio-gerencial-ellos-${stamp}${channelSuffix}.pdf`;
 }
 
 export function hasManagementReportContent(data: ManagementReportData): boolean {

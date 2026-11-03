@@ -104,7 +104,7 @@ export default function UsersPage() {
     setCreating(true);
     try {
       await callUsers({ action: "create", email, password });
-      toast.success("Acesso liberado", { description: `${email.trim()} já pode entrar no Elos.` });
+      toast.success("Acesso liberado", { description: `${email.trim()} já pode entrar no Ellos.` });
       setEmail("");
       setPassword("");
       await load();
@@ -153,7 +153,7 @@ export default function UsersPage() {
       <motion.div variants={pageItemVariants}>
         <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Defina quem pode entrar no Elos. Todos veem e editam os mesmos dados da central.
+          Defina quem pode entrar no Ellos. Todos veem e editam os mesmos dados da central.
         </p>
       </motion.div>
 
@@ -313,7 +313,7 @@ export default function UsersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remover o acesso de {removeTarget?.email}?</AlertDialogTitle>
             <AlertDialogDescription>
-              A pessoa não consegue mais entrar no Elos. Os dados que ela cadastrou continuam na central. Você
+              A pessoa não consegue mais entrar no Ellos. Os dados que ela cadastrou continuam na central. Você
               pode liberar o acesso de novo depois.
             </AlertDialogDescription>
           </AlertDialogHeader>
