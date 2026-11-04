@@ -30,6 +30,7 @@ export const KEYS = {
   productivity: "ellos-productivity-reports",
   productivityLimits: "ellos-productivity-limits",
   workingHours: "ellos-working-hours",
+  incidents: "ellos-incidents",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -263,6 +264,47 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       label: str(r.label),
       createdAt: str(r.created_at).slice(0, 10),
     }),
+  },
+  [KEYS.incidents]: {
+    table: "incidents",
+    order: "occurred_on",
+    toRow: (i) => ({
+      id: i.id,
+      type: i.type,
+      occurred_on: i.occurredOn,
+      channel: i.channel,
+      attendant_id: nullable(i.attendantId),
+      attendant_name: str(i.attendantName),
+      protocol: str(i.protocol).trim(),
+      description: str(i.description).trim(),
+      severity: i.severity,
+      status: i.status,
+      action_taken: str(i.actionTaken).trim(),
+      resolved_at: nullable(i.resolvedAt),
+      created_at: nullable(i.createdAt) ?? undefined,
+      updated_at: nullable(i.updatedAt) ?? undefined,
+    }),
+    fromRow: (r, ctx) => {
+      const attendantId = r.attendant_id == null ? undefined : num(r.attendant_id);
+      return {
+        id: num(r.id),
+        type: str(r.type),
+        occurredOn: str(r.occurred_on),
+        channel: str(r.channel),
+        attendantId,
+        attendantName:
+          (attendantId !== undefined ? ctx.attendantNames.get(attendantId) : undefined) ??
+          str(r.attendant_name),
+        protocol: str(r.protocol),
+        description: str(r.description),
+        severity: str(r.severity),
+        status: str(r.status),
+        actionTaken: str(r.action_taken),
+        resolvedAt: optStr(r.resolved_at),
+        createdAt: str(r.created_at),
+        updatedAt: str(r.updated_at),
+      };
+    },
   },
   [KEYS.roleGoals]: {
     table: "role_goals",
@@ -550,6 +592,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     fetchAll("productivity_reports", "period_start").catch((): Row[] => []),
     fetchAll("productivity_limits", "created_at").catch((): Row[] => []),
     fetchAll("working_hours_options", "created_at").catch((): Row[] => []),
+    fetchAll("incidents", "occurred_on").catch((): Row[] => []),
   ]);
   const attendantNames = new Map(attendantRows.map((r) => [num(r.id), str(r.name)]));
   const ctx = { attendantNames };
@@ -565,6 +608,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     KEYS.productivity,
     KEYS.productivityLimits,
     KEYS.workingHours,
+    KEYS.incidents,
   ];
   const allRows = [attendantRows, ...otherRows];
   keysInOrder.forEach((key, index) => {
