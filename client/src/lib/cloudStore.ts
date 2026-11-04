@@ -62,6 +62,7 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       jornada_end: str(a.jornadaEnd),
       observation: str(a.observation),
       registration_date: nullable(a.registrationDate) ?? undefined,
+      escallo_codigo: a.escalloCodigo ?? null,
     }),
     fromRow: (r) => ({
       id: num(r.id),
@@ -73,6 +74,7 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       jornadaEnd: str(r.jornada_end),
       observation: str(r.observation),
       registrationDate: str(r.registration_date),
+      escalloCodigo: r.escallo_codigo == null ? null : Number(r.escallo_codigo),
     }),
   },
   [KEYS.performance]: {

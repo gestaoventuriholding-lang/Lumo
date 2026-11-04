@@ -33,11 +33,13 @@ import {
   Trash2,
   AlertCircle,
   Trash,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import type { Attendant } from "@/types/attendant";
 import { formatJornada, isValidJornada } from "@/lib/attendantSchedule";
+import { lerCodigoDigitado } from "@/lib/escalloVinculos";
 import AttendantOccupancyMap from "@/components/AttendantOccupancyMap";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
@@ -72,7 +74,9 @@ export default function Attendants() {
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const itemsPerPage = 10;
 
-  const [formData, setFormData] = useState<Omit<Attendant, "id" | "registrationDate" | "role">>({
+  // Código da Escallo digitado à mão (texto, para aceitar vazio)
+  const [escalloCodigoTexto, setEscalloCodigoTexto] = useState("");
+  const [formData, setFormData] = useState<Omit<Attendant, "id" | "registrationDate" | "role" | "escalloCodigo">>({
     name: "",
     serviceChannel: "Ligação",
     workingHours: "",
@@ -113,7 +117,9 @@ export default function Attendants() {
         jornadaEnd: attendant.jornadaEnd,
         observation: attendant.observation,
       });
+      setEscalloCodigoTexto(attendant.escalloCodigo != null ? String(attendant.escalloCodigo) : "");
     } else {
+      setEscalloCodigoTexto("");
       setEditingId(null);
       setFormData({
         name: "",
@@ -130,6 +136,7 @@ export default function Attendants() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setEscalloCodigoTexto("");
     setFormData({
       name: "",
       serviceChannel: "Ligação",
@@ -159,7 +166,21 @@ export default function Attendants() {
       return;
     }
 
-    const payload = { ...formData, role: ATTENDANT_ROLE };
+    const codigoLido = lerCodigoDigitado(escalloCodigoTexto);
+    if ("erro" in codigoLido) {
+      toast.error(codigoLido.erro);
+      return;
+    }
+    if (codigoLido.codigo !== null) {
+      // Um código da Escallo só pode pertencer a um colaborador.
+      const dono = attendants.find((a) => a.escalloCodigo === codigoLido.codigo && a.id !== editingId);
+      if (dono) {
+        toast.error(`O código ${codigoLido.codigo} já pertence a ${dono.name}.`);
+        return;
+      }
+    }
+
+    const payload = { ...formData, role: ATTENDANT_ROLE, escalloCodigo: codigoLido.codigo };
 
     if (editingId) {
       updateAttendant(editingId, payload);
@@ -233,13 +254,21 @@ export default function Attendants() {
               Gerencie seus colaboradores e suas informações
             </p>
           </div>
-          <Button
-            onClick={() => handleOpenModal()}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Colaborador
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/escallo-vinculos">
+                <Link2 className="h-4 w-4" />
+                Vincular com a Escallo
+              </Link>
+            </Button>
+            <Button
+              onClick={() => handleOpenModal()}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Colaborador
+            </Button>
+          </div>
         </div>
 
         {/* Search and Bulk Actions */}
@@ -572,6 +601,24 @@ export default function Attendants() {
                   {formatJornada(formData)}
                 </p>
               )}
+            </div>
+
+            {/* Código Escallo */}
+            <div className="space-y-2">
+              <label htmlFor="escallo-codigo" className="text-sm font-medium text-foreground">
+                Código Escallo
+              </label>
+              <Input
+                id="escallo-codigo"
+                inputMode="numeric"
+                placeholder="Vazio = ainda não vinculado"
+                value={escalloCodigoTexto}
+                onChange={(e) => setEscalloCodigoTexto(e.target.value)}
+                className="border-border/50 tabular-nums"
+              />
+              <p className="text-xs text-muted-foreground">
+                Número do agente no relatório da Escallo. Normalmente é preenchido pela tela Vincular com a Escallo.
+              </p>
             </div>
 
             {/* Observação */}

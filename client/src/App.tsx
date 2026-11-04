@@ -20,6 +20,7 @@ const Attendants = lazy(() => import("./pages/Attendants"));
 const Performance = lazy(() => import("./pages/Performance"));
 const Absences = lazy(() => import("./pages/Absences"));
 const Incidents = lazy(() => import("./pages/Incidents"));
+const EscalloVinculos = lazy(() => import("./pages/EscalloVinculos"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Structure = lazy(() => import("./pages/Structure"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
@@ -53,6 +54,7 @@ function AppRoutes() {
               <Route path="/performance" component={Performance} />
               <Route path="/absences" component={Absences} />
               <Route path="/incidents" component={Incidents} />
+              <Route path="/escallo-vinculos" component={EscalloVinculos} />
               <Route path="/structure" component={Structure} />
               <Route path="/calendar" component={CalendarPage} />
               <Route path="/import" component={ImportPage} />
