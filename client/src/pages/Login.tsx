@@ -64,7 +64,7 @@ export default function LoginPage({ initialMode = "signin" }: { initialMode?: Mo
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8 shadow-surface">
         <div className="flex justify-center">
-          <EllosLogo />
+          <EllosLogo background="var(--card)" />
         </div>
         <p className="mb-8 mt-2 text-center text-sm text-muted-foreground">
           Pessoas conectadas. Resultados mais fortes.

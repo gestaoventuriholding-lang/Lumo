@@ -13,6 +13,8 @@ import type {
   CalendarEventInput,
   CalendarEventUpdateInput,
 } from "@/types/calendarEvent";
+import type { Incident, IncidentInput } from "@/types/incident";
+import { applyIncidentUpdate, createIncident, loadIncidents, saveIncidents } from "@/lib/incidentStorage";
 import type { ProductionGoal, RoleGoal, PerformanceIndicator } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
 import { loadAbsences, saveAbsences, createAbsence } from "@/lib/absenceStorage";
@@ -62,6 +64,7 @@ interface EllosDataContextValue {
   productivityRecords: ProductivityRecord[];
   absences: Absence[];
   calendarEvents: CalendarEvent[];
+  incidents: Incident[];
   productionGoals: ProductionGoal[];
   roleGoals: RoleGoal[];
   productivityLimits: ProductivityLimit[];
@@ -80,6 +83,10 @@ interface EllosDataContextValue {
   addCalendarEvent: (input: CalendarEventInput) => CalendarEvent;
   updateCalendarEvent: (id: number, input: CalendarEventUpdateInput) => void;
   removeCalendarEvent: (id: number) => void;
+
+  addIncident: (input: IncidentInput) => Incident;
+  updateIncident: (id: number, input: IncidentInput) => void;
+  removeIncident: (id: number) => void;
 
   addPerformanceRecord: (record: DailyPerformanceRecord) => void;
   updatePerformanceRecord: (id: number, data: Partial<DailyPerformanceRecord>) => void;
@@ -119,6 +126,7 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
   const [calendarEvents, setCalendarEventsState] = useState<CalendarEvent[]>(() =>
     loadCalendarEvents()
   );
+  const [incidents, setIncidentsState] = useState<Incident[]>(() => loadIncidents());
   const [productionGoals, setProductionGoalsState] = useState<ProductionGoal[]>(() =>
     loadProductionGoals()
   );
@@ -154,6 +162,17 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setCalendarEventsState((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         saveCalendarEvents(next);
+        return next;
+      });
+    },
+    []
+  );
+
+  const setIncidents = useCallback(
+    (updater: Incident[] | ((prev: Incident[]) => Incident[])) => {
+      setIncidentsState((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        saveIncidents(next);
         return next;
       });
     },
@@ -330,6 +349,33 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
     [setCalendarEvents]
   );
 
+  const addIncident = useCallback(
+    (input: IncidentInput) => {
+      const created = createIncident(input, attendants);
+      setIncidents((prev) => [...prev, created]);
+      return created;
+    },
+    [attendants, setIncidents]
+  );
+
+  const updateIncident = useCallback(
+    (id: number, input: IncidentInput) => {
+      setIncidents((prev) =>
+        prev.map((incident) =>
+          incident.id === id ? applyIncidentUpdate(incident, input, attendants) : incident
+        )
+      );
+    },
+    [attendants, setIncidents]
+  );
+
+  const removeIncident = useCallback(
+    (id: number) => {
+      setIncidents((prev) => prev.filter((incident) => incident.id !== id));
+    },
+    [setIncidents]
+  );
+
   const addPerformanceRecord = useCallback(
     (record: DailyPerformanceRecord) => {
       setPerformanceRecords((prev) => [...prev, record]);
@@ -480,6 +526,7 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       productivityRecords,
       absences,
       calendarEvents,
+      incidents,
       productionGoals,
       roleGoals,
       productivityLimits,
@@ -495,6 +542,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       addCalendarEvent,
       updateCalendarEvent,
       removeCalendarEvent,
+      addIncident,
+      updateIncident,
+      removeIncident,
       addPerformanceRecord,
       updatePerformanceRecord,
       removePerformanceRecord,
@@ -513,6 +563,7 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       productivityRecords,
       absences,
       calendarEvents,
+      incidents,
       productionGoals,
       roleGoals,
       productivityLimits,
@@ -528,6 +579,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       addCalendarEvent,
       updateCalendarEvent,
       removeCalendarEvent,
+      addIncident,
+      updateIncident,
+      removeIncident,
       addPerformanceRecord,
       updatePerformanceRecord,
       removePerformanceRecord,
