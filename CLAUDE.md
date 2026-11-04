@@ -2,8 +2,10 @@
 
 O produto se chama **Ellos** (antes Lumo, depois Elos): sistema de gestão de central de atendimento (call center) da Venturi Tecnologia.
 Identidade visual: neutros quentes + laranja da prancha de marca (#FF6B00; #FF8A00 no modo escuro), fontes Inter
-(interface) e Manrope (títulos, KPIs e logo); logo provisório em texto em `client/src/components/EllosLogo.tsx`
-(trocar por `client/public/brand/ellos-symbol.svg` e `ellos-logo.svg` quando os arquivos existirem). O nome mudou em todo o código: chaves de armazenamento (`ellos-*`), classes CSS
+(interface) e Manrope (títulos, KPIs e logo). O símbolo (dois elos entrelaçados, laranja + branco/escuro) é um SVG
+redesenhado a partir da prancha de marca, em `client/src/components/EllosLogo.tsx` (menu aberto: símbolo + "Ellos";
+fechado: só o símbolo); favicon em `client/public/brand/ellos-favicon.svg`. Os arquivos oficiais
+(`ellos-symbol.svg`, `ellos-logo.svg`) ainda não foram entregues: trocar quando existirem. O nome mudou em todo o código: chaves de armazenamento (`ellos-*`), classes CSS
 (`ellos-*`), `EllosDataContext`. No primeiro acesso, `migrateLegacyStorageKeys()` (`storageMigration.ts`) copia as
 chaves antigas `lumo-*` para `ellos-*`, então ninguém perde dados nem sessão. **Continuam com o nome antigo** só as peças
 externas: repositório GitHub, projeto Vercel, domínio `lumo.venturiholding.com.br` e projeto Supabase `lumo`.
@@ -65,7 +67,8 @@ template do Manus foram removidos).
 - Migrações em `supabase/migrations/` (aplicadas manualmente no editor SQL ou pelo MCP do Supabase).
 - Tabelas: `attendants`, `performance_records`, `absences`, `calendar_events`, `production_goals`,
   `role_goals`, `structure_layouts` (layout único e compartilhado), `import_logs`, `productivity_reports`,
-  `user_preferences` (1 por usuário, inclui `analysis_note`), `admins`, `members`.
+  `user_preferences` (1 por usuário, inclui `analysis_note`), `admins`, `members`, `incidents` (ocorrências;
+  chave `ellos-incidents`; `attendant_id` vira nulo se a pessoa for excluída, e `attendant_name` guarda o nome).
 - RLS em todas: os dados são **compartilhados pela equipe**. Quem está em `members` (ou `admins`) lê e
   altera tudo (`public.is_member()`); visitante anônimo e conta sem acesso não veem nada. Só o admin
   gerencia usuários, pela Edge Function `gerenciar-usuarios` (aba Usuários).
@@ -91,6 +94,11 @@ template do Manus foram removidos).
   vivo**: sem painel em tempo real, filas ou integração com telefonia. O protótipo
   `prototipos/central-operacao.html` não vai ser implementado.
 - Canais da central: Ligação e WhatsApp. Contexto: laboratório/clínica.
+- **Ocorrências** (rota `/incidents`, `pages/Incidents.tsx`, `lib/incidentStorage.ts`, tabela `incidents`): registro
+  de reclamações, erros de agendamento e agendamentos incorretos. Identifica o atendimento pelo **protocolo da
+  Escallo**, nunca por nome ou CPF do paciente (LGPD): o formulário avisa, sem bloquear, se o texto parece ter CPF
+  ou e-mail. Situação: aberta → em tratamento → resolvida; resolver exige a ação tomada. O Ellos só guarda e copia o
+  protocolo: **não puxa conversa nem gravação da Escallo** (sem integração).
 
 ## Pendências conhecidas
 1. Cadastro público no Supabase ainda ligado (qualquer um com o link pode criar conta vazia).
