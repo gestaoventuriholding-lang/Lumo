@@ -158,6 +158,7 @@ describe("vínculo com a Escallo: tradução do erro da função", () => {
     expect(await traduzirErroDaFuncao({ context: { status: 500 } })).toMatch(/falar com o servidor/);
     expect(await traduzirErroDaFuncao({ context: { status: 500, json: async () => { throw new Error("x"); } } })).toMatch(/falar com o servidor/);
     expect(await traduzirErroDaFuncao(undefined)).toMatch(/falar com o servidor/);
-    expect(await traduzirErroDaFuncao({ name: "FunctionsFetchError", message: "Failed to send a request" })).toMatch(/falar com o servidor/);
+    // Função não publicada: o navegador bloqueia a chamada e o erro chega como falha de envio.
+    expect(await traduzirErroDaFuncao({ name: "FunctionsFetchError", message: "Failed to send a request" })).toMatch(/provavelmente ainda não foi publicada/);
   });
 });

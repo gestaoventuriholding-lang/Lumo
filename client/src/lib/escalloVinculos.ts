@@ -115,6 +115,8 @@ export function lerCodigoDigitado(texto: string): { codigo: number | null } | { 
 
 const MSG_NAO_PUBLICADA =
   "A busca na Escallo ainda não foi publicada neste ambiente. Peça para publicar a função escallo-rel025.";
+const MSG_SEM_RESPOSTA =
+  "Não consegui falar com a função escallo-rel025. Se a internet está funcionando, ela provavelmente ainda não foi publicada neste ambiente.";
 const MSG_SEM_SERVIDOR = "Não foi possível falar com o servidor. Verifique a internet e tente de novo.";
 
 /**
@@ -130,6 +132,7 @@ export async function traduzirErroDaFuncao(error: unknown): Promise<string> {
   const mensagem = typeof e.message === "string" ? e.message : "";
 
   if (status === 404 || nome === "FunctionsRelayError" || /not[ _]found|404/i.test(mensagem)) return MSG_NAO_PUBLICADA;
+  if (nome === "FunctionsFetchError") return MSG_SEM_RESPOSTA;
   if (ctx && typeof ctx.json === "function") {
     try {
       const corpo = (await (ctx as { json: () => Promise<unknown> }).json()) as { error?: unknown } | null;
