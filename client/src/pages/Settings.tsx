@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import GoalsManagement from "@/components/GoalsManagement";
 import ProductivityLimitsCard from "@/components/ProductivityLimitsCard";
 import WorkingHoursCard from "@/components/WorkingHoursCard";
+import ChannelColorsCard from "@/components/ChannelColorsCard";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
   AlertDialog,
@@ -82,6 +83,11 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Cores dos canais */}
+      <motion.div variants={pageItemVariants}>
+        <ChannelColorsCard />
       </motion.div>
 
       {/* Preferences Section */}

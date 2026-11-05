@@ -8,6 +8,7 @@ import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVarian
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { applyPreset, ACTIVE_PRESET } from "./lib/themePreset";
+import { ChannelColorsApplier } from "./hooks/useChannelColors";
 import { EllosDataProvider } from "./contexts/EllosDataContext";
 import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
@@ -110,6 +111,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
+          <ChannelColorsApplier />
           <AuthProvider>
             <AuthGate>
               <EllosDataProvider>
