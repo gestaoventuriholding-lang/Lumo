@@ -168,3 +168,21 @@ describe("vínculo com a Escallo: tradução do erro da função", () => {
     expect(await traduzirErroDaFuncao({ name: "FunctionsFetchError", message: "Failed to send a request" })).toMatch(/provavelmente ainda não foi publicada/);
   });
 });
+
+describe("vínculo com a Escallo: contador de já vinculados", () => {
+  it("conta os registros que a função já devolveu como ligados (eles não vêm nas sobras)", () => {
+    const sem = prepararVinculos([sobra({ codigo: 200 })], equipe);
+    expect(sem.jaVinculados).toBe(0);
+    const com = prepararVinculos([sobra({ codigo: 200 })], equipe, 20);
+    expect(com.jaVinculados).toBe(20);
+  });
+  it("soma os da resposta com os que acabaram de ser confirmados na tela", () => {
+    // 300 já é de Carla (id 3): aparece nas sobras e conta como vinculado agora
+    const l = prepararVinculos([sobra({ codigo: 300 }), sobra({ codigo: 400 })], equipe, 5);
+    expect(l.jaVinculados).toBe(6);
+  });
+  it("valor inválido não quebra", () => {
+    expect(prepararVinculos([], equipe, -3).jaVinculados).toBe(0);
+    expect(prepararVinculos([], equipe, 2.9).jaVinculados).toBe(2);
+  });
+});

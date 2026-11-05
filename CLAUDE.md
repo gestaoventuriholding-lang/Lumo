@@ -7,8 +7,9 @@ redesenhado a partir da prancha de marca, em `client/src/components/EllosLogo.ts
 fechado: só o símbolo); favicon em `client/public/brand/ellos-favicon.svg`. Os arquivos oficiais
 (`ellos-symbol.svg`, `ellos-logo.svg`) ainda não foram entregues: trocar quando existirem. O nome mudou em todo o código: chaves de armazenamento (`ellos-*`), classes CSS
 (`ellos-*`), `EllosDataContext`. No primeiro acesso, `migrateLegacyStorageKeys()` (`storageMigration.ts`) copia as
-chaves antigas `lumo-*` para `ellos-*`, então ninguém perde dados nem sessão. **Continuam com o nome antigo** só as peças
-externas: repositório GitHub, projeto Vercel, domínio `lumo.venturiholding.com.br` e projeto Supabase `lumo`.
+chaves antigas `lumo-*` para `ellos-*`, então ninguém perde dados nem sessão. Os projetos da Vercel e do Supabase já se
+chamam `ellos` (a URL e o ref do banco não mudam). **Continua com o nome antigo** só o repositório GitHub (`Lumo`); o domínio
+`lumo.venturiholding.com.br` e o alias `lumo-lyart.vercel.app` ainda respondem, sem redirecionamento para o `ellos`.
 Dona do produto: Amanda Silva (CEO). Fale em português do Brasil.
 
 ## Onde tudo está
@@ -16,10 +17,10 @@ Dona do produto: Amanda Silva (CEO). Fale em português do Brasil.
 | Peça | Onde |
 |---|---|
 | Código | GitHub `gestaoventuriholding-lang/Lumo`, branch `main` |
-| Produção | https://lumo.venturiholding.com.br (reserva: https://lumo-lyart.vercel.app) |
-| Hospedagem | Vercel, equipe "Venturi Holding", projeto `lumo`. Cada push no `main` publica sozinho |
-| DNS | Cloudflare (`venturiholding.com.br`): CNAME `lumo` → Vercel, proxy desligado |
-| Banco e login | Supabase, projeto `lumo` (ref `uvhweshxiexbrjcqgvnu`, região São Paulo), conta amanda.silva@venturiholding.com.br |
+| Produção | https://ellos.venturiholding.com.br (o antigo https://lumo.venturiholding.com.br e https://lumo-lyart.vercel.app ainda respondem) |
+| Hospedagem | Vercel, equipe "Venturi Holding", projeto `ellos`. Cada push no `main` publica sozinho; cada branch ganha uma pré-visualização `ellos-git-<branch>-venturi-holding.vercel.app` **que usa o MESMO banco da produção** |
+| DNS | Cloudflare (`venturiholding.com.br`): CNAMEs `ellos` e `lumo` → Vercel, proxy desligado |
+| Banco e login | Supabase, projeto `ellos` (ref `uvhweshxiexbrjcqgvnu`, região São Paulo), conta amanda.silva@venturiholding.com.br |
 
 ## Comandos
 
@@ -67,19 +68,28 @@ template do Manus foram removidos).
 - Migrações em `supabase/migrations/` (aplicadas manualmente no editor SQL ou pelo MCP do Supabase).
 - Tabelas: `attendants`, `performance_records`, `absences`, `calendar_events`, `production_goals`,
   `role_goals`, `structure_layouts` (layout único e compartilhado), `import_logs`, `productivity_reports`,
-  `user_preferences` (1 por usuário, inclui `analysis_note`), `admins`, `members`, `incidents` (ocorrências;
-  chave `ellos-incidents`; `attendant_id` vira nulo se a pessoa for excluída, e `attendant_name` guarda o nome).
+  `user_preferences` (1 por usuário, inclui `analysis_note`), `admins`, `members`, `productivity_limits` (limites de pausa,
+  ocupação e tempo logado), `incidents` (ocorrências;
+  chave `ellos-incidents`; `attendant_id` vira nulo se a pessoa for excluída, e `attendant_name` guarda o nome) e
+  `login_alerts` (alertas de tempo logado desconsiderado; ver "Integração com a Escallo"). `attendants` tem a coluna
+  `escallo_codigo` (código do agente na Escallo; único; vazio = não vinculado).
 - RLS em todas: os dados são **compartilhados pela equipe**. Quem está em `members` (ou `admins`) lê e
   altera tudo (`public.is_member()`); visitante anônimo e conta sem acesso não veem nada. Só o admin
   gerencia usuários, pela Edge Function `gerenciar-usuarios` (aba Usuários).
-- `performance_records` e `absences` herdam o `owner_id` do atendente (gatilho `check_attendant_owner`).
-- O e-mail amanda.silva@venturiholding.com.br vira admin automaticamente ao criar a conta
-  (gatilho `ellos_grant_admin_on_signup`).
+- `performance_records`, `productivity_reports`, `absences` e `login_alerts` herdam o `owner_id` do atendente (gatilho `check_attendant_owner`).
+- O e-mail amanda.silva@venturiholding.com.br vira admin automaticamente ao criar a conta. O gatilho no banco ainda se
+  chama `lumo_grant_admin_on_signup`: a migração que o renomeia para `ellos_grant_admin_on_signup`
+  (`20261031120000`) **ainda não foi aplicada**.
+- Backups pontuais de dados ficam no schema `backup_fase_b` (fora da API; não apagar sem a Amanda pedir).
+- A versão gravada pelo Supabase numa migração aplicada pelo MCP tem a data/hora da aplicação; o arquivo no repositório usa
+  a mesma versão (renomeie o arquivo depois de aplicar). Desfazeres ficam em `supabase/desfazer/` (não são migrações).
 - Toda mudança de esquema vira um arquivo novo em `supabase/migrations/` e depois rode os advisors
   de segurança do Supabase.
 
 ## Convenções
 - Textos da interface em português, voz ativa, botões dizem o que fazem ("Salvar meta").
+- Nada vai para o ar sem a Amanda aprovar: migração, publicação de função, merge na `main` e gravação de dados reais
+  (sempre com backup antes e simulação primeiro).
 - Mensagens de erro dizem o que houve e como resolver.
 - Commits em português. Rode `pnpm test` e `pnpm vite build` antes de enviar.
 - Não reintroduza nada do Manus (login, plugins `vite-plugin-manus-runtime`, `debug-collector`).
@@ -100,6 +110,35 @@ template do Manus foram removidos).
   ou e-mail. Situação: aberta → em tratamento → resolvida; resolver exige a ação tomada. O Ellos só guarda e copia o
   protocolo: **não puxa conversa nem gravação da Escallo** (sem integração).
 
+## Integração com a Escallo (relatórios do dia, nunca ao vivo)
+A API da Escallo é lida **por dia fechado**, para trazer os relatórios sem baixar planilha. Continua valendo: nada em tempo real.
+- **Função** `supabase/functions/escallo-rel025` (Edge Function, `verify_jwt` ligado, só lê): exige login e que a pessoa seja da
+  equipe (`is_member`), chama o rel025 (ligação) de **um dia**, liga cada agente ao colaborador pelo **código** e devolve a prévia
+  (`vinculados`, `sobras`, `loginDesconsiderado`). Não grava nada. O token fica só no secret `ESCALLO_TOKEN` do Supabase (nunca no
+  código, no chat ou em log). A lista de origens permitidas está em `ORIGENS_PERMITIDAS` (aceita `lumo-` e `ellos-`).
+  Lógica pura e testável em `mapeamento.ts` (testes em `client/src/lib/escalloRel025.test.tsx`). Para rodar local: `npx deno`.
+- **Vínculo** (rota `/escallo-vinculos`, botão em Atendentes): sugere o colaborador pelo nome, mas **só vincula o que a pessoa confirma**; nunca
+  cria colaborador. O campo "Código Escallo" também se edita no cadastro. `?demo=1` abre uma demonstração com dados inventados e
+  **só existe em pré-visualização** (`demoPermitida`); nunca no oficial.
+- **rel025** (ligação) e **rel090** (WhatsApp): o `codigo` do agente é o mesmo nos dois. Ligação = entrada + saída atendidas
+  (`ligacoesOferecidasAtendidas` + `ligacoesRealizadasAtendidas`). Tempos em segundos. TO3/TO4 vêm 0 (jornada não configurada na Escallo) e viram vazio.
+  Ignore a linha `_media` do rel090 e importe só agentes **vinculados a colaboradores** (os demais são supervisores, campanha de confirmação etc.).
+  A paginação da Escallo não funciona: chame uma vez por dia e confira `quantidade`.
+- **Login e pausa são do agente**, iguais nos dois canais. Por isso só se grava Ligação para quem teve atendimento de ligação.
+- **Regra do tempo logado acima do limite** (padrão **12 h por dia**, configurável em Configurações → limites, métrica `login_max_hours`;
+  limite desligado = regra desligada): os atendimentos são gravados, mas login, pausa (todas), ocupação 1–4 e chamadas por hora do dia
+  ficam **vazios nos dois canais** e gera-se um alerta. Lógica em `client/src/lib/loginLimit.ts` (usada pela importação de planilhas
+  e pela função). Só vale para relatório de **um dia**; relatório de período não passa pela regra.
+- **Alertas** (`login_alerts`, um por colaborador e dia): aparecem no sininho com "Tempo logado desconsiderado — verificar se a
+  pessoa deslogou"; o gestor marca **visto** (continua na lista) ou **resolvido** (sai). A situação é compartilhada pela equipe
+  (diferente dos outros alertas do sino, que guardam "lido" só no navegador e zeram todo dia). Pré-visualização: `?demoalerta=1`.
+- **Gravação de dados da Escallo** ainda não é um botão no app: foi feita em scripts locais (pasta `scripts/`, não versionada),
+  sempre com simulação, backup e desfazer. A Fase B de 29/10 gravou só Ligação (8 colaboradores) com origem `API Escallo`.
+
 ## Pendências conhecidas
 1. Cadastro público no Supabase ainda ligado (qualquer um com o link pode criar conta vazia).
    Sugestão já feita: desligar em Authentication → Sign In / Providers → "Allow new users to sign up".
+2. Troca de nome Lumo → Ellos: faltam renomear o repositório GitHub, redirecionar `lumo.venturiholding.com.br`, conferir "Site URL"
+   e "Redirect URLs" do Supabase Auth e depois remover os padrões `lumo-` do código (`ORIGENS_PERMITIDAS`, `demoPermitida`).
+3. Importar de 01/10 em diante os dados da API (ligação e WhatsApp): depende de aprovação, simulação e backup.
+4. Aviso do Supabase: `rls_auto_enable()` executável por visitante e por logado (verificar se é intencional).
