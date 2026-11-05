@@ -113,24 +113,38 @@ export function lerCodigoDigitado(texto: string): { codigo: number | null } | { 
   return { codigo: Number(t) };
 }
 
+const MSG_NAO_PUBLICADA =
+  "A busca na Escallo ainda não foi publicada neste ambiente. Peça para publicar a função escallo-rel025.";
+const MSG_SEM_SERVIDOR = "Não foi possível falar com o servidor. Verifique a internet e tente de novo.";
+
+/**
+ * Traduz o erro do supabase.functions.invoke para uma mensagem que diz o que fazer.
+ * O formato do erro varia (resposta HTTP, função inexistente, falha de rede), então nada aqui presume que
+ * `context` seja uma Response: tudo é conferido antes de usar.
+ */
+export async function traduzirErroDaFuncao(error: unknown): Promise<string> {
+  const e = (error ?? {}) as { name?: unknown; message?: unknown; context?: unknown };
+  const ctx = e.context as { status?: unknown; json?: unknown } | undefined;
+  const status = typeof ctx?.status === "number" ? ctx.status : undefined;
+  const nome = typeof e.name === "string" ? e.name : "";
+  const mensagem = typeof e.message === "string" ? e.message : "";
+
+  if (status === 404 || nome === "FunctionsRelayError" || /not[ _]found|404/i.test(mensagem)) return MSG_NAO_PUBLICADA;
+  if (ctx && typeof ctx.json === "function") {
+    try {
+      const corpo = (await (ctx as { json: () => Promise<unknown> }).json()) as { error?: unknown } | null;
+      if (corpo && typeof corpo.error === "string" && corpo.error) return corpo.error;
+    } catch {
+      /* corpo que não é JSON: cai na mensagem padrão */
+    }
+  }
+  return MSG_SEM_SERVIDOR;
+}
+
 /** Chama a função escallo-rel025 (só leitura). Traduz os erros para mensagens que dizem o que fazer. */
 export async function buscarVinculosNaEscallo(dia: string): Promise<RespostaEscallo> {
   const { data, error } = await getSupabase().functions.invoke("escallo-rel025", { body: { dia } });
-  if (error) {
-    const resposta = (error as { context?: Response }).context;
-    if (resposta) {
-      if (resposta.status === 404) {
-        throw new Error("A busca na Escallo ainda não foi publicada neste ambiente. Peça para publicar a função escallo-rel025.");
-      }
-      try {
-        const corpo = await resposta.json();
-        if (corpo?.error) throw new Error(String(corpo.error));
-      } catch (interno) {
-        if (interno instanceof Error && interno.message) throw interno;
-      }
-    }
-    throw new Error("Não foi possível falar com o servidor. Verifique a internet e tente de novo.");
-  }
+  if (error) throw new Error(await traduzirErroDaFuncao(error));
   const r = data as RespostaEscallo | null;
   if (!r || !Array.isArray(r.sobras)) throw new Error("A resposta da busca veio em um formato inesperado.");
   return r;

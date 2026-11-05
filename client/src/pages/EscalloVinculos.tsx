@@ -227,7 +227,7 @@ export default function EscalloVinculos() {
       <Card>
         <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
           <div className="space-y-1">
-            <label htmlFor="dia-escallo" className="text-sm font-medium text-foreground">
+            <label htmlFor="dia-escallo" className="block text-sm font-medium text-foreground">
               Dia do relatório
             </label>
             <Input id="dia-escallo" type="date" value={dia} max={ontem()} onChange={(e) => setDia(e.target.value)} className="w-44" />
@@ -263,7 +263,7 @@ export default function EscalloVinculos() {
 
           <div className="flex flex-wrap gap-2 text-sm">
             <Badge variant="secondary">{resposta.escallo.registros} agentes na Escallo</Badge>
-            <Badge variant="secondary">{listas.jaVinculados} já vinculados</Badge>
+            <Badge variant="secondary">{listas.jaVinculados} já vinculado(s)</Badge>
             <Badge variant="secondary">{nSugestoes} com sugestão</Badge>
             <Badge variant="secondary">{listas.semSugestao.length} sem sugestão</Badge>
             <Badge variant="secondary">{listas.colaboradoresSemCodigo.length} colaboradores sem código</Badge>
@@ -341,8 +341,8 @@ export default function EscalloVinculos() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar {prontas} vínculo(s){demo ? " (demonstração)" : ""}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cada código da Escallo será gravado no colaborador mostrado ao lado dele, com as trocas que você fez. Linhas com
-              aviso ficam de fora. Você pode corrigir depois no cadastro do colaborador.
+              Cada código da Escallo será gravado no colaborador mostrado ao lado dele, com as trocas que você fez. Linhas com problema (colaborador repetido ou já vinculado)
+              ficam de fora. Você pode corrigir depois no cadastro do colaborador.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

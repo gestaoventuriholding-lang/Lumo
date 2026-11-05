@@ -141,3 +141,23 @@ describe("demonstração: só na pré-visualização", () => {
     expect(demoPermitida("")).toBe(false);
   });
 });
+
+import { traduzirErroDaFuncao } from "./escalloVinculos";
+
+describe("vínculo com a Escallo: tradução do erro da função", () => {
+  it("função inexistente (404, erro de relay ou mensagem de não encontrada) vira o aviso de não publicada", async () => {
+    expect(await traduzirErroDaFuncao({ context: { status: 404 } })).toMatch(/ainda não foi publicada/);
+    expect(await traduzirErroDaFuncao({ name: "FunctionsRelayError", context: {} })).toMatch(/ainda não foi publicada/);
+    expect(await traduzirErroDaFuncao({ message: "Requested function was not found" })).toMatch(/ainda não foi publicada/);
+  });
+  it("usa a mensagem que a própria função devolveu", async () => {
+    const context = { status: 400, json: async () => ({ error: "A data 2026-02-31 não existe." }) };
+    expect(await traduzirErroDaFuncao({ context })).toBe("A data 2026-02-31 não existe.");
+  });
+  it("não quebra com context sem json, corpo inválido, erro vazio ou de rede", async () => {
+    expect(await traduzirErroDaFuncao({ context: { status: 500 } })).toMatch(/falar com o servidor/);
+    expect(await traduzirErroDaFuncao({ context: { status: 500, json: async () => { throw new Error("x"); } } })).toMatch(/falar com o servidor/);
+    expect(await traduzirErroDaFuncao(undefined)).toMatch(/falar com o servidor/);
+    expect(await traduzirErroDaFuncao({ name: "FunctionsFetchError", message: "Failed to send a request" })).toMatch(/falar com o servidor/);
+  });
+});
