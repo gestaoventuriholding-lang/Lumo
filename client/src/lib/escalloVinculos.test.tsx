@@ -104,3 +104,22 @@ describe("vínculo com a Escallo: campo digitado", () => {
     expect(lerCodigoDigitado("1,5")).toHaveProperty("erro");
   });
 });
+
+import { dadosDemonstracao } from "./escalloDemo";
+
+describe("vínculo com a Escallo: demonstração", () => {
+  it("usa só dados inventados (ids negativos, nomes de demonstração) e monta as listas esperadas", () => {
+    const { colaboradores, resposta } = dadosDemonstracao();
+    expect(colaboradores.every((c) => c.id < 0 && c.name.includes("Demonstração"))).toBe(true);
+    expect(resposta.sobras.every((s) => s.nome.includes("Demonstração"))).toBe(true);
+    const l = prepararVinculos(resposta.sobras, colaboradores);
+    expect(l.sugestoes.map((x) => x.codigo)).toEqual([101, 102, 103, 104]);
+    expect(l.semSugestao.map((x) => x.codigo)).toEqual([201, 202]);
+    expect(l.semCodigo).toHaveLength(1);
+    expect(l.jaVinculados).toBe(1);
+    expect(l.colaboradoresSemCodigo).toHaveLength(6);
+  });
+  it("cada chamada devolve dados novos (confirmar na demonstração não contamina a próxima)", () => {
+    expect(dadosDemonstracao().colaboradores).not.toBe(dadosDemonstracao().colaboradores);
+  });
+});

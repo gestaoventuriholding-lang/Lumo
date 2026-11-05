@@ -25,6 +25,7 @@ import {
   type LinhaVinculo,
   type RespostaEscallo,
 } from "@/lib/escalloVinculos";
+import { dadosDemonstracao } from "@/lib/escalloDemo";
 import type { Attendant } from "@/types/attendant";
 
 /** Ontem, no horário de São Paulo (a Escallo só fecha o relatório do dia depois que ele acaba). */
@@ -46,7 +47,11 @@ function comoEntrada(a: Attendant, escalloCodigo: number) {
 }
 
 export default function EscalloVinculos() {
-  const { attendants, updateAttendant } = useEllosData();
+  const { attendants: reais, updateAttendant } = useEllosData();
+  // Demonstração: dados inventados e nada é salvo. Abre também com ?demo=1 no endereço.
+  const [demo, setDemo] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1");
+  const [colaboradoresDemo, setColaboradoresDemo] = useState<Attendant[]>(() => dadosDemonstracao().colaboradores);
+  const attendants = demo ? colaboradoresDemo : reais;
   const [dia, setDia] = useState(ontem);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -71,7 +76,21 @@ export default function EscalloVinculos() {
     return new Set([...contagem].filter(([, n]) => n > 1).map(([id]) => id));
   }, [listas, escolhas]);
 
+  function alternarDemo(ligar: boolean) {
+    setDemo(ligar);
+    setColaboradoresDemo(dadosDemonstracao().colaboradores);
+    setResposta(null);
+    setErro(null);
+    setEscolhas({});
+  }
+
   async function buscar() {
+    if (demo) {
+      setErro(null);
+      setEscolhas({});
+      setResposta(dadosDemonstracao().resposta);
+      return;
+    }
     setCarregando(true);
     setErro(null);
     try {
@@ -98,13 +117,18 @@ export default function EscalloVinculos() {
       return false;
     }
     const colaborador = attendants.find((a) => a.id === id)!;
-    updateAttendant(colaborador.id, comoEntrada(colaborador, l.codigo));
+    if (demo) {
+      // Demonstração: só a cópia local muda. Nada vai para o banco.
+      setColaboradoresDemo((prev) => prev.map((a) => (a.id === colaborador.id ? { ...a, escalloCodigo: l.codigo } : a)));
+    } else {
+      updateAttendant(colaborador.id, comoEntrada(colaborador, l.codigo));
+    }
     aceitos.set(l.codigo, colaborador.id);
     return true;
   }
 
   function confirmarUma(l: LinhaVinculo) {
-    if (confirmar(l)) toast.success("Vínculo confirmado.");
+    if (confirmar(l)) toast.success(demo ? "Vínculo confirmado na demonstração (nada foi salvo)." : "Vínculo confirmado.");
   }
 
   function confirmarSugestoes() {
@@ -118,7 +142,7 @@ export default function EscalloVinculos() {
       else recusados += 1;
     }
     setConfirmarTodas(false);
-    if (feitos) toast.success(`${feitos} vínculo(s) confirmado(s).`);
+    if (feitos) toast.success(demo ? `${feitos} vínculo(s) confirmado(s) na demonstração (nada foi salvo).` : `${feitos} vínculo(s) confirmado(s).`);
     if (recusados) toast.warning(`${recusados} linha(s) ficaram de fora: confira os avisos na tela.`);
   }
 
@@ -184,6 +208,17 @@ export default function EscalloVinculos() {
         </p>
       </div>
 
+      {demo && (
+        <div role="status" className="flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            <strong>Modo demonstração.</strong> Os nomes e códigos são inventados e o salvamento está desligado: nada vai para o banco nem para a Escallo.
+          </span>
+          <Button variant="outline" size="sm" onClick={() => alternarDemo(false)}>
+            Sair da demonstração
+          </Button>
+        </div>
+      )}
+
       <Card>
         <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
           <div className="space-y-1">
@@ -199,6 +234,11 @@ export default function EscalloVinculos() {
           <p className="text-xs text-muted-foreground sm:ml-2">
             Só lê a lista de agentes do dia escolhido. Não grava nada no Ellos.
           </p>
+          {!demo && (
+            <Button variant="link" size="sm" className="sm:ml-auto" onClick={() => alternarDemo(true)}>
+              Ver demonstração
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -294,7 +334,7 @@ export default function EscalloVinculos() {
       <AlertDialog open={confirmarTodas} onOpenChange={setConfirmarTodas}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar {prontas} vínculo(s)?</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar {prontas} vínculo(s){demo ? " (demonstração)" : ""}?</AlertDialogTitle>
             <AlertDialogDescription>
               Cada código da Escallo será gravado no colaborador mostrado ao lado dele, com as trocas que você fez. Linhas com
               aviso ficam de fora. Você pode corrigir depois no cadastro do colaborador.
