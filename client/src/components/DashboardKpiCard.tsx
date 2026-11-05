@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import ChartAreaGradient from "@/components/ChartAreaGradient";
 import { TrendArrow } from "@/components/ToneMark";
@@ -14,7 +14,7 @@ type SparkPoint = { v: number };
 interface DashboardKpiCardProps {
   title: string;
   value: string;
-  comparison: string;
+  comparison: ReactNode;
   footnote?: string;
   /** Variação frente ao período anterior */
   delta?: Change;

@@ -67,6 +67,7 @@ import {
   trendChartKind,
 } from "@/lib/chartTheme";
 import ChartAreaGradient from "@/components/ChartAreaGradient";
+import { ChannelIcon } from "@/components/ChannelBadge";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -294,12 +295,24 @@ export default function Dashboard() {
       title: periodAttendancesLabel(period),
       value: channelTotals.total > 0 ? formatCount(channelTotals.total) : "—",
       comparison:
-        channelTotals.total > 0
-          ? `${formatCount(channelTotals.ligacao)} Ligação · ${formatCount(channelTotals.whatsapp)} WhatsApp`
-          : "Sem registros no período",
+        channelTotals.total > 0 ? (
+          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="inline-flex items-center gap-1">
+              <ChannelIcon channel="Ligação" className="h-3.5 w-3.5" />
+              {formatCount(channelTotals.ligacao)} Ligação
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <ChannelIcon channel="WhatsApp" className="h-3.5 w-3.5" />
+              {formatCount(channelTotals.whatsapp)} WhatsApp
+            </span>
+          </span>
+        ) : (
+          "Sem registros no período"
+        ),
       footnote: `${dashboardStats.attendantsWithRecords} colaboradores com registros`,
       delta: describeChange(channelTotals.total, previous.stats.totalAttendances, previous.name),
-      trend: "up" as const,
+      // a linha acima é só a divisão por canal (sem bom/ruim); quem diz melhorou ou piorou é a variação abaixo, com seta
+      trend: "neutral" as const,
       icon: TrendingUp,
       iconBg: "bg-primary-soft",
       iconColor: "text-primary",
