@@ -21,7 +21,10 @@ const URL_ESCALLO =
 const ORIGENS_PERMITIDAS = [
   /^https:\/\/ellos\.venturiholding\.com\.br$/,
   /^https:\/\/lumo-lyart\.vercel\.app$/,
+  // Pré-visualizações da Vercel. "lumo-" é o nome atual do projeto; "ellos-" vale depois que ele for renomeado.
+  // Os dois ficam aceitos durante a troca de nome.
   /^https:\/\/lumo-git-[a-z0-9-]+-venturi-holding\.vercel\.app$/,
+  /^https:\/\/ellos-git-[a-z0-9-]+-venturi-holding\.vercel\.app$/,
   /^http:\/\/localhost:\d+$/,
 ];
 

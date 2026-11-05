@@ -131,6 +131,9 @@ describe("demonstração: só na pré-visualização", () => {
     expect(demoPermitida("localhost")).toBe(true);
     expect(demoPermitida("lumo-git-feat-escallo-rel025-venturi-holding.vercel.app")).toBe(true);
     expect(demoPermitida("lumo-4k2x9abc1-venturi-holding.vercel.app")).toBe(true);
+    // Nome novo do projeto, depois da troca
+    expect(demoPermitida("ellos-git-feat-escallo-rel025-venturi-holding.vercel.app")).toBe(true);
+    expect(demoPermitida("ellos-4k2x9abc1-venturi-holding.vercel.app")).toBe(true);
   });
   it("bloqueia o Ellos oficial, o domínio antigo, o alias de produção e qualquer endereço desconhecido", () => {
     expect(demoPermitida("ellos.venturiholding.com.br")).toBe(false);
@@ -138,6 +141,9 @@ describe("demonstração: só na pré-visualização", () => {
     expect(demoPermitida("lumo-lyart.vercel.app")).toBe(false);
     expect(demoPermitida("lumo-git-x-venturi-holding.vercel.app.outro-site.com")).toBe(false);
     expect(demoPermitida("evil-venturi-holding.vercel.app")).toBe(false);
+    expect(demoPermitida("ellos.venturiholding.com.br.outro-site.com")).toBe(false);
+    expect(demoPermitida("ellos-git-x-venturi-holding.vercel.app.outro-site.com")).toBe(false);
+    expect(demoPermitida("ellos-venturi-holding.vercel.app")).toBe(false);
     expect(demoPermitida("")).toBe(false);
   });
 });

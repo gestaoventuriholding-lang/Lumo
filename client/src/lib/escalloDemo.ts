@@ -69,6 +69,7 @@ export function dadosDemonstracao(): { colaboradores: Attendant[]; resposta: Res
 export function demoPermitida(hostname: string): boolean {
   const h = hostname.toLowerCase();
   if (h === "localhost" || h === "127.0.0.1" || h === "[::1]") return true;
-  // Pré-visualizações da Vercel: lumo-git-<branch>-venturi-holding.vercel.app e lumo-<código>-venturi-holding.vercel.app
-  return /^lumo-(git-[a-z0-9-]+|[a-z0-9]+)-venturi-holding\.vercel\.app$/.test(h);
+  // Pré-visualizações da Vercel: <projeto>-git-<branch>-venturi-holding.vercel.app e <projeto>-<código>-venturi-holding.vercel.app.
+  // O projeto hoje se chama "lumo" e vai passar a "ellos": os dois nomes valem durante a troca.
+  return /^(lumo|ellos)-(git-[a-z0-9-]+|[a-z0-9]+)-venturi-holding\.vercel\.app$/.test(h);
 }
