@@ -32,6 +32,7 @@ import {
   chartAxisProps,
   chartColors,
   chartCursor,
+  chartBarRadius,
   chartGridProps,
   chartTooltipContentStyle,
 } from "@/lib/chartTheme";
@@ -628,8 +629,8 @@ export default function Performance() {
                     strokeDasharray="8 4"
                     strokeWidth={1.5}
                   />
-                  <Bar dataKey="ligacao" fill={chartColors.ligacao} name="Ligação" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="whatsapp" fill={chartColors.whatsapp} name="WhatsApp" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ligacao" fill={chartColors.ligacao} name="Ligação" radius={chartBarRadius} />
+                  <Bar dataKey="whatsapp" fill={chartColors.whatsapp} name="WhatsApp" radius={chartBarRadius} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

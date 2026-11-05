@@ -193,7 +193,7 @@ describe("tema: vidro", () => {
 
 describe("tema: nenhuma cor solta no código", () => {
   // Estes dois arquivos entram na etapa 3 (tela Estruturas) e ainda têm cores próprias.
-  const PERMITIDOS = new Set(["components/structure/StructureCanvas.tsx", "lib/structureAlign.ts", "lib/chartTheme.ts", "lib/escalloDemo.ts"]);
+  const PERMITIDOS = new Set(["components/structure/StructureCanvas.tsx", "lib/structureAlign.ts"]);
   const sujos: string[] = [];
   const andar = (dir: string) => {
     for (const nome of readdirSync(dir)) {

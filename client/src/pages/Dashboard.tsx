@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -53,12 +55,18 @@ import {
 import { buildDetailedAnalysisReport } from "@/lib/detailedAnalysisSummary";
 import { loadAnalysisNote } from "@/lib/analysisNoteStorage";
 import {
+  chartActiveDot,
   chartAxisProps,
+  chartBarRadius,
   chartColors,
   chartCursor,
   chartGridProps,
+  chartLineCursor,
+  chartSliceStroke,
   chartTooltipContentStyle,
+  trendChartKind,
 } from "@/lib/chartTheme";
+import ChartAreaGradient from "@/components/ChartAreaGradient";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -100,6 +108,8 @@ function TrendTooltip({ active, payload }: { active?: boolean; payload?: { paylo
 
 /** Volume por dia, empilhado por canal: barras mostram quantidade; canal sem dados no período some */
 function AttendancesTrendChart({ data }: { data: TrendPoint[] }) {
+  const gradientId = useId().replace(/:/g, "");
+  const kind = trendChartKind(data.length);
   const visible = CHANNEL_SERIES.filter((series) => data.some((point) => point[series.key] > 0));
   const hidden = CHANNEL_SERIES.filter((series) => !visible.includes(series));
   return (
@@ -116,30 +126,55 @@ function AttendancesTrendChart({ data }: { data: TrendPoint[] }) {
         )}
       </div>
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
-          <CartesianGrid {...chartGridProps} />
-          <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
-          <YAxis
-            {...chartAxisProps}
-            width={44}
-            tickFormatter={(v: number) => v.toLocaleString("pt-BR")}
-          />
-          <Tooltip content={<TrendTooltip />} cursor={chartCursor} />
-          {visible.map((series, index) => (
-            <Bar
-              key={series.key}
-              dataKey={series.key}
-              stackId="canais"
-              fill={series.color}
-              maxBarSize={48}
-              stroke="var(--card, #fff)"
-              strokeWidth={index > 0 ? 2 : 0}
-              radius={index === visible.length - 1 ? [4, 4, 0, 0] : 0}
-              isAnimationActive
-              animationDuration={CHART_DRAW_MS}
-            />
-          ))}
-        </BarChart>
+        {kind === "area" ? (
+          <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <defs>
+              {visible.map((series) => (
+                <ChartAreaGradient key={series.key} id={`${gradientId}-${series.key}`} color={series.color} />
+              ))}
+            </defs>
+            <CartesianGrid {...chartGridProps} />
+            <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
+            <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
+            <Tooltip content={<TrendTooltip />} cursor={chartLineCursor} />
+            {/* o canal cinza vai por baixo e o laranja por cima */}
+            {[...visible].reverse().map((series) => (
+              <Area
+                key={series.key}
+                type="monotone"
+                dataKey={series.key}
+                stroke={series.color}
+                strokeWidth={2.2}
+                fill={`url(#${gradientId}-${series.key})`}
+                dot={false}
+                activeDot={chartActiveDot(series.color)}
+                isAnimationActive
+                animationDuration={CHART_DRAW_MS}
+              />
+            ))}
+          </AreaChart>
+        ) : (
+          <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid {...chartGridProps} />
+            <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
+            <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
+            <Tooltip content={<TrendTooltip />} cursor={chartCursor} />
+            {visible.map((series, index) => (
+              <Bar
+                key={series.key}
+                dataKey={series.key}
+                stackId="canais"
+                fill={series.color}
+                maxBarSize={48}
+                stroke={chartSliceStroke}
+                strokeWidth={index > 0 ? 2 : 0}
+                radius={index === visible.length - 1 ? chartBarRadius : 0}
+                isAnimationActive
+                animationDuration={CHART_DRAW_MS}
+              />
+            ))}
+          </BarChart>
+        )}
       </ResponsiveContainer>
     </div>
   );
@@ -384,6 +419,8 @@ export default function Dashboard() {
                     innerRadius={58}
                     outerRadius={88}
                     paddingAngle={3}
+                    cornerRadius={4}
+                    stroke="none"
                     dataKey="value"
                   >
                     {channelDistribution.map((entry) => (

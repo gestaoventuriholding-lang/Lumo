@@ -1,4 +1,6 @@
+import { useId } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import ChartAreaGradient from "@/components/ChartAreaGradient";
 import { cn } from "@/lib/utils";
 import { motion, cardItemVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { AnimatedText } from "@/components/AnimatedNumber";
@@ -43,6 +45,7 @@ export default function DashboardKpiCard({
   progress,
 }: DashboardKpiCardProps) {
   const dark = variant === "dark";
+  const gradientId = useId().replace(/:/g, "");
   return (
     <motion.div
       variants={cardItemVariants}
@@ -61,12 +64,14 @@ export default function DashboardKpiCard({
           <div className="h-11 w-24 shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sparkData}>
+                <defs>
+                  <ChartAreaGradient id={gradientId} color={sparkColor} />
+                </defs>
                 <Area
                   type="monotone"
                   dataKey="v"
                   stroke={sparkColor}
-                  fill={sparkColor}
-                  fillOpacity={dark ? 0.25 : 0.18}
+                  fill={`url(#${gradientId})`}
                   strokeWidth={2}
                   dot={false}
                   isAnimationActive
