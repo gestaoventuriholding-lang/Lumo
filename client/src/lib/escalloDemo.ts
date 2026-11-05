@@ -1,6 +1,7 @@
 // Ellos: dados INVENTADOS para a demonstração da tela "Vincular com a Escallo".
 // Nenhum nome ou código aqui é real, e a demonstração nunca grava nada no banco.
 import type { Attendant } from "@/types/attendant";
+import type { LoginAlert } from "@/types/loginAlert";
 import type { RespostaEscallo, SobraEscallo } from "@/lib/escalloVinculos";
 
 function colaborador(id: number, name: string, escalloCodigo: number | null = null): Attendant {
@@ -72,4 +73,18 @@ export function demoPermitida(hostname: string): boolean {
   // Pré-visualizações da Vercel: <projeto>-git-<branch>-venturi-holding.vercel.app e <projeto>-<código>-venturi-holding.vercel.app.
   // O projeto hoje se chama "lumo" e vai passar a "ellos": os dois nomes valem durante a troca.
   return /^(lumo|ellos)-(git-[a-z0-9-]+|[a-z0-9]+)-venturi-holding\.vercel\.app$/.test(h);
+}
+
+/**
+ * Alertas de "tempo logado desconsiderado" INVENTADOS, só para ver o sininho na pré-visualização
+ * (abra qualquer tela com ?demoalerta=1). Nada disso é salvo.
+ */
+export function alertasLoginDemonstracao(): LoginAlert[] {
+  const agora = "2026-01-01T12:00:00.000Z";
+  const base = { limitSeconds: 12 * 3600, createdAt: agora, updatedAt: agora };
+  return [
+    { ...base, id: -9001, attendantId: -1, attendantName: "Ana Demonstração", date: "2026-01-02", loginSeconds: 18 * 3600 + 11 * 60, status: "open" },
+    { ...base, id: -9002, attendantId: -2, attendantName: "Bruno Demonstração", date: "2026-01-01", loginSeconds: 53 * 3600 + 24 * 60, status: "open" },
+    { ...base, id: -9003, attendantId: -3, attendantName: "Carla Demonstração", date: "2025-12-31", loginSeconds: 24 * 3600 + 3 * 60, status: "seen" },
+  ];
 }

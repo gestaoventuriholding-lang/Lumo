@@ -11,6 +11,7 @@ import {
   totaisDoPreview,
   validarPedido,
   hojeSaoPaulo,
+  LOGIN_LIMITE_PADRAO_SEGUNDOS,
   type Colaborador,
   type RegistroEscallo,
 } from "./mapeamento.ts";
@@ -167,9 +168,18 @@ Deno.serve(async (req: Request) => {
     colaboradores = comCodigo.data as Colaborador[];
   }
 
-  const { vinculados, sobras } = ligarColaboradores(registros, colaboradores, dia);
+  // Limite de login por dia (Configurações → limites; padrão 12 h; limite desligado = regra desligada)
+  let limiteLogin: number | null = LOGIN_LIMITE_PADRAO_SEGUNDOS;
+  const limite = await supabase.from("productivity_limits").select("limit_value, status").eq("metric", "login_max_hours").maybeSingle();
+  if (!limite.error && limite.data) {
+    const horas = Number(limite.data.limit_value);
+    limiteLogin = limite.data.status === "Ativo" ? (horas > 0 ? Math.round(horas * 3600) : LOGIN_LIMITE_PADRAO_SEGUNDOS) : null;
+  }
+
+  const { vinculados, sobras } = ligarColaboradores(registros, colaboradores, dia, limiteLogin);
+  const comLoginDesconsiderado = vinculados.filter((v) => v.loginDesconsiderado);
   console.log(
-    `escallo-rel025: dia ${dia}, ${registros.length} registros, ${vinculados.length} ligados, ${sobras.length} sobras`
+    `escallo-rel025: dia ${dia}, ${registros.length} registros, ${vinculados.length} ligados, ${sobras.length} sobras, ${comLoginDesconsiderado.length} com login desconsiderado`
   );
 
   return json({
@@ -183,7 +193,16 @@ Deno.serve(async (req: Request) => {
       semVinculo: sobras.filter((s) => s.motivo === "sem_vinculo").length,
       paraRevisar: sobras.filter((s) => s.motivo === "revisar").length,
       comSugestaoPorNome: sobras.filter((s) => s.sugestao).length,
+      comLoginDesconsiderado: comLoginDesconsiderado.length,
     },
+    limiteLoginSegundos: limiteLogin,
+    // Quem passou do limite de login: grava os atendimentos, deixa login/pausa/ocupação vazios e gera alerta para o gestor
+    loginDesconsiderado: comLoginDesconsiderado.map((v) => ({
+      attendantId: v.attendantId,
+      escalloCodigo: v.escalloCodigo,
+      loginSegundos: v.loginDesconsiderado!.loginSegundos,
+      limiteSegundos: v.loginDesconsiderado!.limiteSegundos,
+    })),
     totaisDoQueSeriaGravado: totaisDoPreview(vinculados),
     vinculados,
     sobras,

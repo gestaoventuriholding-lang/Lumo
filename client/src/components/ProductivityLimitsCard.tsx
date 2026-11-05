@@ -17,13 +17,13 @@ function toDraft(limits: ProductivityLimit[]): Draft {
     const found = limits.find((l) => l.metric === def.metric);
     draft[def.metric] = {
       value: String(found?.value ?? def.suggested),
-      active: found ? found.status === "Ativo" : false,
+      active: found ? found.status === "Ativo" : Boolean(def.defaultActive),
     };
   });
   return draft;
 }
 
-/** Limites de pausa e ocupação: geram os alertas do relatório importado */
+/** Limites de pausa, ocupação e tempo logado: geram os alertas e as regras do relatório importado */
 export default function ProductivityLimitsCard() {
   const { productivityLimits, setProductivityLimits } = useEllosData();
   const [draft, setDraft] = useState<Draft>(() => toDraft(productivityLimits));
@@ -37,13 +37,14 @@ export default function ProductivityLimitsCard() {
     for (const def of LIMIT_DEFINITIONS) {
       const item = draft[def.metric];
       const value = Number(item.value.replace(",", "."));
-      if (!Number.isFinite(value) || value < 0 || value > 100) {
-        toast.error(`${def.label}: informe um valor entre 0 e 100`);
+      if (!Number.isFinite(value) || value < def.min || value > def.max) {
+        toast.error(`${def.label}: informe um valor entre ${def.min} e ${def.max}`);
         return;
       }
       const existing = productivityLimits.find((l) => l.metric === def.metric);
-      // sem limite ativo e sem registro anterior, não cria linha à toa
-      if (!existing && !item.active) continue;
+      // ainda no padrão (sem registro anterior, ligado ou desligado como já vale sem nada cadastrado): não cria linha à toa
+      const isDefault = item.active === Boolean(def.defaultActive) && (!item.active || value === def.suggested);
+      if (!existing && isDefault) continue;
       next.push({
         id: existing?.id ?? newId(),
         metric: def.metric,
@@ -83,7 +84,7 @@ export default function ProductivityLimitsCard() {
                     value={item.value}
                     onChange={(e) => update(def.metric, { value: e.target.value })}
                   />
-                  <span className="text-sm text-muted-foreground">%</span>
+                  <span className="text-sm text-muted-foreground">{def.unit === "h" ? "horas" : "%"}</span>
                 </div>
                 <Switch
                   checked={item.active}
@@ -96,8 +97,9 @@ export default function ProductivityLimitsCard() {
         })}
       </div>
       <p className="text-xs text-muted-foreground">
-        Só os limites ligados geram alertas e cores. Eles valem para o relatório de produtividade mais
-        recente importado.
+        Só os limites ligados geram alertas e cores. Os de pausa e ocupação valem para o relatório de produtividade
+        mais recente importado. O tempo logado por dia vale a cada importação: acima do limite, o login, a pausa e a
+        ocupação daquele dia não entram nas médias e o gestor vê um alerta no sino.
       </p>
       <Button onClick={handleSave}>Salvar limites</Button>
     </div>

@@ -123,11 +123,45 @@ describe("escallo rel025: conversão de um registro", () => {
     });
   });
 
-  it("manda para revisão: login acima de 24 h, campo faltando e número negativo", () => {
-    expect(converterRegistro(registro({ tempoLogin: 86593 }), "2026-11-03")).toMatchObject({
-      dados: null,
-      problemas: [expect.stringMatching(/24 horas/)],
+  it("login acima de 12 h: grava os atendimentos e esvazia login, pausa, ocupação e chamadas por hora", () => {
+    const r = converterRegistro(registro({ tempoLogin: 65459, TO03: 33.333, TO04: 20 }), "2026-11-03");
+    expect(r.problemas).toEqual([]);
+    expect(r.loginDesconsiderado).toEqual({ loginSegundos: 65459, limiteSegundos: 43200 });
+    const p = r.dados!.produtividade;
+    expect(p).toMatchObject({
+      inbound_count: 10,
+      outbound_count: 4,
+      attendances_count: 14, // atendimentos ficam
+      talk_seconds: 1500, // tempo de conversa fica
+      tma_seconds: 120, // TMA fica
+      login_seconds: null,
+      pause_seconds: null,
+      pause_percent: null,
+      pause_legal_seconds: null,
+      pause_productive_seconds: null,
+      pause_unproductive_seconds: null,
+      occupancy_to1: null,
+      occupancy_to2: null,
+      occupancy_to3: null,
+      occupancy_to4: null,
+      per_hour: null,
     });
+    expect(r.dados!.diario.attendances_count).toBe(14);
+  });
+
+  it("o limite de login é configurável: no limite exato não esvazia, acima esvazia, e null desliga a regra", () => {
+    expect(converterRegistro(registro({ tempoLogin: 43200 }), "2026-11-03").loginDesconsiderado).toBeNull();
+    expect(converterRegistro(registro({ tempoLogin: 43201 }), "2026-11-03").loginDesconsiderado).not.toBeNull();
+    expect(converterRegistro(registro({ tempoLogin: 36000 }), "2026-11-03", 32400).loginDesconsiderado).toEqual({
+      loginSegundos: 36000,
+      limiteSegundos: 32400,
+    });
+    const desligada = converterRegistro(registro({ tempoLogin: 86593 }), "2026-11-03", null);
+    expect(desligada.loginDesconsiderado).toBeNull();
+    expect(desligada.dados!.produtividade.login_seconds).toBe(86593);
+  });
+
+  it("manda para revisão: campo faltando e número negativo", () => {
     const semCampo = registro();
     delete semCampo.TMA;
     expect(converterRegistro(semCampo, "2026-11-03").problemas[0]).toMatch(/TMA/);
@@ -168,10 +202,9 @@ describe("escallo rel025: ligação com os colaboradores", () => {
     expect(sobras[0]).toMatchObject({ motivo: "sem_vinculo", sugestao: null });
   });
 
-  it("manda para revisão (e não grava) o registro ligado que tem problema, o sem código e o repetido", () => {
+  it("manda para revisão (e não grava) o registro sem código e o repetido", () => {
     const { vinculados, sobras } = ligarColaboradores(
       [
-        registro({ tempoLogin: 90000 }), // ligado, mas anormal
         registro({ codigo: null, nome: "Sem Codigo" }),
         registro({ codigo: 7, nome: "Repetido A" }),
         registro({ codigo: 7, nome: "Repetido B" }),
@@ -180,8 +213,20 @@ describe("escallo rel025: ligação com os colaboradores", () => {
       "2026-11-03"
     );
     expect(vinculados).toHaveLength(0);
-    expect(sobras.map((s) => s.motivo)).toEqual(["revisar", "revisar", "sem_vinculo", "revisar"]);
-    expect(sobras[0].sugestao).toMatchObject({ id: 1 });
+    expect(sobras.map((s) => s.motivo)).toEqual(["revisar", "sem_vinculo", "revisar"]);
+  });
+
+  it("login acima do limite continua vinculado e gravável (com login vazio e marcado para o alerta)", () => {
+    const { vinculados, sobras } = ligarColaboradores([registro({ tempoLogin: 90000 })], colaboradores, "2026-11-03");
+    expect(sobras).toEqual([]);
+    expect(vinculados).toHaveLength(1);
+    expect(vinculados[0].produtividade.login_seconds).toBeNull();
+    expect(vinculados[0].produtividade.attendances_count).toBe(14);
+    expect(vinculados[0].loginDesconsiderado).toEqual({ loginSegundos: 90000, limiteSegundos: 43200 });
+    // com a regra desligada, grava o login como veio
+    const semRegra = ligarColaboradores([registro({ tempoLogin: 90000 })], colaboradores, "2026-11-03", null);
+    expect(semRegra.vinculados[0].produtividade.login_seconds).toBe(90000);
+    expect(semRegra.vinculados[0].loginDesconsiderado).toBeNull();
   });
 
   it("os totais do preview somam só os registros ligados", () => {
@@ -196,6 +241,7 @@ describe("escallo rel025: ligação com os colaboradores", () => {
       saida: 4,
       loginSegundos: 28800,
       pausaSegundos: 3600,
+      comLoginDesconsiderado: 0,
     });
   });
 });

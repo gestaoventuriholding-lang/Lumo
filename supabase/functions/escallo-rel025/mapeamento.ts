@@ -5,8 +5,11 @@
 export const CANAL = "Ligação";
 export const CODIGO_RELATORIO = "REL025";
 export const ORIGEM = "API Escallo";
-/** Um login acima de 24 h no mesmo dia é anormal: o registro vai para revisão e não é gravado. */
-export const LOGIN_MAXIMO_SEGUNDOS = 86_400;
+/**
+ * Login acima deste limite (padrão 12 h, configurável em Configurações) num mesmo dia: os atendimentos são gravados,
+ * mas login, pausa, ocupação e chamadas por hora daquele dia ficam VAZIOS e o gestor recebe um alerta.
+ */
+export const LOGIN_LIMITE_PADRAO_SEGUNDOS = 43_200;
 
 export type RegistroEscallo = Record<string, unknown>;
 
@@ -20,17 +23,18 @@ export interface DadosProdutividade {
   attendances_count: number;
   talk_seconds: number;
   tma_seconds: number;
-  login_seconds: number;
-  pause_seconds: number;
-  pause_percent: number;
-  pause_legal_seconds: number;
-  pause_productive_seconds: number;
-  pause_unproductive_seconds: number;
-  occupancy_to1: number;
-  occupancy_to2: number;
+  // Vazios (null) quando o login do dia passou do limite
+  login_seconds: number | null;
+  pause_seconds: number | null;
+  pause_percent: number | null;
+  pause_legal_seconds: number | null;
+  pause_productive_seconds: number | null;
+  pause_unproductive_seconds: number | null;
+  occupancy_to1: number | null;
+  occupancy_to2: number | null;
   occupancy_to3: number | null;
   occupancy_to4: number | null;
-  per_hour: number;
+  per_hour: number | null;
   report_code: string;
   source_file: string;
 }
@@ -54,6 +58,8 @@ export interface Vinculado {
   escalloCodigo: number;
   produtividade: DadosProdutividade;
   diario: DadosDiarios;
+  /** Preenchido quando o login passou do limite: o tempo que veio da Escallo (vai para o alerta do gestor) */
+  loginDesconsiderado: { loginSegundos: number; limiteSegundos: number } | null;
 }
 
 export interface Sobra {
@@ -129,8 +135,14 @@ const CAMPOS_NUMERICOS = [
 
 export function converterRegistro(
   r: RegistroEscallo,
-  dia: string
-): { dados: { produtividade: DadosProdutividade; diario: DadosDiarios } | null; problemas: string[] } {
+  dia: string,
+  /** null = regra desligada */
+  limiteLoginSegundos: number | null = LOGIN_LIMITE_PADRAO_SEGUNDOS
+): {
+  dados: { produtividade: DadosProdutividade; diario: DadosDiarios } | null;
+  problemas: string[];
+  loginDesconsiderado: { loginSegundos: number; limiteSegundos: number } | null;
+} {
   const problemas: string[] = [];
   const n: Record<string, number> = {};
   for (const campo of CAMPOS_NUMERICOS) {
@@ -139,16 +151,15 @@ export function converterRegistro(
     else if (v < 0) problemas.push(`campo ${campo} negativo`);
     else n[campo] = v;
   }
-  if (problemas.length) return { dados: null, problemas };
-  if (n.tempoLogin > LOGIN_MAXIMO_SEGUNDOS) {
-    return { dados: null, problemas: ["tempo de login acima de 24 horas: confira este registro"] };
-  }
+  if (problemas.length) return { dados: null, problemas, loginDesconsiderado: null };
+  const acimaDoLimite = limiteLoginSegundos != null && n.tempoLogin > limiteLoginSegundos;
 
   const entrada = Math.round(n.ligacoesOferecidasAtendidas);
   const saida = Math.round(n.ligacoesRealizadasAtendidas);
   const atendimentos = entrada + saida;
   return {
     problemas,
+    loginDesconsiderado: acimaDoLimite ? { loginSegundos: Math.round(n.tempoLogin), limiteSegundos: limiteLoginSegundos } : null,
     dados: {
       produtividade: {
         period_start: dia,
@@ -159,18 +170,19 @@ export function converterRegistro(
         attendances_count: atendimentos,
         talk_seconds: Math.round(n.tempoAtendimento + n.tempoRealizadas),
         tma_seconds: Math.round(n.TMA),
-        login_seconds: Math.round(n.tempoLogin),
-        pause_seconds: Math.round(n.tempoPausa),
-        pause_percent: arredondar(n.percentualPausa),
-        pause_legal_seconds: Math.round(n.pausaLegal),
-        pause_productive_seconds: Math.round(n.pausaProdutiva),
-        pause_unproductive_seconds: Math.round(n.pausaImprodutiva),
-        occupancy_to1: arredondar(n.TO01),
-        occupancy_to2: arredondar(n.TO02),
+        // Login acima do limite: tudo que depende do tempo logado fica vazio. Atendimentos, TMA e conversa ficam.
+        login_seconds: acimaDoLimite ? null : Math.round(n.tempoLogin),
+        pause_seconds: acimaDoLimite ? null : Math.round(n.tempoPausa),
+        pause_percent: acimaDoLimite ? null : arredondar(n.percentualPausa),
+        pause_legal_seconds: acimaDoLimite ? null : Math.round(n.pausaLegal),
+        pause_productive_seconds: acimaDoLimite ? null : Math.round(n.pausaProdutiva),
+        pause_unproductive_seconds: acimaDoLimite ? null : Math.round(n.pausaImprodutiva),
+        occupancy_to1: acimaDoLimite ? null : arredondar(n.TO01),
+        occupancy_to2: acimaDoLimite ? null : arredondar(n.TO02),
         // TO3 e TO4 dependem da jornada configurada na Escallo: 0 significa "sem dado", não 0% de ocupação.
-        occupancy_to3: n.TO03 === 0 ? null : arredondar(n.TO03),
-        occupancy_to4: n.TO04 === 0 ? null : arredondar(n.TO04),
-        per_hour: arredondar(n.chamadasPorHora),
+        occupancy_to3: acimaDoLimite || n.TO03 === 0 ? null : arredondar(n.TO03),
+        occupancy_to4: acimaDoLimite || n.TO04 === 0 ? null : arredondar(n.TO04),
+        per_hour: acimaDoLimite ? null : arredondar(n.chamadasPorHora),
         report_code: CODIGO_RELATORIO,
         source_file: ORIGEM,
       },
@@ -193,7 +205,9 @@ export function converterRegistro(
 export function ligarColaboradores(
   registros: RegistroEscallo[],
   colaboradores: Colaborador[],
-  dia: string
+  dia: string,
+  /** null = regra do login desligada */
+  limiteLoginSegundos: number | null = LOGIN_LIMITE_PADRAO_SEGUNDOS
 ): { vinculados: Vinculado[]; sobras: Sobra[] } {
   const porCodigo = new Map<number, Colaborador>();
   for (const c of colaboradores) {
@@ -233,7 +247,7 @@ export function ligarColaboradores(
     }
     codigosVistos.add(codigo);
 
-    const conv = converterRegistro(r, dia);
+    const conv = converterRegistro(r, dia, limiteLoginSegundos);
     const colaborador = porCodigo.get(codigo);
 
     if (!conv.dados) {
@@ -244,7 +258,13 @@ export function ligarColaboradores(
       sobras.push({ codigo, nome, motivo: "sem_vinculo", detalhe: "nenhum colaborador tem este código da Escallo", sugestao: sugerir(nome, codigo) });
       continue;
     }
-    vinculados.push({ attendantId: colaborador.id, escalloCodigo: codigo, produtividade: conv.dados.produtividade, diario: conv.dados.diario });
+    vinculados.push({
+      attendantId: colaborador.id,
+      escalloCodigo: codigo,
+      produtividade: conv.dados.produtividade,
+      diario: conv.dados.diario,
+      loginDesconsiderado: conv.loginDesconsiderado,
+    });
   }
   return { vinculados, sobras };
 }
@@ -256,7 +276,9 @@ export function totaisDoPreview(vinculados: Vinculado[]) {
     atendimentos: soma((v) => v.produtividade.attendances_count),
     entrada: soma((v) => v.produtividade.inbound_count),
     saida: soma((v) => v.produtividade.outbound_count),
-    loginSegundos: soma((v) => v.produtividade.login_seconds),
-    pausaSegundos: soma((v) => v.produtividade.pause_seconds),
+    loginSegundos: soma((v) => v.produtividade.login_seconds ?? 0),
+    pausaSegundos: soma((v) => v.produtividade.pause_seconds ?? 0),
+    /** Dias com login acima do limite (ficam sem login, pausa e ocupação) */
+    comLoginDesconsiderado: vinculados.filter((v) => v.loginDesconsiderado).length,
   };
 }

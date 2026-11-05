@@ -5,6 +5,8 @@ import type { Attendant } from "@/types/attendant";
 import type { AttendanceChannel } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
 import type { ProductivityRecord } from "@/types/productivity";
+import type { LoginAlert } from "@/types/loginAlert";
+import { applyLoginRule, DEFAULT_LOGIN_MAX_HOURS } from "@/lib/loginLimit";
 
 export interface ProductivityImportOptions {
   channel: AttendanceChannel;
@@ -13,12 +15,21 @@ export interface ProductivityImportOptions {
   periodEnd?: string;
   createAttendants: boolean;
   fileName?: string;
+  /**
+   * Regra do tempo logado: acima deste limite (em segundos) o dia fica sem login, pausa e ocupação e gera alerta.
+   * Não informado = padrão de 12 h; null = regra desligada. Só vale para relatório de um dia.
+   */
+  loginLimitSeconds?: number | null;
+  /** Alertas que já existem (para não duplicar nem reabrir) */
+  loginAlerts?: LoginAlert[];
 }
 
 export interface ProductivityImportResult {
   attendants: Attendant[];
   performanceRecords: DailyPerformanceRecord[];
   productivityRecords: ProductivityRecord[];
+  /** Alertas de tempo logado desconsiderado (os que já existiam mais os novos) */
+  loginAlerts: LoginAlert[];
   summary: {
     productivityCreated: number;
     productivityUpdated: number;
@@ -28,6 +39,8 @@ export interface ProductivityImportResult {
     unmatchedNames: string[];
     attendantsInFile: number;
     days: string[];
+    /** Dias em que o login passou do limite e ficou de fora das médias */
+    loginDisregarded: { attendantName: string; date: string; loginSeconds: number }[];
   };
   logMessage: string;
 }
@@ -103,6 +116,7 @@ export function executeProductivityImport(
   const unmatchedNames: string[] = [];
   const days = new Set<string>();
   const touched = new Set<number>();
+  const importedDays = new Set<string>(); // colaborador|dia dos relatórios de um dia importados agora
 
   for (const row of report.rows) {
     let attendant = known.get(normalizeText(row.attendantName));
@@ -187,6 +201,7 @@ export function executeProductivityImport(
     // Relatório por dia também alimenta o desempenho diário (gráficos e rankings)
     if (row.date) {
       days.add(row.date);
+      importedDays.add(`${attendant.id}|${row.date}`);
       const averageTimeMinutes =
         row.tmaSeconds != null ? Math.round((row.tmaSeconds / 60) * 100) / 100 : 0;
       const dayIndex = nextPerformance.findIndex(
@@ -219,6 +234,10 @@ export function executeProductivityImport(
     }
   }
 
+  // Regra do tempo logado acima do limite (só para os dias que acabaram de ser importados)
+  const limit = options.loginLimitSeconds === undefined ? DEFAULT_LOGIN_MAX_HOURS * 3600 : options.loginLimitSeconds;
+  const rule = applyLoginRule(nextProductivity, options.loginAlerts ?? [], limit, { onlyKeys: importedDays, now });
+
   const records = productivityCreated + productivityUpdated;
   const where =
     report.mode === "period" && options.periodStart && options.periodEnd
@@ -229,15 +248,20 @@ export function executeProductivityImport(
     createdAttendants > 0
       ? `, ${createdAttendants} novo${createdAttendants === 1 ? "" : "s"} cadastrado${createdAttendants === 1 ? "" : "s"}`
       : "";
+  const disregarded =
+    rule.flagged.length > 0 && limit != null
+      ? `; ${rule.flagged.length} dia${rule.flagged.length === 1 ? "" : "s"} com tempo logado acima de ${Math.round((limit / 3600) * 10) / 10} h desconsiderado${rule.flagged.length === 1 ? "" : "s"} (veja o sino)`
+      : "";
   const logMessage =
     records > 0
-      ? `Relatório ${report.reportCode ?? "de produtividade"}${where}: ${records} registro${records === 1 ? "" : "s"} de ${people}${created}`
+      ? `Relatório ${report.reportCode ?? "de produtividade"}${where}: ${records} registro${records === 1 ? "" : "s"} de ${people}${created}${disregarded}`
       : "Nenhum registro importado";
 
   return {
     attendants: nextAttendants,
     performanceRecords: nextPerformance,
-    productivityRecords: nextProductivity,
+    productivityRecords: rule.records,
+    loginAlerts: rule.alerts,
     summary: {
       productivityCreated,
       productivityUpdated,
@@ -247,6 +271,7 @@ export function executeProductivityImport(
       unmatchedNames,
       attendantsInFile: report.rows.length,
       days: Array.from(days).sort(),
+      loginDisregarded: rule.flagged.map((f) => ({ attendantName: f.attendantName, date: f.date, loginSeconds: f.loginSeconds })),
     },
     logMessage,
   };
