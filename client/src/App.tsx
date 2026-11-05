@@ -7,7 +7,7 @@ import { MotionConfig } from "framer-motion";
 import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVariants";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import OnOrangeSwitch from "./components/OnOrangeSwitch";
+import { applyPreset, ACTIVE_PRESET } from "./lib/themePreset";
 import { EllosDataProvider } from "./contexts/EllosDataContext";
 import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
@@ -80,6 +80,7 @@ function Router() {
 }
 
 function App() {
+  applyPreset(ACTIVE_PRESET);
   useEffect(() => {
     const prefetchRoutes = () => {
       void import("./pages/Dashboard");
@@ -107,7 +108,6 @@ function App() {
       <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
-          <OnOrangeSwitch />
           <AuthProvider>
             <AuthGate>
               <EllosDataProvider>
