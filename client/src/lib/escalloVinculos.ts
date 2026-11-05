@@ -43,14 +43,17 @@ export interface ListasVinculo {
   colaboradoresSemCodigo: Attendant[];
 }
 
-/** Separa as sobras da Escallo em listas, olhando os vínculos que existem AGORA no cadastro. */
-export function prepararVinculos(sobras: SobraEscallo[], attendants: Attendant[]): ListasVinculo {
+/**
+ * Separa as sobras da Escallo em listas, olhando os vínculos que existem AGORA no cadastro.
+ * `vinculadosNaResposta`: registros que a função já devolveu como ligados (eles não vêm nas sobras) e contam como já vinculados.
+ */
+export function prepararVinculos(sobras: SobraEscallo[], attendants: Attendant[], vinculadosNaResposta = 0): ListasVinculo {
   const usados = new Set(attendants.filter((a) => typeof a.escalloCodigo === "number").map((a) => a.escalloCodigo as number));
   const ids = new Set(attendants.map((a) => a.id));
   const sugestoes: LinhaVinculo[] = [];
   const semSugestao: LinhaVinculo[] = [];
   const semCodigo: { nome: string }[] = [];
-  let jaVinculados = 0;
+  let jaVinculados = Math.max(0, Math.floor(vinculadosNaResposta));
 
   for (const s of sobras) {
     if (s.codigo === null) {

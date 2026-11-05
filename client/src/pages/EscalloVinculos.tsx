@@ -63,7 +63,9 @@ export default function EscalloVinculos() {
   const [confirmarTodas, setConfirmarTodas] = useState(false);
 
   const ordenados = useMemo(() => [...attendants].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")), [attendants]);
-  const listas = useMemo(() => (resposta ? prepararVinculos(resposta.sobras, attendants) : null), [resposta, attendants]);
+  const listas = useMemo(() => (resposta ? prepararVinculos(resposta.sobras, attendants, resposta.resumo.vinculados) : null),
+    [resposta, attendants]
+  );
 
   const escolhaDe = (l: LinhaVinculo): number | null => (l.codigo in escolhas ? escolhas[l.codigo] : l.sugestaoId);
 
@@ -263,10 +265,10 @@ export default function EscalloVinculos() {
 
           <div className="flex flex-wrap gap-2 text-sm">
             <Badge variant="secondary">{resposta.escallo.registros} agentes na Escallo</Badge>
-            <Badge variant="secondary">{listas.jaVinculados} já vinculado(s)</Badge>
+            <Badge variant="secondary">{listas.jaVinculados} {listas.jaVinculados === 1 ? "já vinculado" : "já vinculados"}</Badge>
             <Badge variant="secondary">{nSugestoes} com sugestão</Badge>
             <Badge variant="secondary">{listas.semSugestao.length} sem sugestão</Badge>
-            <Badge variant="secondary">{listas.colaboradoresSemCodigo.length} colaboradores sem código</Badge>
+            <Badge variant="secondary">{listas.colaboradoresSemCodigo.length} {listas.colaboradoresSemCodigo.length === 1 ? "colaborador sem código" : "colaboradores sem código"}</Badge>
           </div>
 
           <section className="space-y-2" aria-labelledby="titulo-sugestoes">
