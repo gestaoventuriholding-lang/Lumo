@@ -123,3 +123,21 @@ describe("vínculo com a Escallo: demonstração", () => {
     expect(dadosDemonstracao().colaboradores).not.toBe(dadosDemonstracao().colaboradores);
   });
 });
+
+import { demoPermitida } from "./escalloDemo";
+
+describe("demonstração: só na pré-visualização", () => {
+  it("libera o computador local e as pré-visualizações da Vercel", () => {
+    expect(demoPermitida("localhost")).toBe(true);
+    expect(demoPermitida("lumo-git-feat-escallo-rel025-venturi-holding.vercel.app")).toBe(true);
+    expect(demoPermitida("lumo-4k2x9abc1-venturi-holding.vercel.app")).toBe(true);
+  });
+  it("bloqueia o Ellos oficial, o domínio antigo, o alias de produção e qualquer endereço desconhecido", () => {
+    expect(demoPermitida("ellos.venturiholding.com.br")).toBe(false);
+    expect(demoPermitida("lumo.venturiholding.com.br")).toBe(false);
+    expect(demoPermitida("lumo-lyart.vercel.app")).toBe(false);
+    expect(demoPermitida("lumo-git-x-venturi-holding.vercel.app.outro-site.com")).toBe(false);
+    expect(demoPermitida("evil-venturi-holding.vercel.app")).toBe(false);
+    expect(demoPermitida("")).toBe(false);
+  });
+});

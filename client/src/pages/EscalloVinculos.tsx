@@ -25,7 +25,7 @@ import {
   type LinhaVinculo,
   type RespostaEscallo,
 } from "@/lib/escalloVinculos";
-import { dadosDemonstracao } from "@/lib/escalloDemo";
+import { dadosDemonstracao, demoPermitida } from "@/lib/escalloDemo";
 import type { Attendant } from "@/types/attendant";
 
 /** Ontem, no horário de São Paulo (a Escallo só fecha o relatório do dia depois que ele acaba). */
@@ -49,7 +49,9 @@ function comoEntrada(a: Attendant, escalloCodigo: number) {
 export default function EscalloVinculos() {
   const { attendants: reais, updateAttendant } = useEllosData();
   // Demonstração: dados inventados e nada é salvo. Abre também com ?demo=1 no endereço.
-  const [demo, setDemo] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1");
+  // Só existe na pré-visualização: no Ellos oficial o botão some e ?demo=1 é ignorado.
+  const demoDisponivel = typeof window !== "undefined" && demoPermitida(window.location.hostname);
+  const [demo, setDemo] = useState(() => demoDisponivel && new URLSearchParams(window.location.search).get("demo") === "1");
   const [colaboradoresDemo, setColaboradoresDemo] = useState<Attendant[]>(() => dadosDemonstracao().colaboradores);
   const attendants = demo ? colaboradoresDemo : reais;
   const [dia, setDia] = useState(ontem);
@@ -77,7 +79,7 @@ export default function EscalloVinculos() {
   }, [listas, escolhas]);
 
   function alternarDemo(ligar: boolean) {
-    setDemo(ligar);
+    setDemo(ligar && demoDisponivel);
     setColaboradoresDemo(dadosDemonstracao().colaboradores);
     setResposta(null);
     setErro(null);
@@ -85,7 +87,7 @@ export default function EscalloVinculos() {
   }
 
   async function buscar() {
-    if (demo) {
+    if (demo && demoDisponivel) {
       setErro(null);
       setEscolhas({});
       setResposta(dadosDemonstracao().resposta);
@@ -209,15 +211,18 @@ export default function EscalloVinculos() {
       </div>
 
       {demo && (
-        <div role="status" className="flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            <strong>Modo demonstração.</strong> Os nomes e códigos são inventados e o salvamento está desligado: nada vai para o banco nem para a Escallo.
-          </span>
-          <Button variant="outline" size="sm" onClick={() => alternarDemo(false)}>
+        <div
+          role="status"
+          className="sticky top-0 z-30 -mx-1 flex flex-col gap-2 rounded-lg border-4 border-warning bg-foreground px-4 py-3 text-background sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span className="text-base font-extrabold uppercase tracking-wide">MODO DEMONSTRAÇÃO — nada é salvo</span>
+          <span className="text-sm">Nomes e códigos inventados. Nenhum botão grava no banco nem na Escallo.</span>
+          <Button size="sm" variant="secondary" onClick={() => alternarDemo(false)}>
             Sair da demonstração
           </Button>
         </div>
       )}
+
 
       <Card>
         <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
@@ -234,7 +239,7 @@ export default function EscalloVinculos() {
           <p className="text-xs text-muted-foreground sm:ml-2">
             Só lê a lista de agentes do dia escolhido. Não grava nada no Ellos.
           </p>
-          {!demo && (
+          {!demo && demoDisponivel && (
             <Button variant="link" size="sm" className="sm:ml-auto" onClick={() => alternarDemo(true)}>
               Ver demonstração
             </Button>
