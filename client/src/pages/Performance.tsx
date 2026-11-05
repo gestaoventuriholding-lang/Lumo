@@ -61,6 +61,7 @@ import ChangeBadge from "@/components/ChangeBadge";
 import { describeChange, kpisFromSummaries, previousRange } from "@/lib/periodComparison";
 import ProductivitySection from "@/components/ProductivitySection";
 import { ToneValue } from "@/components/ToneMark";
+import ChannelBadge from "@/components/ChannelBadge";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
@@ -506,7 +507,7 @@ export default function Performance() {
                           }
                         >
                           <TableCell className="font-medium">{record.attendantName}</TableCell>
-                          <TableCell>{record.channel}</TableCell>
+                          <TableCell><ChannelBadge channel={record.channel} /></TableCell>
                           <TableCell>
                             <span className="font-semibold text-primary">{record.attendancesCount}</span>
                           </TableCell>

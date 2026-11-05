@@ -26,6 +26,7 @@ import { formatBrDate, formatPercent, formatSecondsShort } from "@/lib/reportFor
 import { activeLimit, evaluateLimit } from "@/lib/productivityLimits";
 import { cn } from "@/lib/utils";
 import { ToneValue, levelToTone } from "@/components/ToneMark";
+import ChannelBadge from "@/components/ChannelBadge";
 import type { AlertLevel } from "@/types/goals";
 import type { ProductivityLimit, ProductivityRecord } from "@/types/productivity";
 
@@ -180,7 +181,7 @@ export default function ProductivitySection({ records, attendantIds, range, limi
               {summary.rows.map((row) => (
                 <TableRow key={`${row.attendantId}-${row.channel}`}>
                   <TableCell className="whitespace-nowrap font-medium">{row.attendantName}</TableCell>
-                  <TableCell className="text-muted-foreground">{row.channel}</TableCell>
+                  <TableCell><ChannelBadge channel={row.channel} /></TableCell>
                   <TableCell className="text-right tabular-nums">{row.inbound.toLocaleString("pt-BR")}</TableCell>
                   <TableCell className="text-right tabular-nums">{row.outbound.toLocaleString("pt-BR")}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatSecondsShort(row.tmaSeconds)}</TableCell>
