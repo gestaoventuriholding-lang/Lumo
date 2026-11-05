@@ -308,7 +308,7 @@ export default function Dashboard() {
     >
       <motion.div
         variants={pageItemVariants}
-        className="flex flex-col gap-4 rounded-lg border border-primary/20 bg-primary-soft p-6 lg:flex-row lg:items-center lg:justify-between"
+        className="ellos-panel-sm flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between"
       >
         <div className="flex items-center gap-4">
           <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground sm:flex">

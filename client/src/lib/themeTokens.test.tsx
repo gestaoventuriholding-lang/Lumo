@@ -55,21 +55,21 @@ const rgbaDe = (s: string): { cor: [number, number, number]; alfa: number } => {
 describe("tema: paleta aprovada", () => {
   it("modo escuro", () => {
     const v = (n: string) => resolver(escuro, n).toLowerCase();
-    expect(v("background")).toBe("#0f0d0c");
-    expect(v("card")).toBe("#171412");
-    expect(v("card-raised")).toBe("#1f1b18");
-    expect(v("popover")).toBe("#1b1815");
-    expect(v("border")).toBe("#2b2521");
-    expect(v("input")).toBe("#756c63");
-    expect(v("foreground")).toBe("#f5f0eb");
-    expect(v("muted-foreground")).toBe("#aba29a");
+    expect(v("background")).toBe("#000000"); // preto de verdade
+    expect(v("card")).toBe("#0b0b0b");
+    expect(v("card-raised")).toBe("#141414");
+    expect(v("popover")).toBe("#101010");
+    expect(v("border")).toBe("#222222");
+    expect(v("input")).toBe("#6b6b6b");
+    expect(v("foreground")).toBe("#f2f2f2");
+    expect(v("muted-foreground")).toBe("#a1a1a1");
     expect(v("brand")).toBe("#ff6b00");
     expect(v("brand-text")).toBe("#ff8a3d");
     expect(v("success")).toBe("#3fcf8e");
     expect(v("danger")).toBe("#f2555a");
     expect(v("warning")).toBe("#f5c518");
-    expect(v("channel-whatsapp")).toBe("#8e857c");
-    expect(v("chart-grid")).toBe("#2b2521");
+    expect(v("channel-whatsapp")).toBe("#8c8c8c");
+    expect(v("chart-grid")).toBe("#222222");
   });
   it("modo claro", () => {
     const v = (n: string) => resolver(claro, n).toLowerCase();
@@ -94,6 +94,17 @@ describe("tema: paleta aprovada", () => {
       expect(b).toBeLessThan(110);
     }
     expect(lum(resolver(escuro, "channel-whatsapp"))).toBeLessThan(0.3); // antes era #f2f1ef (≈0,88)
+  });
+  it("o escuro é preto de verdade e neutro: fundo #000 e nenhum cinza com tom quente nas superfícies", () => {
+    expect(resolver(escuro, "background")).toBe("#000000");
+    for (const nome of ["card", "card-raised", "popover", "border", "muted"]) {
+      const [r, g, b] = rgb(resolver(escuro, nome));
+      expect(Math.max(r, g, b) - Math.min(r, g, b), `--${nome} neutro`).toBeLessThanOrEqual(2);
+      expect(Math.max(r, g, b), `--${nome} escuro`).toBeLessThan(0x30);
+    }
+  });
+  it("o brilho laranja de fundo é discreto (até 6%)", () => {
+    for (const t of [claro, escuro]) expect(rgbaDe(resolver(t, "ambient-glow")).alfa).toBeLessThanOrEqual(0.06);
   });
   it("o modo escuro é o padrão do app", () => {
     const app = readFileSync(join(SRC, "App.tsx"), "utf8");
