@@ -80,9 +80,6 @@ const CHANNEL_SERIES = [
   { key: "whatsapp", label: "WhatsApp", color: chartColors.whatsapp },
 ] as const;
 
-/** Total geral de atendimentos: a cor da marca (laranja) */
-const TOTAL_SERIES = { key: "attendances", label: "Total", color: chartColors.total } as const;
-
 type TrendPoint = ReturnType<typeof buildAttendancesTrend>[number];
 
 function TrendTooltip({ active, payload }: { active?: boolean; payload?: { payload: TrendPoint }[] }) {
@@ -116,8 +113,8 @@ function AttendancesTrendChart({ data }: { data: TrendPoint[] }) {
   const kind = trendChartKind(data.length);
   const visible = CHANNEL_SERIES.filter((series) => data.some((point) => point[series.key] > 0));
   const hidden = CHANNEL_SERIES.filter((series) => !visible.includes(series));
-  // Legenda: cor sempre junto do nome. O total (laranja) só existe no gráfico de área.
-  const legend = kind === "area" ? [TOTAL_SERIES, ...visible] : visible;
+  // Legenda: cor sempre junto do nome do canal
+  const legend = visible;
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -135,33 +132,23 @@ function AttendancesTrendChart({ data }: { data: TrendPoint[] }) {
         {kind === "area" ? (
           <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <defs>
-              <ChartAreaGradient id={`${gradientId}-total`} color={TOTAL_SERIES.color} />
+              {visible.map((series) => (
+                <ChartAreaGradient key={series.key} id={`${gradientId}-${series.key}`} color={series.color} topOpacity="0.22" />
+              ))}
             </defs>
             <CartesianGrid {...chartGridProps} />
             <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
             <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
             <Tooltip content={<TrendTooltip />} cursor={chartLineCursor} />
-            {/* total geral: área laranja com degradê que some para baixo */}
-            <Area
-              type="monotone"
-              dataKey="attendances"
-              stroke={TOTAL_SERIES.color}
-              strokeWidth={2.4}
-              fill={`url(#${gradientId}-total)`}
-              dot={false}
-              activeDot={chartActiveDot(TOTAL_SERIES.color)}
-              isAnimationActive
-              animationDuration={CHART_DRAW_MS}
-            />
-            {/* canais: linhas azul (Ligação) e verde (WhatsApp) */}
+            {/* um canal por linha: Ligação (laranja) e WhatsApp (verde), com degradê leve que some para baixo */}
             {visible.map((series) => (
               <Area
                 key={series.key}
                 type="monotone"
                 dataKey={series.key}
                 stroke={series.color}
-                strokeWidth={2}
-                fill="none"
+                strokeWidth={2.2}
+                fill={`url(#${gradientId}-${series.key})`}
                 dot={false}
                 activeDot={chartActiveDot(series.color)}
                 isAnimationActive
