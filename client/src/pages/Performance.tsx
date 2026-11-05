@@ -61,7 +61,7 @@ import ChangeBadge from "@/components/ChangeBadge";
 import { describeChange, kpisFromSummaries, previousRange } from "@/lib/periodComparison";
 import ProductivitySection from "@/components/ProductivitySection";
 import { ToneValue } from "@/components/ToneMark";
-import ChannelBadge from "@/components/ChannelBadge";
+import ChannelBadge, { ChannelIcon } from "@/components/ChannelBadge";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
@@ -595,7 +595,15 @@ export default function Performance() {
             <CardHeader>
               <CardTitle>Atendimentos por Colaborador</CardTitle>
               <CardDescription>
-                {displayRange.label} · Barras laranja = Ligação · Barras neutras = WhatsApp
+                <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span>{displayRange.label}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <ChannelIcon channel="Ligação" className="h-3.5 w-3.5" /> Barras azuis = Ligação
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <ChannelIcon channel="WhatsApp" className="h-3.5 w-3.5" /> Barras verdes = WhatsApp
+                  </span>
+                </span>
               </CardDescription>
             </CardHeader>
             <CardContent>
