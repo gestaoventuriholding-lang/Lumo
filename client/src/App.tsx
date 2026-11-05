@@ -7,6 +7,7 @@ import { MotionConfig } from "framer-motion";
 import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVariants";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import OnOrangeSwitch from "./components/OnOrangeSwitch";
 import { EllosDataProvider } from "./contexts/EllosDataContext";
 import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
@@ -103,9 +104,10 @@ function App() {
   return (
     <ErrorBoundary>
       <MotionConfig reducedMotion="user">
-      <ThemeProvider defaultTheme="light" switchable>
+      <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
+          <OnOrangeSwitch />
           <AuthProvider>
             <AuthGate>
               <EllosDataProvider>

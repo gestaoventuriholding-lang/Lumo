@@ -306,21 +306,21 @@ const AppSidebarPanel = memo(function AppSidebarPanel({
           className={cn(
             "relative h-9 gap-3 rounded-lg px-3 text-sm group-data-[collapsible=icon]:size-auto! group-data-[collapsible=icon]:h-9! group-data-[collapsible=icon]:w-full! group-data-[collapsible=icon]:px-3!",
             isActive
-              ? "font-semibold text-primary hover:bg-transparent hover:text-primary active:bg-transparent active:text-primary data-[active=true]:bg-transparent data-[active=true]:text-primary"
+              ? "font-semibold text-primary-foreground hover:bg-transparent hover:text-primary-foreground active:bg-transparent active:text-primary-foreground data-[active=true]:bg-transparent data-[active=true]:text-primary-foreground"
               : "font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:bg-accent active:text-foreground data-[active=true]:bg-accent data-[active=true]:text-foreground"
           )}
         >
           {isActive && (
             <motion.span
               layoutId="sidebar-active-pill"
-              className="absolute inset-0 rounded-lg bg-primary-soft"
+              className="absolute inset-0 rounded-lg bg-primary shadow-glow"
               transition={{ duration: 0.3, ease: smoothEase }}
             />
           )}
           <item.icon
             className={cn(
               "relative h-[18px] w-[18px]",
-              isActive ? "text-primary" : "text-muted-foreground group-hover/menu-button:text-foreground"
+              isActive ? "text-primary-foreground" : "text-muted-foreground group-hover/menu-button:text-foreground"
             )}
           />
           <span className={cn("relative whitespace-nowrap", labelClass)}>{item.label}</span>
@@ -455,7 +455,7 @@ const LayoutMain = memo(function LayoutMain({
         isStructurePage && "h-svh max-h-svh overflow-hidden"
       )}
     >
-      <div className="z-40 flex h-12 shrink-0 items-center justify-between border-b border-border bg-card px-3 md:px-4">
+      <div className="glass z-40 flex h-12 shrink-0 items-center justify-between rounded-none border-x-0 border-t-0 px-3 md:px-4">
         <div className="flex min-w-0 items-center gap-2">
           <span className="font-display truncate text-base font-semibold text-foreground">
             {pageTitle}

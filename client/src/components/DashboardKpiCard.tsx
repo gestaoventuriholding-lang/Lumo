@@ -49,12 +49,12 @@ export default function DashboardKpiCard({
       className={cn(
         "ellos-panel-sm relative overflow-hidden p-5 transition-colors duration-200",
         dark
-          ? "border-[#1a1a1a] bg-[#1a1a1a] text-white dark:border-border"
-          : "border-t-[3px] border-t-primary hover:border-primary/40"
+          ? "border-primary/40 bg-card shadow-glow"
+          : "hover:border-primary/40"
       )}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div className={cn("flex h-11 w-11 items-center justify-center rounded-lg", dark ? "bg-white/10" : iconBg)}>
+        <div className={cn("flex h-11 w-11 items-center justify-center rounded-lg", dark ? "bg-primary-soft" : iconBg)}>
           <Icon className={cn("h-[22px] w-[22px]", dark ? "text-primary" : iconColor)} />
         </div>
         {sparkData.length > 1 && (
@@ -78,8 +78,8 @@ export default function DashboardKpiCard({
           </div>
         )}
       </div>
-      <p className={cn("text-sm font-medium", dark ? "text-white/70" : "text-muted-foreground")}>{title}</p>
-      <p className={cn("font-display mt-1 text-3xl font-bold", dark ? "text-primary" : "text-foreground")}>
+      <p className={cn("text-sm font-medium", "text-muted-foreground")}>{title}</p>
+      <p className={cn("font-display mt-1 text-3xl font-bold", dark ? "text-brand-text" : "text-foreground")}>
         <AnimatedText text={value} />
       </p>
       {progress !== undefined && (
@@ -93,17 +93,16 @@ export default function DashboardKpiCard({
       <p
         className={cn(
           "mt-3 text-xs font-medium",
-          dark && "text-white/70",
-          !dark && trend === "up" && "text-success",
-          !dark && trend === "down" && "text-danger",
-          !dark && trend === "neutral" && "text-muted-foreground"
+          trend === "up" && "text-success",
+          trend === "down" && "text-danger",
+          trend === "neutral" && "text-muted-foreground"
         )}
       >
         {comparison}
       </p>
       {delta ? <ChangeBadge change={delta} className="mt-1" /> : null}
       {footnote ? (
-        <p className={cn("mt-1 text-xs", dark ? "text-white/60" : "text-muted-foreground")}>{footnote}</p>
+        <p className={cn("mt-1 text-xs", "text-muted-foreground")}>{footnote}</p>
       ) : null}
     </motion.div>
   );

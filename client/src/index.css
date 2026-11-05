@@ -14,15 +14,22 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-card-raised: var(--card-raised);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-brand: var(--brand);
+  --color-brand-text: var(--brand-text);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-fill: var(--warning-fill);
+  --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-subtle-foreground: var(--text-muted);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -50,92 +57,173 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * ==========================================================================================
+ * TEMA DO ELLOS: este é o ÚNICO lugar das cores e dos estilos de vidro.
+ * Telas e componentes usam só estas variáveis (via classes do Tailwind como bg-card, text-success,
+ * ou via var(--...) no CSS). Cores de gráfico: client/src/lib/chartTheme.ts, que lê as variáveis daqui.
+ * Cores com significado: verde = bom, vermelho = ruim, amarelo = atenção. O laranja é só da marca
+ * (nunca de alerta). Todo texto precisa de contraste AA (testado em themeTokens.test.tsx).
+ * Modo escuro é o padrão; o claro usa o mesmo laranja, com ajuste fino para passar em 3:1 no branco.
+ * ==========================================================================================
+ */
 :root {
   --ui-scale: 1;
-  /* Identidade Ellos. O laranja só aparece em botão primário, item ativo do menu,
-     link e série principal dos gráficos. */
-  --radius: 8px;
-  --background: #f7f6f4;
-  --foreground: #141414;
+  --radius: 12px;
+
+  /* superfícies */
+  --background: #f7f4f0;
+  --foreground: #1c1815;
   --card: #ffffff;
-  --card-foreground: #141414;
+  --card-foreground: #1c1815;
+  --card-raised: #f2eee9; /* hover, linha em foco, área rebaixada */
   --popover: #ffffff;
-  --popover-foreground: #141414;
-  --border: #e7e5e1;
-  --input: #e7e5e1;
-  --muted-foreground: #6b6866; /* texto secundário */
-  --text-muted: #9a9794; /* texto terciário */
-  --secondary: #f7f6f4;
-  --secondary-foreground: #141414;
-  --muted: #f7f6f4;
-  --accent: #f7f6f4;
-  --accent-foreground: #141414;
-  --primary: #ff6b00;
-  --primary-hover: #e65f00;
-  --primary-soft: #fff0e5;
-  --primary-foreground: #ffffff;
-  --ring: #ff6b00;
-  --success: #2f7d5b;
-  --warning: #b7791f;
-  --danger: #c2410c;
-  --destructive: #c2410c;
+  --popover-foreground: #1c1815;
+  --border: #e5ded7; /* linha fina e discreta */
+  --input: #8a8178; /* borda de campo de formulário (3:1) */
+  --secondary: #f2eee9;
+  --secondary-foreground: #1c1815;
+  --muted: #f2eee9;
+  --accent: #f2eee9;
+  --accent-foreground: #1c1815;
+
+  /* texto */
+  --muted-foreground: #62594f; /* texto secundário (AA) */
+  --text-muted: #9a9087; /* só itens desativados (isento de AA) */
+
+  /* laranja da marca */
+  --brand: #ee6000; /* preenchimentos, linhas, barras, brilho */
+  --brand-text: #b83f00; /* laranja usado como texto/link sobre fundo claro */
+  --primary: var(--brand);
+  --primary-hover: #d95700;
+  --primary-soft: rgba(238, 96, 0, 0.12);
+  --primary-foreground: #17110c; /* texto sobre o laranja (opção A: escuro, 6,6:1) */
+  --ring: #ee6000;
+
+  /* cores com significado */
+  --success: #15803d;
+  --success-soft: rgba(21, 128, 61, 0.12);
+  --warning: #8a5a00; /* amarelo como TEXTO */
+  --warning-fill: #f5c518; /* amarelo como ícone, faixa ou ponto */
+  --warning-soft: rgba(245, 197, 24, 0.24);
+  --danger: #c62828;
+  --danger-soft: rgba(198, 40, 40, 0.1);
+  --destructive: #c62828;
   --destructive-foreground: #ffffff;
-  --chart-1: #ff6b00;
-  --chart-2: #6b6866;
-  --chart-3: #a3a09c;
-  --chart-4: #d4d1cc;
-  --chart-5: #9a9794;
-  --chart-grid: #e7e5e1;
-  --channel-whatsapp: #1a1a1a; /* segundo canal: preto da marca (claro no modo escuro) */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #141414;
-  --sidebar-primary: #ff6b00;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff0e5;
-  --sidebar-accent-foreground: #ff6b00;
-  --sidebar-border: #e7e5e1;
-  --sidebar-ring: #ff6b00;
-  /* sombra única e sutil; prefira a borda de 1px */
-  --shadow-surface: 0 1px 2px rgba(20, 20, 20, 0.06);
-  --shadow-raised: 0 1px 2px rgba(20, 20, 20, 0.06);
-  --shadow-overlay: 0 1px 2px rgba(20, 20, 20, 0.06);
+
+  /* gráficos (ver chartTheme.ts) */
+  --chart-1: var(--brand);
+  --chart-2: #6f665d;
+  --chart-3: #b8a892;
+  --chart-4: #3f3832;
+  --chart-5: #ff9a4d;
+  --chart-grid: #e5ded7;
+  --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
+  --channel-whatsapp: #6f665d; /* segundo canal: cinza quente de meio-tom */
+  --heat-low: #ffe9d6; /* mapa de calor: do baixo ao alto (laranja) */
+  --heat-high: var(--brand);
+
+  /* menu lateral */
+  --sidebar: var(--glass-bg);
+  --sidebar-foreground: #1c1815;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--primary-soft);
+  --sidebar-accent-foreground: var(--brand-text);
+  --sidebar-border: var(--glass-border);
+  --sidebar-ring: var(--ring);
+
+  /* vidro: só menu lateral, barra do topo, sino, janelas, popovers e menus suspensos. Cartões do Dashboard são sólidos. */
+  --glass-bg: rgba(255, 255, 255, 0.66);
+  --glass-bg-strong: rgba(255, 255, 255, 0.84); /* janelas com formulário: mais opaco para leitura */
+  --glass-border: rgba(28, 24, 21, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.8); /* brilho sutil na borda de cima */
+  --glass-shadow: 0 8px 24px rgba(28, 24, 21, 0.1);
+  --glass-blur: 14px;
+  --glass-solid: #ffffff; /* alternativa sem transparência */
+  --ambient-glow: rgba(238, 96, 0, 0.1); /* brilho laranja suave atrás do conteúdo */
+
+  /* sombras (a borda de 1px é o principal; sombra só sutil) */
+  --shadow-surface: 0 1px 2px rgba(28, 24, 21, 0.06);
+  --shadow-raised: 0 1px 2px rgba(28, 24, 21, 0.06);
+  --shadow-overlay: 0 1px 2px rgba(28, 24, 21, 0.06);
+  --shadow-glow: 0 0 28px -10px rgba(238, 96, 0, 0.45); /* brilho laranja só nos destaques */
 }
 
 .dark {
   color-scheme: dark;
-  --background: #141414;
-  --foreground: #f2f1ef;
-  --card: #1e1e1e;
-  --card-foreground: #f2f1ef;
-  --popover: #1e1e1e;
-  --popover-foreground: #f2f1ef;
-  --border: #2a2a2a;
-  --input: #2a2a2a;
-  --muted-foreground: #a3a09c;
-  --text-muted: #6b6866;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #f2f1ef;
-  --muted: #2a2a2a;
-  --accent: #2a2a2a;
-  --accent-foreground: #f2f1ef;
-  --primary: #ff8a00;
-  --primary-hover: #ff6b00;
+  --background: #0f0d0c;
+  --foreground: #f5f0eb;
+  --card: #171412;
+  --card-foreground: #f5f0eb;
+  --card-raised: #1f1b18;
+  --popover: #1b1815;
+  --popover-foreground: #f5f0eb;
+  --border: #2b2521;
+  --input: #756c63;
+  --secondary: #1f1b18;
+  --secondary-foreground: #f5f0eb;
+  --muted: #1f1b18;
+  --accent: #1f1b18;
+  --accent-foreground: #f5f0eb;
+
+  --muted-foreground: #aba29a;
+  --text-muted: #6f675f;
+
+  --brand: #ff6b00;
+  --brand-text: #ff8a3d;
+  --primary-hover: #ff8a3d;
   --primary-soft: rgba(255, 107, 0, 0.14);
-  --primary-foreground: #141414;
-  --ring: #ff8a00;
-  --chart-grid: #2a2a2a;
-  --channel-whatsapp: #f2f1ef;
-  --sidebar: #1e1e1e;
-  --sidebar-foreground: #f2f1ef;
-  --sidebar-primary: #ff8a00;
-  --sidebar-primary-foreground: #141414;
-  --sidebar-accent: rgba(255, 107, 0, 0.14);
-  --sidebar-accent-foreground: #ff8a00;
-  --sidebar-border: #2a2a2a;
-  --sidebar-ring: #ff8a00;
-  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-overlay: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ring: #ff6b00;
+
+  --success: #3fcf8e;
+  --success-soft: rgba(63, 207, 142, 0.14);
+  --warning: #f5c518;
+  --warning-fill: #f5c518;
+  --warning-soft: rgba(245, 197, 24, 0.14);
+  --danger: #f2555a;
+  --danger-soft: rgba(242, 85, 90, 0.14);
+  --destructive: #f2555a;
+  --destructive-foreground: #17110c;
+
+  --chart-2: #8e857c;
+  --chart-3: #cdbba7;
+  --chart-4: #5e564f;
+  --chart-5: #ffb27a;
+  --chart-grid: #2b2521;
+  --chart-area-top: 0.38;
+  --channel-whatsapp: #8e857c;
+  --heat-low: #2a1a10;
+
+  --sidebar-foreground: #f5f0eb;
+  --sidebar-accent-foreground: var(--brand-text);
+
+  --glass-bg: rgba(23, 20, 18, 0.62);
+  --glass-bg-strong: rgba(27, 24, 21, 0.86);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --glass-solid: #1b1815;
+  --ambient-glow: rgba(255, 107, 0, 0.14);
+
+  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-overlay: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 28px -10px rgba(255, 107, 0, 0.5);
+}
+
+/*
+ * Texto sobre o laranja: as duas opções em comparação (só a pré-visualização troca; no oficial vale a escolhida).
+ *  A (padrão): um único laranja, texto escuro por cima (6,6:1).
+ *  B: texto branco, com laranja mais fechado nos preenchimentos (4,7:1). O laranja vivo fica nos gráficos e no brilho.
+ */
+html[data-on-orange="b"] {
+  --primary: #cc4800;
+  --primary-hover: #b84000;
+  --primary-foreground: #ffffff;
+}
+html[data-on-orange="b"] .text-primary {
+  color: var(--brand-text);
 }
 
 @layer base {
@@ -171,6 +259,17 @@
   body {
     @apply bg-background text-foreground text-base leading-normal;
   }
+  /* Brilho laranja bem suave e difuso atrás do conteúdo, para o vidro aparecer. Camada fixa e barata (só degradê). */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(70vmax 46vmax at 12% -8%, var(--ambient-glow), transparent 62%),
+      radial-gradient(54vmax 40vmax at 100% 108%, color-mix(in srgb, var(--ambient-glow) 70%, transparent), transparent 64%);
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -199,6 +298,63 @@
 }
 
 @layer components {
+  /**
+   * Vidro: fundo translúcido + desfoque moderado + borda fina com brilho sutil no topo.
+   * Só para menu lateral, barra do topo, sino, janelas, popovers e menus suspensos (no máximo ~4 ao mesmo tempo).
+   * Cartões do Dashboard continuam sólidos (bg-card).
+   */
+  .glass,
+  .glass-strong {
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--glass-shadow);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  }
+  .glass {
+    background-color: var(--glass-bg);
+  }
+  .glass-strong {
+    background-color: var(--glass-bg-strong);
+  }
+  /* Menu lateral: o vidro fica só no recipiente; as partes de dentro são transparentes (um desfoque só). */
+  [data-slot="sidebar-inner"],
+  [data-mobile="true"][data-slot="sidebar"] {
+    background-color: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    box-shadow: inset -1px 0 0 var(--glass-border);
+  }
+
+  /* Alternativa sólida: navegador sem desfoque, pedido de menos transparência ou de mais contraste */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-strong,
+    [data-slot="sidebar-inner"],
+    [data-mobile="true"][data-slot="sidebar"] {
+      background-color: var(--glass-solid);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .glass,
+    .glass-strong,
+    [data-slot="sidebar-inner"],
+    [data-mobile="true"][data-slot="sidebar"] {
+      background-color: var(--glass-solid);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    body::before {
+      display: none;
+    }
+  }
+
+  /** Brilho laranja só nos destaques (cartão em foco, item ativo do menu). */
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
   /**
    * Custom container utility that centers content and adds responsive padding.
    *
@@ -267,7 +423,8 @@
   }
 
   .ellos-sidebar-shell {
-    background-color: var(--sidebar);
+    /* transparente: o vidro está no recipiente (sidebar-inner), para não empilhar desfoques */
+    background-color: transparent;
     border-color: var(--sidebar-border);
     color: var(--sidebar-foreground);
   }

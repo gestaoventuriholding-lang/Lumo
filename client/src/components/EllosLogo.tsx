@@ -11,7 +11,7 @@ type EllosLogoProps = {
   background?: string;
 };
 
-const BRAND_ORANGE = "#FF6B00";
+const BRAND_ORANGE = "var(--brand)";
 
 /**
  * Símbolo da marca: dois elos entrelaçados, um laranja e um que segue o tema
@@ -20,7 +20,7 @@ const BRAND_ORANGE = "#FF6B00";
  */
 export function EllosMark({
   className,
-  background = "var(--sidebar)",
+  background = "var(--card)",
 }: {
   className?: string;
   background?: string;
