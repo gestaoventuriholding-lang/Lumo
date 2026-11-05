@@ -1,12 +1,17 @@
 import type { AttendanceChannel, GoalStatus } from "./goals";
 
-/** Indicadores do relatório que podem ter limite: os valores são sempre porcentagens (0 a 100) */
-export type ProductivityLimitMetric = "pause_unproductive_percent" | "pause_percent" | "occupancy_min";
+/** Indicadores do relatório que podem ter limite. Os três primeiros são porcentagens (0 a 100); o último é em horas */
+export type ProductivityLimitMetric =
+  | "pause_unproductive_percent"
+  | "pause_percent"
+  | "occupancy_min"
+  /** Horas de login por dia acima das quais o dia é desconsiderado (padrão 12) */
+  | "login_max_hours";
 
 export interface ProductivityLimit {
   id: number;
   metric: ProductivityLimitMetric;
-  /** Máximo permitido (pausas) ou mínimo esperado (ocupação), em % */
+  /** Máximo permitido (pausas, login) ou mínimo esperado (ocupação): em %, ou em horas para login_max_hours */
   value: number;
   status: GoalStatus;
   createdAt: string;

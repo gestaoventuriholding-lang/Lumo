@@ -16,6 +16,8 @@ export interface Attendant {
   jornadaEnd: string;
   observation: string;
   registrationDate: string;
+  /** Código do agente na Escallo (vazio = ainda não vinculado). Liga o relatório da Escallo a este colaborador. */
+  escalloCodigo?: number | null;
 }
 
 /** Carga horária cadastrada em Configurações (ex.: 6h20, 12x36) */

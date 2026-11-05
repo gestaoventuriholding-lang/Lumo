@@ -14,6 +14,9 @@ import type {
   CalendarEventUpdateInput,
 } from "@/types/calendarEvent";
 import type { Incident, IncidentInput } from "@/types/incident";
+import type { LoginAlert, LoginAlertStatus } from "@/types/loginAlert";
+import { loadLoginAlerts, saveLoginAlerts } from "@/lib/loginAlertStorage";
+import { loginLimitSeconds } from "@/lib/loginLimit";
 import { applyIncidentUpdate, createIncident, loadIncidents, saveIncidents } from "@/lib/incidentStorage";
 import type { ProductionGoal, RoleGoal, PerformanceIndicator } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
@@ -88,6 +91,10 @@ interface EllosDataContextValue {
   updateIncident: (id: number, input: IncidentInput) => void;
   removeIncident: (id: number) => void;
 
+  /** Alertas de "tempo logado desconsiderado" (compartilhados pela equipe) */
+  loginAlerts: LoginAlert[];
+  updateLoginAlertStatus: (id: number, status: LoginAlertStatus) => void;
+
   addPerformanceRecord: (record: DailyPerformanceRecord) => void;
   updatePerformanceRecord: (id: number, data: Partial<DailyPerformanceRecord>) => void;
   removePerformanceRecord: (id: number) => void;
@@ -127,6 +134,7 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
     loadCalendarEvents()
   );
   const [incidents, setIncidentsState] = useState<Incident[]>(() => loadIncidents());
+  const [loginAlerts, setLoginAlertsState] = useState<LoginAlert[]>(() => loadLoginAlerts());
   const [productionGoals, setProductionGoalsState] = useState<ProductionGoal[]>(() =>
     loadProductionGoals()
   );
@@ -162,6 +170,17 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setCalendarEventsState((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         saveCalendarEvents(next);
+        return next;
+      });
+    },
+    []
+  );
+
+  const setLoginAlerts = useCallback(
+    (updater: LoginAlert[] | ((prev: LoginAlert[]) => LoginAlert[])) => {
+      setLoginAlertsState((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        saveLoginAlerts(next);
         return next;
       });
     },
@@ -223,8 +242,11 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
             : absence
         )
       );
+      setLoginAlerts((prev) =>
+        prev.map((alert) => (alert.attendantId === id && alert.attendantName !== input.name ? { ...alert, attendantName: input.name } : alert))
+      );
     },
-    [setAttendants, setPerformanceRecords, setAbsences]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts]
   );
 
   const removeAttendant = useCallback(
@@ -232,8 +254,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setAttendants((prev) => prev.filter((a) => a.id !== id));
       setPerformanceRecords((prev) => prev.filter((r) => r.attendantId !== id));
       setAbsences((prev) => prev.filter((a) => a.attendantId !== id));
+      setLoginAlerts((prev) => prev.filter((a) => a.attendantId !== id));
     },
-    [setAttendants, setPerformanceRecords, setAbsences]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts]
   );
 
   const removeAttendants = useCallback(
@@ -242,8 +265,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setAttendants((prev) => prev.filter((a) => !idSet.has(a.id)));
       setPerformanceRecords((prev) => prev.filter((r) => !idSet.has(r.attendantId)));
       setAbsences((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
+      setLoginAlerts((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
     },
-    [setAttendants, setPerformanceRecords, setAbsences]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts]
   );
 
   const addAbsence = useCallback(
@@ -468,7 +492,12 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
         attendants,
         performanceRecords,
         productivityRecords,
-        options
+        {
+          ...options,
+          // regra do tempo logado acima do limite: vale o que está em Configurações (padrão 12 h)
+          loginLimitSeconds: options.loginLimitSeconds === undefined ? loginLimitSeconds(productivityLimits) : options.loginLimitSeconds,
+          loginAlerts,
+        }
       );
       // colaboradores primeiro: os registros apontam para eles no banco
       setAttendantsState(outcome.attendants);
@@ -477,6 +506,10 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       savePerformanceRecords(outcome.performanceRecords);
       setProductivityRecordsState(outcome.productivityRecords);
       saveProductivityRecords(outcome.productivityRecords);
+      if (outcome.loginAlerts !== loginAlerts) {
+        setLoginAlertsState(outcome.loginAlerts);
+        saveLoginAlerts(outcome.loginAlerts);
+      }
       appendImportLog({
         timestamp: new Date().toISOString(),
         fileName: options.fileName,
@@ -489,7 +522,17 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       });
       return outcome;
     },
-    [attendants, performanceRecords, productivityRecords]
+    [attendants, performanceRecords, productivityRecords, productivityLimits, loginAlerts]
+  );
+
+  const updateLoginAlertStatus = useCallback(
+    (id: number, status: LoginAlertStatus) => {
+      const now = new Date().toISOString();
+      setLoginAlerts((prev) =>
+        prev.map((a) => (a.id === id && a.status !== status ? { ...a, status, statusChangedAt: now, updatedAt: now } : a))
+      );
+    },
+    [setLoginAlerts]
   );
 
   const setProductionGoals = useCallback((goals: ProductionGoal[]) => {
@@ -545,6 +588,8 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       addIncident,
       updateIncident,
       removeIncident,
+      loginAlerts,
+      updateLoginAlertStatus,
       addPerformanceRecord,
       updatePerformanceRecord,
       removePerformanceRecord,
@@ -582,6 +627,8 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       addIncident,
       updateIncident,
       removeIncident,
+      loginAlerts,
+      updateLoginAlertStatus,
       addPerformanceRecord,
       updatePerformanceRecord,
       removePerformanceRecord,

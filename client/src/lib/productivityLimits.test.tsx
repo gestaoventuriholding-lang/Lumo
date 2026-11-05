@@ -58,3 +58,24 @@ describe("limites de pausa e ocupação", () => {
     expect(alerts).toEqual([]);
   });
 });
+
+import { LIMIT_DEFINITIONS, getLimitDefinition } from "./productivityLimits";
+
+describe("limite de tempo logado por dia", () => {
+  it("existe em Configurações, em horas, ligado por padrão em 12 h e aceita de 1 a 24", () => {
+    const def = getLimitDefinition("login_max_hours");
+    expect(LIMIT_DEFINITIONS.map((d) => d.metric)).toContain("login_max_hours");
+    expect(def).toMatchObject({ unit: "h", suggested: 12, min: 1, max: 24, defaultActive: true, direction: "max", percentAlert: false });
+    // os limites de pausa e ocupação seguem em %
+    expect(getLimitDefinition("pause_percent")).toMatchObject({ unit: "%", min: 0, max: 100, percentAlert: true });
+  });
+
+  it("não gera alerta de pausa/ocupação por registro (ele age na importação)", () => {
+    const alerts = buildProductivityAlerts([record({ periodEnd: "2026-10-29" })], [limit("login_max_hours", 1)]);
+    expect(alerts).toEqual([]);
+    // junto com um limite de pausa, só o de pausa gera alerta
+    const com = buildProductivityAlerts([record({ periodEnd: "2026-10-29" })], [limit("login_max_hours", 1), limit("pause_unproductive_percent", 5)]);
+    expect(com).toHaveLength(1);
+    expect(com[0].footer).toBe("Pausa improdutiva");
+  });
+});

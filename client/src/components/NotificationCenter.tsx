@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "@/lib/motionVariants";
-import { Bell, Check, AlertCircle, X, BarChart3 } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertCircle, X, BarChart3 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -17,13 +17,15 @@ import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface NotificationCenterProps {
   alerts: PerformanceAlert[];
+  /** Muda a situação de um alerta compartilhado (guardado no banco), como o de tempo logado desconsiderado */
+  onSharedAlertAction?: (sharedAlertId: number, status: "seen" | "resolved") => void;
 }
 
 const getAlertIcon = (level: AlertLevel) => (
   <AlertCircle className={`h-5 w-5 ${alertIconClass(level)}`} />
 );
 
-export default function NotificationCenter({ alerts }: NotificationCenterProps) {
+export default function NotificationCenter({ alerts, onSharedAlertAction }: NotificationCenterProps) {
   const { preferences } = useUserPreferences();
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
@@ -42,10 +44,12 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
     [alerts, dismissedIds]
   );
 
-  const unreadCount = visibleAlerts.filter((alert) => !readIds.has(alert.id)).length;
-  const criticalCount = visibleAlerts.filter(
-    (alert) => alert.alertLevel === "red" && !readIds.has(alert.id)
-  ).length;
+  // alertas compartilhados (banco) guardam a própria situação; os outros usam o "lido" deste navegador
+  const isUnreadAlert = (alert: PerformanceAlert) =>
+    alert.sharedAlertId != null ? alert.sharedStatus === "open" : !readIds.has(alert.id);
+
+  const unreadCount = visibleAlerts.filter(isUnreadAlert).length;
+  const criticalCount = visibleAlerts.filter((alert) => alert.alertLevel === "red" && isUnreadAlert(alert)).length;
 
   const handleMarkAsRead = (id: number) => {
     setReadIds((prev) => {
@@ -57,9 +61,12 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
 
   const handleMarkAllAsRead = () => {
     setReadIds((prev) => {
-      const next = new Set([...prev, ...visibleAlerts.map((a) => a.id)]);
+      const next = new Set([...prev, ...visibleAlerts.filter((a) => a.sharedAlertId == null).map((a) => a.id)]);
       persistReadAlertIds(next);
       return next;
+    });
+    visibleAlerts.forEach((a) => {
+      if (a.sharedAlertId != null && a.sharedStatus === "open") onSharedAlertAction?.(a.sharedAlertId, "seen");
     });
   };
 
@@ -101,7 +108,7 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
           <div>
             <h3 className="font-semibold text-foreground text-sm">Alertas</h3>
             <p className="text-xs text-muted-foreground">
-              Metas de produção e limites de pausa e ocupação
+              Metas de produção, limites de pausa e ocupação e tempo logado
             </p>
           </div>
           {unreadCount > 0 && (
@@ -115,7 +122,8 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
           <AnimatePresence mode="popLayout">
             {visibleAlerts.length > 0 ? (
               visibleAlerts.map((alert) => {
-                const isUnread = !readIds.has(alert.id);
+                const isUnread = isUnreadAlert(alert);
+                const isShared = alert.sharedAlertId != null;
                 return (
                   <motion.div
                     key={alert.id}
@@ -136,24 +144,54 @@ export default function NotificationCenter({ alerts }: NotificationCenterProps) 
                           {alert.footer ?? `${alert.percentage.toFixed(1)}% da meta · ${alert.role}`}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDismiss(alert.id)}
-                        className="p-1 hover:bg-foreground/10 rounded transition-colors shrink-0"
-                        aria-label="Descartar alerta"
-                      >
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      </button>
+                      {!isShared && (
+                        <button
+                          type="button"
+                          onClick={() => handleDismiss(alert.id)}
+                          className="p-1 hover:bg-foreground/10 rounded transition-colors shrink-0"
+                          aria-label="Descartar alerta"
+                        >
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                      )}
                     </div>
-                    {isUnread && (
-                      <button
-                        type="button"
-                        onClick={() => handleMarkAsRead(alert.id)}
-                        className="mt-2 text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
-                      >
-                        <Check className="h-3 w-3" />
-                        Marcar como lido
-                      </button>
+                    {isShared && alert.sharedAlertId != null ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        {alert.sharedStatus === "open" ? (
+                          <button
+                            type="button"
+                            onClick={() => onSharedAlertAction?.(alert.sharedAlertId!, "seen")}
+                            className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
+                          >
+                            <Check className="h-3 w-3" />
+                            Marcar como visto
+                          </button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Check className="h-3 w-3" />
+                            Visto
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onSharedAlertAction?.(alert.sharedAlertId!, "resolved")}
+                          className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
+                        >
+                          <CheckCheck className="h-3 w-3" />
+                          Marcar como resolvido
+                        </button>
+                      </div>
+                    ) : (
+                      isUnread && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkAsRead(alert.id)}
+                          className="mt-2 text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
+                        >
+                          <Check className="h-3 w-3" />
+                          Marcar como lido
+                        </button>
+                      )
                     )}
                   </motion.div>
                 );

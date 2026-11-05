@@ -30,6 +30,9 @@ import { EllosLogo } from "./EllosLogo";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import { buildPerformanceAlerts } from "@/lib/performanceMetrics";
 import { buildProductivityAlerts } from "@/lib/productivityLimits";
+import { buildLoginAlerts } from "@/lib/loginLimit";
+import { alertasLoginDemonstracao, demoPermitida } from "@/lib/escalloDemo";
+import type { LoginAlertStatus } from "@/types/loginAlert";
 import type { PerformanceAlert } from "@/types/goals";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -114,13 +117,31 @@ function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
-  const { todayIndicators, productivityRecords, productivityLimits } = useEllosData();
+  const { todayIndicators, productivityRecords, productivityLimits, loginAlerts, updateLoginAlertStatus } = useEllosData();
+  // Só na pré-visualização: ?demoalerta=1 mostra alertas de tempo logado INVENTADOS no sino (nada é salvo)
+  const demoAlertas =
+    typeof window !== "undefined" &&
+    demoPermitida(window.location.hostname) &&
+    new URLSearchParams(window.location.search).get("demoalerta") === "1";
+  const [loginAlertsDemo, setLoginAlertsDemo] = useState(() => alertasLoginDemonstracao());
+  const loginBellAlerts = useMemo(
+    () => buildLoginAlerts(demoAlertas ? loginAlertsDemo : loginAlerts),
+    [demoAlertas, loginAlertsDemo, loginAlerts]
+  );
+  const handleSharedAlertAction = useCallback(
+    (id: number, status: Exclude<LoginAlertStatus, "open">) => {
+      if (demoAlertas) setLoginAlertsDemo((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+      else updateLoginAlertStatus(id, status);
+    },
+    [demoAlertas, updateLoginAlertStatus]
+  );
   const performanceAlerts = useMemo(
     () => [
+      ...loginBellAlerts,
       ...buildPerformanceAlerts(todayIndicators),
       ...buildProductivityAlerts(productivityRecords, productivityLimits),
     ],
-    [todayIndicators, productivityRecords, productivityLimits]
+    [loginBellAlerts, todayIndicators, productivityRecords, productivityLimits]
   );
   const [location, setLocation] = useLocation();
   const { isMobile, openMobile, setOpenMobile } = useSidebar();
@@ -156,6 +177,7 @@ function DashboardLayoutContent({
       <LayoutMain
         pageTitle={activeMenuItem?.label ?? "Ellos"}
         performanceAlerts={performanceAlerts}
+        onSharedAlertAction={handleSharedAlertAction}
         isStructurePage={isStructurePage}
       >
         {children}
@@ -415,6 +437,7 @@ type LayoutMainProps = {
   children: ReactNode;
   pageTitle: string;
   performanceAlerts: PerformanceAlert[];
+  onSharedAlertAction: (sharedAlertId: number, status: "seen" | "resolved") => void;
   isStructurePage: boolean;
 };
 
@@ -422,6 +445,7 @@ const LayoutMain = memo(function LayoutMain({
   children,
   pageTitle,
   performanceAlerts,
+  onSharedAlertAction,
   isStructurePage,
 }: LayoutMainProps) {
   return (
@@ -437,7 +461,7 @@ const LayoutMain = memo(function LayoutMain({
             {pageTitle}
           </span>
         </div>
-        <NotificationCenter alerts={performanceAlerts} />
+        <NotificationCenter alerts={performanceAlerts} onSharedAlertAction={onSharedAlertAction} />
       </div>
       <main
         className={cn(

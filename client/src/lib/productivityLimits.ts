@@ -13,6 +13,15 @@ export interface LimitDefinition {
   direction: "max" | "min";
   /** Valor sugerido ao criar o limite (a pessoa pode mudar) */
   suggested: number;
+  /** Unidade do valor: % do tempo logado, ou horas */
+  unit: "%" | "h";
+  /** Faixa aceita para o valor */
+  min: number;
+  max: number;
+  /** Vale mesmo sem nada cadastrado (a pessoa pode desligar) */
+  defaultActive?: boolean;
+  /** Gera alerta por registro (porcentagens). O limite de login age na importação, não aqui. */
+  percentAlert: boolean;
 }
 
 export const LIMIT_DEFINITIONS: LimitDefinition[] = [
@@ -22,6 +31,10 @@ export const LIMIT_DEFINITIONS: LimitDefinition[] = [
     hint: "Máximo de tempo em pausa improdutiva, em % do tempo logado",
     direction: "max",
     suggested: 5,
+    unit: "%",
+    min: 0,
+    max: 100,
+    percentAlert: true,
   },
   {
     metric: "pause_percent",
@@ -29,6 +42,10 @@ export const LIMIT_DEFINITIONS: LimitDefinition[] = [
     hint: "Máximo de tempo em qualquer pausa, em % do tempo logado",
     direction: "max",
     suggested: 15,
+    unit: "%",
+    min: 0,
+    max: 100,
+    percentAlert: true,
   },
   {
     metric: "occupancy_min",
@@ -36,6 +53,22 @@ export const LIMIT_DEFINITIONS: LimitDefinition[] = [
     hint: "Mínimo de ocupação esperado, em % do tempo logado",
     direction: "min",
     suggested: 70,
+    unit: "%",
+    min: 0,
+    max: 100,
+    percentAlert: true,
+  },
+  {
+    metric: "login_max_hours",
+    label: "Tempo logado por dia",
+    hint: "Acima disso, o login, a pausa e a ocupação do dia ficam de fora das médias e o gestor recebe um alerta",
+    direction: "max",
+    suggested: 12,
+    unit: "h",
+    min: 1,
+    max: 24,
+    defaultActive: true,
+    percentAlert: false,
   },
 ];
 
@@ -96,7 +129,9 @@ export function recordPercents(record: ProductivityRecord): {
   };
 }
 
-const METRIC_CODE: Record<ProductivityLimitMetric, number> = {
+type PercentMetric = Exclude<ProductivityLimitMetric, "login_max_hours">;
+
+const METRIC_CODE: Record<PercentMetric, number> = {
   pause_unproductive_percent: 1,
   pause_percent: 2,
   occupancy_min: 3,
@@ -115,7 +150,10 @@ export function buildProductivityAlerts(
   records: ProductivityRecord[],
   limits: ProductivityLimit[]
 ): PerformanceAlert[] {
-  const activeLimits = limits.filter((l) => l.status === "Ativo");
+  // o limite de login (em horas) age na importação; aqui só entram os limites em %
+  const activeLimits = limits.filter(
+    (l): l is ProductivityLimit & { metric: PercentMetric } => l.status === "Ativo" && l.metric !== "login_max_hours"
+  );
   if (records.length === 0 || activeLimits.length === 0) return [];
 
   const latestEnd = records.reduce((max, r) => (r.periodEnd > max ? r.periodEnd : max), "");

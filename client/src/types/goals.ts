@@ -67,6 +67,10 @@ export interface PerformanceAlert {
   alertLevel: AlertLevel;
   timestamp: string;
   read: boolean;
+  /** Alertas guardados no banco e compartilhados pela equipe (ex.: tempo logado acima do limite) */
+  kind?: "login_excess";
+  sharedAlertId?: number;
+  sharedStatus?: "open" | "seen";
 }
 
 /**

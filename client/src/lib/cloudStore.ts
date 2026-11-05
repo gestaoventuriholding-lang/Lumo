@@ -31,6 +31,7 @@ export const KEYS = {
   productivityLimits: "ellos-productivity-limits",
   workingHours: "ellos-working-hours",
   incidents: "ellos-incidents",
+  loginAlerts: "ellos-login-alerts",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -62,6 +63,7 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       jornada_end: str(a.jornadaEnd),
       observation: str(a.observation),
       registration_date: nullable(a.registrationDate) ?? undefined,
+      escallo_codigo: a.escalloCodigo ?? null,
     }),
     fromRow: (r) => ({
       id: num(r.id),
@@ -73,6 +75,7 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       jornadaEnd: str(r.jornada_end),
       observation: str(r.observation),
       registrationDate: str(r.registration_date),
+      escalloCodigo: r.escallo_codigo == null ? null : Number(r.escallo_codigo),
     }),
   },
   [KEYS.performance]: {
@@ -305,6 +308,32 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
         updatedAt: str(r.updated_at),
       };
     },
+  },
+  [KEYS.loginAlerts]: {
+    table: "login_alerts",
+    order: "alert_date",
+    // status_changed_at e status_changed_by são preenchidos pelo banco (gatilho), não pelo app
+    toRow: (a) => ({
+      id: a.id,
+      attendant_id: a.attendantId,
+      alert_date: a.date,
+      login_seconds: num(a.loginSeconds),
+      limit_seconds: num(a.limitSeconds),
+      status: a.status,
+      created_at: nullable(a.createdAt) ?? undefined,
+    }),
+    fromRow: (r, ctx) => ({
+      id: num(r.id),
+      attendantId: num(r.attendant_id),
+      attendantName: ctx.attendantNames.get(num(r.attendant_id)) ?? "Colaborador",
+      date: str(r.alert_date),
+      loginSeconds: num(r.login_seconds),
+      limitSeconds: num(r.limit_seconds),
+      status: str(r.status),
+      statusChangedAt: optStr(r.status_changed_at),
+      createdAt: str(r.created_at),
+      updatedAt: str(r.updated_at),
+    }),
   },
   [KEYS.roleGoals]: {
     table: "role_goals",
@@ -593,6 +622,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     fetchAll("productivity_limits", "created_at").catch((): Row[] => []),
     fetchAll("working_hours_options", "created_at").catch((): Row[] => []),
     fetchAll("incidents", "occurred_on").catch((): Row[] => []),
+    fetchAll("login_alerts", "alert_date").catch((): Row[] => []),
   ]);
   const attendantNames = new Map(attendantRows.map((r) => [num(r.id), str(r.name)]));
   const ctx = { attendantNames };
@@ -609,6 +639,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     KEYS.productivityLimits,
     KEYS.workingHours,
     KEYS.incidents,
+    KEYS.loginAlerts,
   ];
   const allRows = [attendantRows, ...otherRows];
   keysInOrder.forEach((key, index) => {
