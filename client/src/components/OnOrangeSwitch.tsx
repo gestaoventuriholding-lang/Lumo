@@ -3,9 +3,14 @@ import { demoPermitida } from "@/lib/escalloDemo";
 import {
   ON_ORANGE_STORAGE_KEY,
   applyOnOrange,
+  readOnOrangeFromSearch,
   resolveOnOrange,
   type OnOrange,
 } from "@/lib/onOrange";
+
+// Lido assim que o arquivo carrega: o roteador pode trocar o endereço (e perder o ?laranja=) antes de a tela montar.
+const ESCOLHA_DO_ENDERECO: OnOrange | null =
+  typeof window !== "undefined" ? readOnOrangeFromSearch(window.location.search) : null;
 
 function guardado(): string | null {
   try {
@@ -22,7 +27,7 @@ function guardado(): string | null {
 export default function OnOrangeSwitch() {
   const permitido = typeof window !== "undefined" && demoPermitida(window.location.hostname);
   const [valor, setValor] = useState<OnOrange>(() =>
-    permitido ? resolveOnOrange(window.location.search, guardado()) : "a"
+    permitido ? (ESCOLHA_DO_ENDERECO ?? resolveOnOrange("", guardado())) : "a"
   );
 
   useEffect(() => {
