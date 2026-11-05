@@ -385,7 +385,7 @@ export default function Incidents() {
                         {formatDate(incident.occurredOn)}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <ChannelIcon className="h-4 w-4" />
+                        <ChannelIcon aria-hidden className={`h-4 w-4 ${incident.channel === "WhatsApp" ? "text-channel-whatsapp-text" : "text-channel-ligacao-text"}`} />
                         {incident.channel}
                       </span>
                       <span>Agente: {incident.attendantName}</span>

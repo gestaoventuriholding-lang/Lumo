@@ -3,17 +3,20 @@
  * variáveis de client/src/index.css (nenhuma cor escrita no código). Assim os gráficos acompanham o modo claro e o
  * escuro sozinhos e sempre usam a paleta aprovada.
  *
- * Regras: a série principal é laranja (Ligação); a secundária é um cinza neutro (WhatsApp); verde = bom, vermelho = ruim,
- * amarelo = atenção; o laranja nunca marca alerta. Área: linha laranja com degradê que some para baixo. Grade tracejada e apagada.
+ * Regras: o laranja é a marca e o TOTAL geral; Ligação é azul e WhatsApp é verde-limão (diferente do verde de "bom"), sempre
+ * junto do nome ou do ícone do canal; verde = bom, vermelho = ruim, amarelo = atenção; o laranja nunca marca alerta.
+ * Área: linha laranja com degradê que some para baixo. Grade tracejada e apagada.
  */
 
 export const chartColors = {
-  /** Série principal */
+  /** Série principal: a marca (laranja) */
   primary: "var(--chart-1)",
-  /** Séries em ordem de uso (a primeira é a principal) */
+  /** Total geral de atendimentos */
+  total: "var(--chart-1)",
+  /** Séries genéricas (não são canais), em ordem de uso: a primeira é a principal */
   series: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
   /** Canais da central */
-  ligacao: "var(--chart-1)",
+  ligacao: "var(--channel-ligacao)",
   whatsapp: "var(--channel-whatsapp)",
   /** Estados */
   positive: "var(--success)",

@@ -25,6 +25,7 @@ import {
   chartGridProps,
   chartTooltipContentStyle,
 } from "@/lib/chartTheme";
+import { ToneValue } from "@/components/ToneMark";
 import {
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle,
   Loader2, BarChart3, Phone, MessageSquare, Users,
@@ -543,7 +544,7 @@ function VozDashboard({ data }: { data: ParsedRecord[] }) {
                       <TableCell className="text-right">{r.atendidas ?? "—"}</TableCell>
                       <TableCell className="text-right">{r.sem_atendimento ?? "—"}</TableCell>
                       <TableCell className="text-right">{r.recuperadas ?? "—"}</TableCell>
-                      <TableCell className={`text-right font-semibold ${p > 80 ? "text-success" : p > 60 ? "text-warning" : "text-danger"}`}>{p.toFixed(1)}%</TableCell>
+                      <TableCell className="text-right font-semibold"><ToneValue tone={p > 80 ? "good" : p > 60 ? "warn" : "bad"} className="flex w-full justify-end">{p.toFixed(1)}%</ToneValue></TableCell>
                       <TableCell className="text-right text-muted-foreground">{r.taxa_perda != null ? (r.taxa_perda > 1 ? r.taxa_perda : r.taxa_perda * 100).toFixed(2) + "%" : "—"}</TableCell>
                     </TableRow>
                   );

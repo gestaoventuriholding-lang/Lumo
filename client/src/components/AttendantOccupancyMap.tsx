@@ -22,15 +22,15 @@ const NAME_COLUMN = "w-[210px] shrink-0";
 const CHANNEL_STYLE = {
   Ligação: {
     icon: Phone,
-    rgb: "232 89 12",
-    chip: "bg-primary-soft text-primary",
-    bar: "bg-primary",
+    color: "var(--channel-ligacao)",
+    chip: "bg-channel-ligacao-soft text-channel-ligacao-text",
+    bar: "bg-channel-ligacao",
   },
   WhatsApp: {
     icon: MessageCircle,
-    rgb: "107 104 102",
-    chip: "bg-muted text-muted-foreground",
-    bar: "bg-muted-foreground",
+    color: "var(--channel-whatsapp)",
+    chip: "bg-channel-whatsapp-soft text-channel-whatsapp-text",
+    bar: "bg-channel-whatsapp",
   },
 } as const;
 
@@ -231,7 +231,7 @@ function OccupancySection({ data }: { data: OccupancyMapData }) {
                       style={
                         isGap || isEdge
                           ? undefined
-                          : { backgroundColor: `rgb(${style.rgb} / ${0.14 + intensity * 0.5})` }
+                          : { backgroundColor: `color-mix(in srgb, ${style.color} ${Math.round((0.14 + intensity * 0.5) * 100)}%, transparent)` }
                       }
                     >
                       {count}

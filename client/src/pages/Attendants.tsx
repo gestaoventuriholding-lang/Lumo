@@ -41,6 +41,7 @@ import type { Attendant } from "@/types/attendant";
 import { formatJornada, isValidJornada } from "@/lib/attendantSchedule";
 import { lerCodigoDigitado } from "@/lib/escalloVinculos";
 import AttendantOccupancyMap from "@/components/AttendantOccupancyMap";
+import ChannelBadge from "@/components/ChannelBadge";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
 const ATTENDANT_ROLE = "Atendente";
@@ -49,12 +50,6 @@ const serviceChannelOptions: { value: Attendant["serviceChannel"]; label: string
   { value: "Ligação", label: "Ligação" },
   { value: "WhatsApp", label: "WhatsApp" },
 ];
-
-function serviceChannelBadgeClass(channel: Attendant["serviceChannel"]): string {
-  return channel === "WhatsApp"
-    ? "bg-muted text-muted-foreground"
-    : "bg-primary-soft text-primary";
-}
 
 export default function Attendants() {
   const {
@@ -375,11 +370,7 @@ export default function Attendants() {
                         {attendant.name}
                       </TableCell>
                       <TableCell>
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${serviceChannelBadgeClass(attendant.serviceChannel)}`}
-                        >
-                          {attendant.serviceChannel}
-                        </span>
+                        <ChannelBadge channel={attendant.serviceChannel} />
                       </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/15 text-primary dark:bg-primary/20">

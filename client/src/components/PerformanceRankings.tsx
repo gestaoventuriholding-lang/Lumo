@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ToneMark, levelToTone } from "@/components/ToneMark";
 import { ChevronDown, MessageCircle, Phone, Trophy } from "lucide-react";
 import {
   compareAttendantSummaries,
@@ -88,7 +89,8 @@ function GoalBar({ value, scale }: { value: number; scale: number }) {
         )}
         <span className="absolute inset-y-0 w-px bg-foreground/50" style={{ left: `${goalAt}%` }} />
       </div>
-      <span className={cn("w-12 text-right text-sm font-bold tabular-nums", toneText[tone])}>
+      <span className={cn("flex w-16 items-center justify-end gap-1 text-sm font-bold tabular-nums", toneText[tone])}>
+        {value > 0 && levelToTone(tone === "muted" ? undefined : tone) && <ToneMark tone={levelToTone(tone === "muted" ? undefined : tone)!} />}
         {value > 0 ? `${rounded}%` : "—"}
       </span>
     </div>
@@ -230,7 +232,10 @@ export default function PerformanceRankings({
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon
+                  aria-hidden
+                  className={cn("h-3.5 w-3.5", value === "WhatsApp" ? "text-channel-whatsapp-text" : "text-channel-ligacao-text")}
+                />
                 {value}
               </button>
             ))}

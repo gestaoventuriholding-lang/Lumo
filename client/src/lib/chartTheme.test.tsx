@@ -41,6 +41,21 @@ const contraste = (a: string, b: string) => {
   const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
   return (x + 0.05) / (y + 0.05);
 };
+const matiz = (h: string) => {
+  const [r, g, b] = rgb(h).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  if (d === 0) return 0;
+  const m = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return Math.round((m * 60 + 360) % 360);
+};
+const rgbaDe = (s: string) => {
+  const m = s.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+  if (!m) throw new Error(`rgba inválido: ${s}`);
+  return { cor: [Number(m[1]), Number(m[2]), Number(m[3])] as [number, number, number], alfa: Number(m[4]) };
+};
+const misturarRgb = (topo: [number, number, number], base: string, alfa: number) =>
+  "#" + rgb(base).map((c, i) => Math.round(topo[i] * alfa + c * (1 - alfa)).toString(16).padStart(2, "0")).join("");
 const misturar = (forte: string, fraco: string, t: number) =>
   "#" + rgb(forte).map((c, i) => Math.round(c * t + rgb(fraco)[i] * (1 - t)).toString(16).padStart(2, "0")).join("");
 
@@ -48,7 +63,7 @@ describe("tema dos gráficos: só variáveis do tema", () => {
   it("nenhuma cor escrita no código: tudo é var(--...)", () => {
     const todas = [
       ...chartColors.series,
-      chartColors.primary, chartColors.ligacao, chartColors.whatsapp, chartColors.positive, chartColors.warning,
+      chartColors.primary, chartColors.total, chartColors.ligacao, chartColors.whatsapp, chartColors.positive, chartColors.warning,
       chartColors.negative, chartColors.neutral, chartColors.neutralSoft,
       ...Object.values(absenceChartColors), chartGridProps.stroke,
     ];
@@ -60,7 +75,10 @@ describe("tema dos gráficos: só variáveis do tema", () => {
     expect(chartColors.negative).toBe("var(--danger)");
     expect(chartColors.warning).toBe("var(--warning-fill)");
     expect([chartColors.positive, chartColors.negative, chartColors.warning]).not.toContain(chartColors.primary);
-    expect(chartColors.ligacao).toBe(chartColors.primary);
+    expect(chartColors.total).toBe(chartColors.primary); // o laranja é a marca e o total geral
+    expect(chartColors.ligacao).toBe("var(--channel-ligacao)");
+    expect(chartColors.whatsapp).toBe("var(--channel-whatsapp)");
+    expect([chartColors.ligacao, chartColors.whatsapp]).not.toContain(chartColors.primary);
   });
   it("a grade é tracejada, só horizontal e apagada", () => {
     expect(chartGridProps).toMatchObject({ vertical: false, strokeDasharray: "4 4", stroke: "var(--chart-grid)" });
@@ -70,14 +88,33 @@ describe("tema dos gráficos: só variáveis do tema", () => {
 describe("tema dos gráficos: contraste", () => {
   for (const [nome, t] of [["claro", claro], ["escuro", escuro]] as const) {
     it(`séries 1 a 4 e WhatsApp têm 3:1 sobre o cartão no modo ${nome}`, () => {
-      for (const v of ["chart-1", "chart-2", "chart-3", "chart-4", "channel-whatsapp"]) {
+      for (const v of ["chart-1", "chart-2", "chart-3", "chart-4", "channel-ligacao", "channel-whatsapp"]) {
         expect(contraste(resolver(t, v), resolver(t, "card")), `${nome}: --${v}`).toBeGreaterThanOrEqual(3);
       }
     });
-    it(`ligação é laranja (saturado) e WhatsApp é cinza neutro no modo ${nome}`, () => {
-      const saturacao = (h: string) => Math.max(...rgb(h)) - Math.min(...rgb(h));
-      expect(saturacao(resolver(t, "chart-1"))).toBeGreaterThan(150);
-      expect(saturacao(resolver(t, "channel-whatsapp"))).toBeLessThanOrEqual(40);
+    it(`Ligação é azul e WhatsApp é verde (matizes diferentes entre si e do laranja) no modo ${nome}`, () => {
+      const lig = matiz(resolver(t, "channel-ligacao"));
+      const wa = matiz(resolver(t, "channel-whatsapp"));
+      const laranja = matiz(resolver(t, "chart-1"));
+      expect(lig).toBeGreaterThan(200);
+      expect(lig).toBeLessThan(240); // azul
+      expect(wa).toBeGreaterThan(75);
+      expect(wa).toBeLessThan(150); // verde
+      expect(Math.abs(laranja - 25)).toBeLessThan(15); // laranja
+    });
+    it(`o verde do WhatsApp é outro verde que o de "bom" (status) no modo ${nome}`, () => {
+      const diferenca = Math.abs(matiz(resolver(t, "channel-whatsapp")) - matiz(resolver(t, "success")));
+      expect(Math.min(diferenca, 360 - diferenca)).toBeGreaterThanOrEqual(40);
+    });
+    it(`texto do canal passa em 4,5:1 sobre o cartão e sobre o selo no modo ${nome}`, () => {
+      for (const canal of ["ligacao", "whatsapp"]) {
+        const texto = resolver(t, `channel-${canal}-text`);
+        const card = resolver(t, "card");
+        const { cor, alfa } = rgbaDe(resolver(t, `channel-${canal}-soft`));
+        const selo = misturarRgb(cor, card, alfa);
+        expect(contraste(texto, card), `${nome}: ${canal} no cartão`).toBeGreaterThanOrEqual(4.5);
+        expect(contraste(texto, selo), `${nome}: ${canal} no selo`).toBeGreaterThanOrEqual(4.5);
+      }
     });
     it(`mapa de calor: texto de cada degrau passa em 4,5:1 no modo ${nome}`, () => {
       const baixo = resolver(t, "heat-low");
@@ -90,8 +127,9 @@ describe("tema dos gráficos: contraste", () => {
       }
     });
   }
-  it("no escuro o WhatsApp deixou de ser quase branco", () => {
-    expect(lum(resolver(escuro, "channel-whatsapp"))).toBeLessThan(0.4);
+  it("no escuro o WhatsApp deixou de ser quase branco: é um verde saturado", () => {
+    const [r, g, b] = rgb(resolver(escuro, "channel-whatsapp"));
+    expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeGreaterThan(100);
   });
 });
 

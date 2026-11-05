@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import ChartAreaGradient from "@/components/ChartAreaGradient";
+import { TrendArrow } from "@/components/ToneMark";
 import { cn } from "@/lib/utils";
 import { motion, cardItemVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { AnimatedText } from "@/components/AnimatedNumber";
@@ -103,6 +104,7 @@ export default function DashboardKpiCard({
           trend === "neutral" && "text-muted-foreground"
         )}
       >
+        <TrendArrow trend={trend} />
         {comparison}
       </p>
       {delta ? <ChangeBadge change={delta} className="mt-1" /> : null}

@@ -60,6 +60,7 @@ import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
 import ChangeBadge from "@/components/ChangeBadge";
 import { describeChange, kpisFromSummaries, previousRange } from "@/lib/periodComparison";
 import ProductivitySection from "@/components/ProductivitySection";
+import { ToneValue } from "@/components/ToneMark";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
@@ -563,17 +564,12 @@ export default function Performance() {
                           </TableCell>
                           <TableCell>{formatAverageTime(row.averageTimeMinutes)}</TableCell>
                           <TableCell>
-                            <span
-                              className={
-                                row.averagePercentage >= 90
-                                  ? "font-bold text-success"
-                                  : row.averagePercentage >= 80
-                                    ? "font-bold text-warning"
-                                    : "font-bold text-danger"
-                              }
+                            <ToneValue
+                              tone={row.averagePercentage >= 90 ? "good" : row.averagePercentage >= 80 ? "warn" : "bad"}
+                              className="font-bold"
                             >
                               {Math.round(row.averagePercentage)}%
-                            </span>
+                            </ToneValue>
                           </TableCell>
                         </TableRow>
                       ))

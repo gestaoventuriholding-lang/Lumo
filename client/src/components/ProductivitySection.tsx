@@ -25,6 +25,7 @@ import { summarizeProductivity, type ProductivitySummaryRow } from "@/lib/produc
 import { formatBrDate, formatPercent, formatSecondsShort } from "@/lib/reportFormat";
 import { activeLimit, evaluateLimit } from "@/lib/productivityLimits";
 import { cn } from "@/lib/utils";
+import { ToneValue, levelToTone } from "@/components/ToneMark";
 import type { AlertLevel } from "@/types/goals";
 import type { ProductivityLimit, ProductivityRecord } from "@/types/productivity";
 
@@ -57,7 +58,9 @@ function Indicator({
         <Icon className="h-3.5 w-3.5" />
         {label}
       </p>
-      <p className={cn("mt-1 text-xl font-bold tabular-nums", level && levelText[level])}>{value}</p>
+      <p className="mt-1 text-xl font-bold tabular-nums">
+        <ToneValue tone={levelToTone(level)}>{value}</ToneValue>
+      </p>
       <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>
     </div>
   );
@@ -183,20 +186,20 @@ export default function ProductivitySection({ records, attendantIds, range, limi
                   <TableCell className="text-right tabular-nums">{formatSecondsShort(row.tmaSeconds)}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatSecondsShort(row.loginSeconds)}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatSecondsShort(row.pauseSeconds)}</TableCell>
-                  <TableCell
-                    className={cn("text-right tabular-nums", levelClass(evaluateLimit("max", row.pausePercent, pauseLimit)))}
-                  >
-                    {formatPercent(row.pausePercent)}
+                  <TableCell className="text-right tabular-nums">
+                    <ToneValue tone={levelToTone(evaluateLimit("max", row.pausePercent, pauseLimit))} className="flex w-full justify-end font-semibold">
+                      {formatPercent(row.pausePercent)}
+                    </ToneValue>
                   </TableCell>
-                  <TableCell
-                    className={cn("text-right tabular-nums", levelClass(evaluateLimit("max", row.pauseUnproductivePercent, unproductiveLimit)))}
-                  >
-                    {formatPercent(row.pauseUnproductivePercent)}
+                  <TableCell className="text-right tabular-nums">
+                    <ToneValue tone={levelToTone(evaluateLimit("max", row.pauseUnproductivePercent, unproductiveLimit))} className="flex w-full justify-end font-semibold">
+                      {formatPercent(row.pauseUnproductivePercent)}
+                    </ToneValue>
                   </TableCell>
-                  <TableCell
-                    className={cn("text-right tabular-nums", levelClass(evaluateLimit("min", row.occupancy, occupancyLimit)))}
-                  >
-                    {formatPercent(row.occupancy)}
+                  <TableCell className="text-right tabular-nums">
+                    <ToneValue tone={levelToTone(evaluateLimit("min", row.occupancy, occupancyLimit))} className="flex w-full justify-end font-semibold">
+                      {formatPercent(row.occupancy)}
+                    </ToneValue>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {row.perHour != null ? row.perHour.toLocaleString("pt-BR") : "—"}

@@ -47,6 +47,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-channel-ligacao: var(--channel-ligacao);
+  --color-channel-ligacao-text: var(--channel-ligacao-text);
+  --color-channel-ligacao-soft: var(--channel-ligacao-soft);
+  --color-channel-whatsapp: var(--channel-whatsapp);
+  --color-channel-whatsapp-text: var(--channel-whatsapp-text);
+  --color-channel-whatsapp-soft: var(--channel-whatsapp-soft);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -119,7 +125,14 @@
   --chart-5: #ff9a4d;
   --chart-grid: #e5ded7;
   --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
-  --channel-whatsapp: #6f665d; /* segundo canal: cinza quente de meio-tom */
+  /* Canais: Ligação = azul, WhatsApp = verde-limão (outro verde que o de "bom": ver --success). A cor do canal
+     vai sempre junto do nome ou do ícone do canal. O laranja continua sendo a marca e o total geral. */
+  --channel-ligacao: #1d63d8;
+  --channel-ligacao-text: #1750b4;
+  --channel-ligacao-soft: rgba(29, 99, 216, 0.12);
+  --channel-whatsapp: #4d7c0f;
+  --channel-whatsapp-text: #3f6a0a;
+  --channel-whatsapp-soft: rgba(77, 124, 15, 0.14);
   --heat-low: #ffe9d6; /* mapa de calor: do baixo ao alto (laranja) */
   --heat-high: var(--brand);
   --heat-text-high: #17110c; /* texto sobre as células mais fortes (não muda com a opção A/B) */
@@ -193,7 +206,12 @@
   --chart-5: #ffb27a;
   --chart-grid: #222222;
   --chart-area-top: 0.38;
-  --channel-whatsapp: #8c8c8c;
+  --channel-ligacao: #4a90ff;
+  --channel-ligacao-text: #7db0ff;
+  --channel-ligacao-soft: rgba(74, 144, 255, 0.16);
+  --channel-whatsapp: #8cd32f;
+  --channel-whatsapp-text: #a8e25a;
+  --channel-whatsapp-soft: rgba(140, 211, 47, 0.16);
   --heat-low: #1f1209;
 
   --sidebar-foreground: #f5f0eb;

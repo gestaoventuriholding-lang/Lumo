@@ -68,7 +68,8 @@ describe("tema: paleta aprovada", () => {
     expect(v("success")).toBe("#3fcf8e");
     expect(v("danger")).toBe("#f2555a");
     expect(v("warning")).toBe("#f5c518");
-    expect(v("channel-whatsapp")).toBe("#8c8c8c");
+    expect(v("channel-ligacao")).toBe("#4a90ff");
+    expect(v("channel-whatsapp")).toBe("#8cd32f");
     expect(v("chart-grid")).toBe("#222222");
   });
   it("modo claro", () => {
@@ -84,7 +85,8 @@ describe("tema: paleta aprovada", () => {
     expect(v("danger")).toBe("#c62828");
     expect(v("warning")).toBe("#8a5a00");
     expect(v("warning-fill")).toBe("#f5c518");
-    expect(v("channel-whatsapp")).toBe("#6f665d");
+    expect(v("channel-ligacao")).toBe("#1d63d8");
+    expect(v("channel-whatsapp")).toBe("#4d7c0f");
   });
   it("o perigo não é mais um laranja: vermelho de verdade nos dois modos, e o WhatsApp não é quase branco", () => {
     for (const t of [claro, escuro]) {
@@ -93,7 +95,7 @@ describe("tema: paleta aprovada", () => {
       expect(g).toBeLessThan(90);
       expect(b).toBeLessThan(110);
     }
-    expect(lum(resolver(escuro, "channel-whatsapp"))).toBeLessThan(0.3); // antes era #f2f1ef (≈0,88)
+    expect(Math.max(...rgb(resolver(escuro, "channel-whatsapp"))) - Math.min(...rgb(resolver(escuro, "channel-whatsapp")))).toBeGreaterThan(100); // verde saturado; antes era #f2f1ef (quase branco)
   });
   it("o escuro é preto de verdade e neutro: fundo #000 e nenhum cinza com tom quente nas superfícies", () => {
     expect(resolver(escuro, "background")).toBe("#000000");
