@@ -47,6 +47,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-accent-cyan: var(--accent-cyan);
   --color-channel-ligacao: var(--channel-ligacao);
   --color-channel-ligacao-text: var(--channel-ligacao-text);
   --color-channel-ligacao-soft: var(--channel-ligacao-soft);
@@ -70,10 +71,177 @@
  * ou via var(--...) no CSS). Cores de gráfico: client/src/lib/chartTheme.ts, que lê as variáveis daqui.
  * Cores com significado: verde = bom, vermelho = ruim, amarelo = atenção. O laranja é só da marca
  * (nunca de alerta). Todo texto precisa de contraste AA (testado em themeTokens.test.tsx).
- * Modo escuro é o padrão; o claro usa o mesmo laranja, com ajuste fino para passar em 3:1 no branco.
+ * Presets de tema: "Check-Up" (azul, padrão) e "Laranja" (guardado). Modo escuro é o padrão.
  * ==========================================================================================
  */
 :root {
+  --ui-scale: 1;
+  --radius: 12px;
+
+  /* superfícies */
+  --background: #f3f6fb;
+  --foreground: #0b1b33;
+  --card: #ffffff;
+  --card-foreground: #0b1b33;
+  --card-raised: #eaf0f9; /* hover, linha em foco, área rebaixada */
+  --popover: #ffffff;
+  --popover-foreground: #0b1b33;
+  --border: #dce4ef; /* linha fina e discreta */
+  --input: #7186a6; /* borda de campo de formulário (3:1) */
+  --secondary: #eaf0f9;
+  --secondary-foreground: #0b1b33;
+  --muted: #eaf0f9;
+  --accent: #eaf0f9;
+  --accent-foreground: #0b1b33;
+
+  /* texto */
+  --muted-foreground: #4b5c78; /* texto secundário (AA) */
+  --text-muted: #8a9ab4; /* só itens desativados (isento de AA) */
+
+  /* azul da marca (preset Check-Up) */
+  --brand: #0056b3; /* gráficos, brilho, total geral */
+  --brand-text: #0056b3; /* azul usado como texto/link */
+  --primary: var(--brand); /* preenchimento de botões e item ativo do menu */
+  --primary-hover: #004a9a;
+  --primary-soft: rgba(0, 86, 179, 0.1);
+  --primary-foreground: #ffffff; /* texto sobre o azul (7,5:1) */
+  --ring: #0056b3;
+  --accent-cyan: #0693e3; /* ciano de apoio */
+
+  /* cores com significado */
+  --success: #15803d;
+  --success-soft: rgba(21, 128, 61, 0.12);
+  --warning: #8a5a00; /* amarelo como TEXTO */
+  --warning-fill: #f5c518; /* amarelo como ícone, faixa ou ponto */
+  --warning-soft: rgba(245, 197, 24, 0.24);
+  --danger: #c62828;
+  --danger-soft: rgba(198, 40, 40, 0.1);
+  --destructive: #c62828;
+  --destructive-foreground: #ffffff;
+
+  /* gráficos (ver chartTheme.ts) */
+  --chart-1: var(--brand);
+  --chart-2: #5b6e8c;
+  --chart-3: #7686a3;
+  --chart-4: #3a4a66;
+  --chart-5: #0693e3;
+  --chart-grid: #dce4ef;
+  --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
+  /* Canais: Ligação = laranja, WhatsApp = verde-limão (outro verde que o de "bom": ver --success). A cor do canal
+     vai sempre junto do nome ou do ícone do canal. O azul é só da marca e do total geral. */
+  --channel-ligacao: #d65a00;
+  --channel-ligacao-text: #a84700;
+  --channel-ligacao-soft: rgba(214, 90, 0, 0.12);
+  --channel-whatsapp: #4d7c0f;
+  --channel-whatsapp-text: #3f6a0a;
+  --channel-whatsapp-soft: rgba(77, 124, 15, 0.14);
+  --heat-low: #e3eefb; /* mapa de calor: do baixo ao alto (azul) */
+  --heat-high: var(--brand);
+  --heat-text-high: #ffffff; /* texto sobre as células mais fortes */
+
+  /* menu lateral */
+  --sidebar: var(--glass-bg);
+  --sidebar-foreground: #0b1b33;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--primary-soft);
+  --sidebar-accent-foreground: var(--brand-text);
+  --sidebar-border: var(--glass-border);
+  --sidebar-ring: var(--ring);
+
+  /* vidro: só menu lateral, barra do topo, sino, janelas, popovers e menus suspensos. Cartões do Dashboard são sólidos. */
+  --glass-bg: rgba(255, 255, 255, 0.66);
+  --glass-bg-strong: rgba(255, 255, 255, 0.86);
+  --glass-border: rgba(11, 27, 51, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.8); /* brilho sutil na borda de cima */
+  --glass-shadow: 0 8px 24px rgba(11, 27, 51, 0.1);
+  --glass-blur: 14px;
+  --glass-solid: #ffffff; /* alternativa sem transparência */
+  --ambient-glow: rgba(0, 86, 179, 0.05); /* brilho azul bem discreto atrás do conteúdo */
+
+  /* sombras (a borda de 1px é o principal; sombra só sutil) */
+  --shadow-surface: 0 1px 2px rgba(11, 27, 51, 0.06);
+  --shadow-raised: 0 1px 2px rgba(11, 27, 51, 0.06);
+  --shadow-overlay: 0 1px 2px rgba(11, 27, 51, 0.06);
+  --shadow-glow: 0 0 22px -12px rgba(0, 86, 179, 0.35); /* brilho azul só nos destaques */
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #06101f; /* azul-marinho profundo (não preto) */
+  --foreground: #eef4ff;
+  --card: #0c1a30;
+  --card-foreground: #eef4ff;
+  --card-raised: #122443;
+  --popover: #0f2038;
+  --popover-foreground: #eef4ff;
+  --border: #1d3256;
+  --input: #5f7dae;
+  --secondary: #122443;
+  --secondary-foreground: #eef4ff;
+  --muted: #122443;
+  --accent: #122443;
+  --accent-foreground: #eef4ff;
+
+  --muted-foreground: #a9b9d6;
+  --text-muted: #5c6f92;
+
+  --brand: #2f8bff;
+  --brand-text: #7db8ff;
+  --primary: #1f6fe0; /* preenchimento com texto branco (4,9:1) */
+  --primary-hover: #3a82ec;
+  --primary-soft: rgba(47, 139, 255, 0.16);
+  --primary-foreground: #ffffff;
+  --ring: #2f8bff;
+  --accent-cyan: #22c7f0;
+
+  --success: #3fcf8e;
+  --success-soft: rgba(63, 207, 142, 0.14);
+  --warning: #f5c518;
+  --warning-fill: #f5c518;
+  --warning-soft: rgba(245, 197, 24, 0.14);
+  --danger: #f2555a;
+  --danger-soft: rgba(242, 85, 90, 0.14);
+  --destructive: #f2555a;
+  --destructive-foreground: #06101f;
+
+  --chart-2: #8fa3c4;
+  --chart-3: #c3d0e6;
+  --chart-4: #5b7199;
+  --chart-5: #22c7f0;
+  --chart-grid: #1d3256;
+  --chart-area-top: 0.38;
+  --channel-ligacao: #ff7a1a;
+  --channel-ligacao-text: #ff9a4d;
+  --channel-ligacao-soft: rgba(255, 122, 26, 0.16);
+  --channel-whatsapp: #8cd32f;
+  --channel-whatsapp-text: #a8e25a;
+  --channel-whatsapp-soft: rgba(140, 211, 47, 0.16);
+  --heat-low: #0f2547;
+  --heat-text-high: #06101f;
+
+  --sidebar-foreground: #eef4ff;
+  --sidebar-accent-foreground: var(--brand-text);
+
+  --glass-bg: rgba(12, 26, 48, 0.62);
+  --glass-bg-strong: rgba(15, 32, 56, 0.9);
+  --glass-border: rgba(160, 190, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --glass-solid: #0f2038;
+  --ambient-glow: rgba(47, 139, 255, 0.055);
+
+  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-overlay: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 22px -12px rgba(47, 139, 255, 0.45);
+}
+
+/*
+ * PRESET "LARANJA" (guardado): o tema anterior do Ellos. Para usar, ponha data-preset="laranja" no <html>
+ * (ver lib/themePreset.ts). Os blocos acima são o preset "Check-Up" (azul), o padrão.
+ */
+html[data-preset="laranja"] {
   --ui-scale: 1;
   --radius: 12px;
 
@@ -120,13 +288,12 @@
   /* gráficos (ver chartTheme.ts) */
   --chart-1: var(--brand);
   --chart-2: #6f665d;
-  --chart-3: #968871;
+  --chart-3: #b8a892;
   --chart-4: #3f3832;
   --chart-5: #ff9a4d;
   --chart-grid: #e5ded7;
   --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
-  /* Canais: Ligação = azul, WhatsApp = verde-limão (outro verde que o de "bom": ver --success). A cor do canal
-     vai sempre junto do nome ou do ícone do canal. O laranja continua sendo a marca e o total geral. */
+  /* Canais (preset laranja): Ligação = azul, WhatsApp = verde-limão */
   --channel-ligacao: #1d63d8;
   --channel-ligacao-text: #1750b4;
   --channel-ligacao-soft: rgba(29, 99, 216, 0.12);
@@ -135,7 +302,6 @@
   --channel-whatsapp-soft: rgba(77, 124, 15, 0.14);
   --heat-low: #ffe9d6; /* mapa de calor: do baixo ao alto (laranja) */
   --heat-high: var(--brand);
-  --heat-text-high: #17110c; /* texto sobre as células mais fortes (não muda com a opção A/B) */
 
   /* menu lateral */
   --sidebar: var(--glass-bg);
@@ -164,7 +330,7 @@
   --shadow-glow: 0 0 22px -12px rgba(238, 96, 0, 0.3); /* brilho laranja só nos destaques */
 }
 
-.dark {
+html.dark[data-preset="laranja"] {
   color-scheme: dark;
   --background: #000000; /* preto de verdade */
   --foreground: #f2f2f2;
@@ -202,7 +368,7 @@
 
   --chart-2: #8c8c8c;
   --chart-3: #c8c8c8;
-  --chart-4: #6a6a6a;
+  --chart-4: #585858;
   --chart-5: #ffb27a;
   --chart-grid: #222222;
   --chart-area-top: 0.38;
@@ -229,20 +395,6 @@
   --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-overlay: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 22px -12px rgba(255, 107, 0, 0.35);
-}
-
-/*
- * Texto sobre o laranja: as duas opções em comparação (só a pré-visualização troca; no oficial vale a escolhida).
- *  A (padrão): um único laranja, texto escuro por cima (6,6:1).
- *  B: texto branco, com laranja mais fechado nos preenchimentos (4,7:1). O laranja vivo fica nos gráficos e no brilho.
- */
-html[data-on-orange="b"] {
-  --primary: #cc4800;
-  --primary-hover: #b84000;
-  --primary-foreground: #ffffff;
-}
-html[data-on-orange="b"] .text-primary {
-  color: var(--brand-text);
 }
 
 @layer base {

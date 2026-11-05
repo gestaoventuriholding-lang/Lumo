@@ -7,7 +7,7 @@ import { MotionConfig } from "framer-motion";
 import { AnimatePresence, motion, pageTransitionProps } from "@/lib/motionVariants";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import OnOrangeSwitch from "./components/OnOrangeSwitch";
+import { applyPreset, ACTIVE_PRESET } from "./lib/themePreset";
 import { EllosDataProvider } from "./contexts/EllosDataContext";
 import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
@@ -22,6 +22,7 @@ const Performance = lazy(() => import("./pages/Performance"));
 const Absences = lazy(() => import("./pages/Absences"));
 const Incidents = lazy(() => import("./pages/Incidents"));
 const EscalloVinculos = lazy(() => import("./pages/EscalloVinculos"));
+const AmostraVisual = lazy(() => import("./pages/AmostraVisual"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Structure = lazy(() => import("./pages/Structure"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
@@ -56,6 +57,7 @@ function AppRoutes() {
               <Route path="/absences" component={Absences} />
               <Route path="/incidents" component={Incidents} />
               <Route path="/escallo-vinculos" component={EscalloVinculos} />
+              <Route path="/amostra-visual" component={AmostraVisual} />
               <Route path="/structure" component={Structure} />
               <Route path="/calendar" component={CalendarPage} />
               <Route path="/import" component={ImportPage} />
@@ -80,6 +82,7 @@ function Router() {
 }
 
 function App() {
+  applyPreset(ACTIVE_PRESET);
   useEffect(() => {
     const prefetchRoutes = () => {
       void import("./pages/Dashboard");
@@ -107,7 +110,6 @@ function App() {
       <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
-          <OnOrangeSwitch />
           <AuthProvider>
             <AuthGate>
               <EllosDataProvider>

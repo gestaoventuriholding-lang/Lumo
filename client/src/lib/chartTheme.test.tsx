@@ -70,12 +70,12 @@ describe("tema dos gráficos: só variáveis do tema", () => {
     for (const c of todas) expect(c).toMatch(/^var\(--[a-z0-9-]+\)$/);
     expect(readFileSync(join(SRC, "lib/chartTheme.ts"), "utf8")).not.toMatch(/#[0-9a-fA-F]{3,6}\b/);
   });
-  it("cores com significado: verde bom, vermelho ruim, amarelo atenção; o laranja não é cor de alerta", () => {
+  it("cores com significado: verde bom, vermelho ruim, amarelo atenção; o laranja (Ligação) é diferente do amarelo de atenção", () => {
     expect(chartColors.positive).toBe("var(--success)");
     expect(chartColors.negative).toBe("var(--danger)");
     expect(chartColors.warning).toBe("var(--warning-fill)");
     expect([chartColors.positive, chartColors.negative, chartColors.warning]).not.toContain(chartColors.primary);
-    expect(chartColors.total).toBe(chartColors.primary); // o laranja é a marca e o total geral
+    expect(chartColors.total).toBe(chartColors.primary); // o azul é a marca e o total geral
     expect(chartColors.ligacao).toBe("var(--channel-ligacao)");
     expect(chartColors.whatsapp).toBe("var(--channel-whatsapp)");
     expect([chartColors.ligacao, chartColors.whatsapp]).not.toContain(chartColors.primary);
@@ -92,15 +92,16 @@ describe("tema dos gráficos: contraste", () => {
         expect(contraste(resolver(t, v), resolver(t, "card")), `${nome}: --${v}`).toBeGreaterThanOrEqual(3);
       }
     });
-    it(`Ligação é azul e WhatsApp é verde (matizes diferentes entre si e do laranja) no modo ${nome}`, () => {
+    it(`Ligação é laranja e WhatsApp é verde (matizes diferentes entre si e do azul da marca) no modo ${nome}`, () => {
       const lig = matiz(resolver(t, "channel-ligacao"));
       const wa = matiz(resolver(t, "channel-whatsapp"));
-      const laranja = matiz(resolver(t, "chart-1"));
-      expect(lig).toBeGreaterThan(200);
-      expect(lig).toBeLessThan(240); // azul
+      const marca = matiz(resolver(t, "chart-1"));
+      expect(lig).toBeGreaterThan(10);
+      expect(lig).toBeLessThan(40); // laranja
       expect(wa).toBeGreaterThan(75);
       expect(wa).toBeLessThan(150); // verde
-      expect(Math.abs(laranja - 25)).toBeLessThan(15); // laranja
+      expect(marca).toBeGreaterThan(200);
+      expect(marca).toBeLessThan(225); // azul da marca
     });
     it(`o verde do WhatsApp é outro verde que o de "bom" (status) no modo ${nome}`, () => {
       const diferenca = Math.abs(matiz(resolver(t, "channel-whatsapp")) - matiz(resolver(t, "success")));

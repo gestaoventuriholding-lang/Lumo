@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
-import { applyOnOrange, readOnOrangeFromSearch, resolveOnOrange } from "./onOrange";
+import { ACTIVE_PRESET, PRESETS, applyPreset, isPreset } from "./themePreset";
 
 // O tema do Ellos mora em client/src/index.css. Estes testes protegem a paleta aprovada, o contraste AA e a regra
 // "nenhuma cor solta no código".
@@ -19,7 +19,8 @@ function bloco(seletor: string): Record<string, string> {
 }
 const claro = bloco(":root");
 const escuro = { ...claro, ...bloco(".dark") }; // o escuro herda o que não redefine (ex.: --primary: var(--brand))
-const opcaoB = bloco('html[data-on-orange="b"]');
+const laranjaClaro = bloco('html[data-preset="laranja"]');
+const laranjaEscuro = { ...laranjaClaro, ...bloco('html.dark[data-preset="laranja"]') };
 
 function resolver(tema: Record<string, string>, nome: string, extra: Record<string, string> = {}): string {
   let v = { ...tema, ...extra }[nome];
@@ -52,65 +53,94 @@ const rgbaDe = (s: string): { cor: [number, number, number]; alfa: number } => {
   return { cor: [Number(m[1]), Number(m[2]), Number(m[3])], alfa: Number(m[4]) };
 };
 
-describe("tema: paleta aprovada", () => {
-  it("modo escuro", () => {
+describe("tema: paleta aprovada (preset Check-Up)", () => {
+  it("modo escuro: azul-marinho profundo, não preto", () => {
     const v = (n: string) => resolver(escuro, n).toLowerCase();
-    expect(v("background")).toBe("#000000"); // preto de verdade
-    expect(v("card")).toBe("#0b0b0b");
-    expect(v("card-raised")).toBe("#141414");
-    expect(v("popover")).toBe("#101010");
-    expect(v("border")).toBe("#222222");
-    expect(v("input")).toBe("#6b6b6b");
-    expect(v("foreground")).toBe("#f2f2f2");
-    expect(v("muted-foreground")).toBe("#a1a1a1");
-    expect(v("brand")).toBe("#ff6b00");
-    expect(v("brand-text")).toBe("#ff8a3d");
+    expect(v("background")).toBe("#06101f");
+    expect(v("card")).toBe("#0c1a30");
+    expect(v("card-raised")).toBe("#122443");
+    expect(v("popover")).toBe("#0f2038");
+    expect(v("border")).toBe("#1d3256");
+    expect(v("input")).toBe("#5f7dae");
+    expect(v("foreground")).toBe("#eef4ff");
+    expect(v("muted-foreground")).toBe("#a9b9d6");
+    expect(v("brand")).toBe("#2f8bff");
+    expect(v("brand-text")).toBe("#7db8ff");
+    expect(v("primary")).toBe("#1f6fe0");
     expect(v("success")).toBe("#3fcf8e");
     expect(v("danger")).toBe("#f2555a");
     expect(v("warning")).toBe("#f5c518");
-    expect(v("channel-ligacao")).toBe("#4a90ff");
+    expect(v("chart-grid")).toBe("#1d3256");
+    expect(v("channel-ligacao")).toBe("#ff7a1a");
     expect(v("channel-whatsapp")).toBe("#8cd32f");
-    expect(v("chart-grid")).toBe("#222222");
   });
-  it("modo claro", () => {
+  it("modo claro: fundo azulado, menu e botões em azul royal", () => {
     const v = (n: string) => resolver(claro, n).toLowerCase();
-    expect(v("background")).toBe("#f7f4f0");
+    expect(v("background")).toBe("#f3f6fb");
     expect(v("card")).toBe("#ffffff");
-    expect(v("border")).toBe("#e5ded7");
-    expect(v("foreground")).toBe("#1c1815");
-    expect(v("muted-foreground")).toBe("#62594f");
-    expect(v("brand")).toBe("#ee6000");
-    expect(v("brand-text")).toBe("#b83f00");
+    expect(v("border")).toBe("#dce4ef");
+    expect(v("foreground")).toBe("#0b1b33");
+    expect(v("muted-foreground")).toBe("#4b5c78");
+    expect(v("brand")).toBe("#0056b3");
+    expect(v("primary")).toBe("#0056b3");
+    expect(v("brand-text")).toBe("#0056b3");
     expect(v("success")).toBe("#15803d");
     expect(v("danger")).toBe("#c62828");
     expect(v("warning")).toBe("#8a5a00");
     expect(v("warning-fill")).toBe("#f5c518");
-    expect(v("channel-ligacao")).toBe("#1d63d8");
+    expect(v("channel-ligacao")).toBe("#d65a00");
     expect(v("channel-whatsapp")).toBe("#4d7c0f");
   });
-  it("o perigo não é mais um laranja: vermelho de verdade nos dois modos, e o WhatsApp não é quase branco", () => {
+  it("a marca é azul nos dois modos e o fundo escuro é azul (não preto nem cinza)", () => {
+    for (const t of [claro, escuro]) {
+      const [r, g, b] = rgb(resolver(t, "brand"));
+      expect(b).toBeGreaterThan(r + 60);
+      expect(b).toBeGreaterThan(g);
+    }
+    const [r, g, b] = rgb(resolver(escuro, "background"));
+    expect(b).toBeGreaterThan(r + 10); // azulado
+    expect(Math.max(r, g, b)).toBeLessThan(0x30); // escuro
+    expect(resolver(escuro, "background")).not.toBe("#000000");
+  });
+  it("o perigo é vermelho de verdade nos dois modos", () => {
     for (const t of [claro, escuro]) {
       const [r, g, b] = rgb(resolver(t, "danger"));
       expect(r).toBeGreaterThan(150);
       expect(g).toBeLessThan(90);
       expect(b).toBeLessThan(110);
     }
-    expect(Math.max(...rgb(resolver(escuro, "channel-whatsapp"))) - Math.min(...rgb(resolver(escuro, "channel-whatsapp")))).toBeGreaterThan(100); // verde saturado; antes era #f2f1ef (quase branco)
   });
-  it("o escuro é preto de verdade e neutro: fundo #000 e nenhum cinza com tom quente nas superfícies", () => {
-    expect(resolver(escuro, "background")).toBe("#000000");
-    for (const nome of ["card", "card-raised", "popover", "border", "muted"]) {
-      const [r, g, b] = rgb(resolver(escuro, nome));
-      expect(Math.max(r, g, b) - Math.min(r, g, b), `--${nome} neutro`).toBeLessThanOrEqual(2);
-      expect(Math.max(r, g, b), `--${nome} escuro`).toBeLessThan(0x30);
+  it("o brilho de fundo é discreto (até 6%) e em tom de azul", () => {
+    for (const t of [claro, escuro]) {
+      const { cor, alfa } = rgbaDe(resolver(t, "ambient-glow"));
+      expect(alfa).toBeLessThanOrEqual(0.06);
+      expect(cor[2]).toBeGreaterThan(cor[0] + 60);
     }
-  });
-  it("o brilho laranja de fundo é discreto (até 6%)", () => {
-    for (const t of [claro, escuro]) expect(rgbaDe(resolver(t, "ambient-glow")).alfa).toBeLessThanOrEqual(0.06);
   });
   it("o modo escuro é o padrão do app", () => {
     const app = readFileSync(join(SRC, "App.tsx"), "utf8");
     expect(app).toContain('defaultTheme="dark"');
+  });
+});
+
+describe("presets de tema", () => {
+  it("o padrão é o Check-Up e o preset laranja está guardado no mesmo arquivo", () => {
+    expect(ACTIVE_PRESET).toBe("checkup");
+    expect([...PRESETS]).toEqual(["checkup", "laranja"]);
+    expect(resolver(laranjaClaro, "brand").toLowerCase()).toBe("#ee6000");
+    expect(resolver(laranjaEscuro, "brand").toLowerCase()).toBe("#ff6b00");
+    expect(resolver(laranjaEscuro, "background").toLowerCase()).toBe("#000000");
+    // no preset laranja a Ligação volta a ser azul (o canal acompanha o preset)
+    expect(resolver(laranjaEscuro, "channel-ligacao").toLowerCase()).toBe("#4a90ff");
+  });
+  it("trocar de preset só liga ou desliga um atributo no html (nenhuma tela muda)", () => {
+    const el = document.createElement("html");
+    applyPreset("laranja", el);
+    expect(el.getAttribute("data-preset")).toBe("laranja");
+    applyPreset("checkup", el);
+    expect(el.hasAttribute("data-preset")).toBe(false);
+    expect(isPreset("laranja")).toBe(true);
+    expect(isPreset("outro")).toBe(false);
   });
 });
 
@@ -123,13 +153,13 @@ describe("tema: contraste AA (WCAG 2.1)", () => {
       ["texto secundário no cartão", v("muted-foreground"), v("card")],
       ["texto secundário no fundo", v("muted-foreground"), v("background")],
       ["texto secundário no cartão elevado", v("muted-foreground"), v("card-raised")],
-      ["laranja em texto no cartão", v("brand-text"), v("card")],
-      ["verde no cartão", v("success"), v("card")],
+            ["verde no cartão", v("success"), v("card")],
       ["vermelho no cartão", v("danger"), v("card")],
       ["amarelo (texto) no cartão", v("warning"), v("card")],
-      ["texto sobre o laranja (opção A)", v("primary-foreground"), v("primary")],
+      ["texto sobre o azul dos botões e do menu", v("primary-foreground"), v("primary")],
+      ["azul em texto/link no cartão", v("brand-text"), v("card")],
     ];
-    return { nome, texto, grafico: [["laranja do gráfico", v("brand"), v("card")], ["WhatsApp", v("channel-whatsapp"), v("card")], ["borda de campo", v("input"), v("card")]] as [string, string, string][] };
+    return { nome, texto, grafico: [["azul do gráfico", v("brand"), v("card")], ["WhatsApp", v("channel-whatsapp"), v("card")], ["borda de campo", v("input"), v("card")]] as [string, string, string][] };
   };
   for (const [nome, t] of [["claro", claro], ["escuro", escuro]] as const) {
     it(`texto com 4,5:1 no modo ${nome}`, () => {
@@ -139,10 +169,6 @@ describe("tema: contraste AA (WCAG 2.1)", () => {
       for (const [descricao, a, b] of pares(nome, t).grafico) expect(contraste(a, b), `${nome}: ${descricao}`).toBeGreaterThanOrEqual(3);
     });
   }
-  it("opção B: texto branco sobre o laranja fechado passa em 4,5:1", () => {
-    expect(contraste(resolver(escuro, "primary", opcaoB), "#000000")).toBeGreaterThan(0); // o override existe
-    expect(contraste(opcaoB["primary-foreground"], opcaoB.primary)).toBeGreaterThanOrEqual(4.5);
-  });
   it("texto sobre o vidro, no pior caso (vidro sobre o brilho laranja mais forte), passa em 4,5:1", () => {
     for (const [nome, t] of [["claro", claro], ["escuro", escuro]] as const) {
       const base = resolver(t, "background");
@@ -214,35 +240,5 @@ describe("tema: nenhuma cor solta no código", () => {
     andar(join(SRC, "pages"));
     andar(join(SRC, "lib"));
     expect(sujos).toEqual([]);
-  });
-});
-
-describe("comparação do texto sobre o laranja (A × B)", () => {
-  it("lê A ou B do endereço e ignora o resto", () => {
-    expect(readOnOrangeFromSearch("?laranja=b")).toBe("b");
-    expect(readOnOrangeFromSearch("?laranja=A")).toBe("a");
-    expect(readOnOrangeFromSearch("?laranja=c")).toBeNull();
-    expect(readOnOrangeFromSearch("")).toBeNull();
-  });
-  it("o endereço vence o que ficou guardado, e sem nada vale A", () => {
-    expect(resolveOnOrange("?laranja=b", "a")).toBe("b");
-    expect(resolveOnOrange("", "b")).toBe("b");
-    expect(resolveOnOrange("", null)).toBe("a");
-    expect(resolveOnOrange("", "lixo")).toBe("a");
-  });
-  it("B liga o atributo no html e A tira", () => {
-    const el = document.createElement("html");
-    applyOnOrange("b", el);
-    expect(el.getAttribute("data-on-orange")).toBe("b");
-    applyOnOrange("a", el);
-    expect(el.hasAttribute("data-on-orange")).toBe(false);
-  });
-  it("o alternador só existe em pré-visualização: no oficial nada é aplicado", async () => {
-    const { default: Switch } = await import("../components/OnOrangeSwitch");
-    const { renderToString } = await import("react-dom/server");
-    // jsdom roda em localhost (permitido): aparece. O teste de bloqueio do oficial fica em demoPermitida (escalloVinculos.test).
-    expect(renderToString(<Switch />)).toContain("A · texto escuro");
-    const { demoPermitida } = await import("./escalloDemo");
-    expect(demoPermitida("ellos.venturiholding.com.br")).toBe(false);
   });
 });

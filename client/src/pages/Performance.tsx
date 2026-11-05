@@ -598,7 +598,7 @@ export default function Performance() {
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span>{displayRange.label}</span>
                   <span className="inline-flex items-center gap-1.5">
-                    <ChannelIcon channel="Ligação" className="h-3.5 w-3.5" /> Barras azuis = Ligação
+                    <ChannelIcon channel="Ligação" className="h-3.5 w-3.5" /> Barras laranjas = Ligação
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <ChannelIcon channel="WhatsApp" className="h-3.5 w-3.5" /> Barras verdes = WhatsApp
