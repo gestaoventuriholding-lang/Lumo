@@ -72,7 +72,7 @@ describe("tema: paleta aprovada (preset Check-Up)", () => {
     expect(v("warning")).toBe("#f5c518");
     expect(v("chart-grid")).toBe("#1d3256");
     expect(v("channel-ligacao")).toBe("#5252ff"); // azul forte legível no escuro (o #0000ff puro tem 2:1)
-    expect(v("channel-whatsapp")).toBe("#00ff00"); // verde puro, como escolhido
+    expect(v("channel-whatsapp")).toBe("#3ddc3d"); // verde forte, um pouco mais suave que o puro
   });
   it("modo claro: fundo azulado, menu e botões em azul royal", () => {
     const v = (n: string) => resolver(claro, n).toLowerCase();
@@ -89,7 +89,7 @@ describe("tema: paleta aprovada (preset Check-Up)", () => {
     expect(v("warning")).toBe("#8a5a00");
     expect(v("warning-fill")).toBe("#f5c518");
     expect(v("channel-ligacao")).toBe("#0000ff"); // azul puro, como escolhido
-    expect(v("channel-whatsapp")).toBe("#00aa00"); // verde forte legível no claro (o #00ff00 puro tem 1,4:1)
+    expect(v("channel-whatsapp")).toBe("#2a9d2a"); // verde legível no claro (o verde claro some sobre branco)
   });
   it("a marca é azul nos dois modos e o fundo escuro é azul (não preto nem cinza)", () => {
     for (const t of [claro, escuro]) {

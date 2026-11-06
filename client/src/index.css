@@ -127,15 +127,15 @@
   --chart-5: #0693e3;
   --chart-grid: #dce4ef;
   --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
-  /* Canais (escolha da Amanda): Ligação = azul puro (#0000ff) e WhatsApp = verde puro (#00ff00). O verde puro não aparece
-     sobre fundo branco (1,4:1), então no modo claro o WhatsApp usa o verde mais forte que ainda se lê (3:1). A cor do canal
+  /* Canais (escolha da Amanda): Ligação = azul puro (#0000ff) e WhatsApp = verde forte, um pouco mais suave que o puro. O verde
+     claro some sobre fundo branco, então no modo claro o WhatsApp usa um verde mais escuro que ainda se lê (3:1). A cor do canal
      vai sempre junto do nome ou do ícone do canal. */
   --channel-ligacao: #0000ff;
   --channel-ligacao-text: #0000ff;
   --channel-ligacao-soft: rgba(0, 0, 255, 0.12);
-  --channel-whatsapp: #00aa00;
-  --channel-whatsapp-text: #007800;
-  --channel-whatsapp-soft: rgba(0, 170, 0, 0.14);
+  --channel-whatsapp: #2a9d2a;
+  --channel-whatsapp-text: #1b7a1b;
+  --channel-whatsapp-soft: rgba(42, 157, 42, 0.14);
   --heat-low: #e3eefb; /* mapa de calor: do baixo ao alto (azul) */
   --heat-high: var(--brand);
   --heat-text-high: #ffffff; /* texto sobre as células mais fortes */
@@ -212,13 +212,13 @@
   --chart-5: #22c7f0;
   --chart-grid: #1d3256;
   --chart-area-top: 0.38;
-  /* Escuro: o verde puro (#00ff00) aparece como escolhido; o azul puro (#0000ff) some no fundo azul-marinho (2:1), então usa o azul mais forte que ainda se lê (3:1) */
+  /* Escuro: o verde forte aparece como escolhido; o azul puro (#0000ff) some no fundo azul-marinho (2:1), então usa o azul mais forte que ainda se lê (3:1) */
   --channel-ligacao: #5252ff;
   --channel-ligacao-text: #8585ff;
   --channel-ligacao-soft: rgba(82, 82, 255, 0.16);
-  --channel-whatsapp: #00ff00;
-  --channel-whatsapp-text: #00ff00;
-  --channel-whatsapp-soft: rgba(0, 255, 0, 0.16);
+  --channel-whatsapp: #3ddc3d;
+  --channel-whatsapp-text: #3ddc3d;
+  --channel-whatsapp-soft: rgba(61, 220, 61, 0.16);
   --heat-low: #0f2547;
   --heat-text-high: #06101f;
 
