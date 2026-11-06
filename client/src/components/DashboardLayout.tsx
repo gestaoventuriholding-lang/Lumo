@@ -26,6 +26,8 @@ import {
 } from "react";
 import { useLocation } from "wouter";
 import NotificationCenter from "./NotificationCenter";
+import { useSyncStatus } from "@/contexts/SyncStatusContext";
+import { alertaParaSino } from "@/lib/syncStatus";
 import { EllosLogo } from "./EllosLogo";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import { buildPerformanceAlerts } from "@/lib/performanceMetrics";
@@ -135,13 +137,16 @@ function DashboardLayoutContent({
     },
     [demoAlertas, updateLoginAlertStatus]
   );
+  const { alerta: alertaSync } = useSyncStatus();
+  const syncBellAlerts = useMemo(() => alertaParaSino(alertaSync), [alertaSync]);
   const performanceAlerts = useMemo(
     () => [
+      ...syncBellAlerts,
       ...loginBellAlerts,
       ...buildPerformanceAlerts(todayIndicators),
       ...buildProductivityAlerts(productivityRecords, productivityLimits),
     ],
-    [loginBellAlerts, todayIndicators, productivityRecords, productivityLimits]
+    [syncBellAlerts, loginBellAlerts, todayIndicators, productivityRecords, productivityLimits]
   );
   const [location, setLocation] = useLocation();
   const { isMobile, openMobile, setOpenMobile } = useSidebar();

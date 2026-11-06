@@ -68,7 +68,7 @@ export interface PerformanceAlert {
   timestamp: string;
   read: boolean;
   /** Alertas guardados no banco e compartilhados pela equipe (ex.: tempo logado acima do limite) */
-  kind?: "login_excess";
+  kind?: "login_excess" | "sync";
   sharedAlertId?: number;
   sharedStatus?: "open" | "seen";
 }

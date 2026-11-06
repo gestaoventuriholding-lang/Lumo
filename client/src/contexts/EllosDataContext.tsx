@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { subscribeCloudRefresh } from "@/lib/cloudStore";
 import type { Attendant, AttendantInput } from "@/types/attendant";
 import type { Absence, AbsenceInput, AbsenceUpdateInput } from "@/types/absence";
 import type {
@@ -144,6 +146,18 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
   );
   const [productivityLimits, setProductivityLimitsState] = useState<ProductivityLimit[]>(() =>
     loadProductivityLimits()
+  );
+
+  // A sincronização com a Escallo grava direto no banco: quando a atualização automática traz algo novo, relê estas três listas.
+  // Usa os setters crus do estado (não os que gravam), então nada é enviado de volta ao banco.
+  useEffect(
+    () =>
+      subscribeCloudRefresh(() => {
+        setPerformanceRecordsState(loadPerformanceRecords());
+        setProductivityRecordsState(loadProductivityRecords());
+        setLoginAlertsState(loadLoginAlerts());
+      }),
+    []
   );
 
   const setAttendants = useCallback((updater: Attendant[] | ((prev: Attendant[]) => Attendant[])) => {

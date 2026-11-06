@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import GoalsManagement from "@/components/GoalsManagement";
 import ProductivityLimitsCard from "@/components/ProductivityLimitsCard";
 import WorkingHoursCard from "@/components/WorkingHoursCard";
+import SyncEscalloCard from "@/components/SyncEscalloCard";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 import {
   AlertDialog,
@@ -83,6 +84,13 @@ export default function Settings() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Sincronização com a Escallo (só administrador) */}
+      {isAdmin && (
+        <motion.div variants={pageItemVariants}>
+          <SyncEscalloCard />
+        </motion.div>
+      )}
 
       {/* Preferences Section */}
       <motion.div variants={pageItemVariants}>
