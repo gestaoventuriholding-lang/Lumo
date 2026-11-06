@@ -2,7 +2,8 @@
 //
 // Quem pode chamar (verify_jwt desligado: esta função confere a autorização por conta própria):
 //  1) o agendador do Supabase, com a chave secreta guardada no Vault (cabeçalho x-sync-key). Só modos "hoje" e "fechamento".
-//  2) um ADMINISTRADOR logado (JWT), para "simulacao" e "manual" (e também hoje/fechamento).
+//  2) um ADMINISTRADOR logado (JWT), para "simulacao" e "manual" (e também hoje/fechamento);
+//  3) qualquer pessoa da EQUIPE logada, só para "agora" (botão "Atualizar agora": hoje, no máximo 1 vez a cada 5 minutos).
 //  Qualquer outra chamada recebe 401, sem detalhes.
 //
 // Proteção:
@@ -13,11 +14,12 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import {
   MODOS_DO_AGENDADOR,
+  limiteAtualizarAgora,
+  modoRegistrado,
   sincronizar,
   textoSeguro,
   validarPedidoSync,
   type Deps,
-  type Modo,
   type ResultadoSync,
 } from "./sincronizar.ts";
 
@@ -58,6 +60,7 @@ Deno.serve(async (req: Request) => {
 
   // ---- Quem está chamando? ----
   let origemDaChamada: "agendador" | "pessoa";
+  let ehAdmin = false;
   const chave = req.headers.get("x-sync-key");
   if (chave) {
     const { data: valida } = await servico.rpc("sync_chave_valida", { p_chave: chave });
@@ -77,7 +80,9 @@ Deno.serve(async (req: Request) => {
     const { data: usuario } = await comoPessoa.auth.getUser(jwt);
     if (!usuario.user) return json({ error: "Não autorizado." }, 401);
     const { data: admin } = await comoPessoa.rpc("is_admin");
-    if (admin !== true) return json({ error: "Só administrador pode usar a sincronização." }, 403);
+    const { data: daEquipe } = await comoPessoa.rpc("is_member");
+    if (admin !== true && daEquipe !== true) return json({ error: "Só a equipe do Ellos pode usar a sincronização." }, 403);
+    ehAdmin = admin === true;
     origemDaChamada = "pessoa";
   }
 
@@ -99,8 +104,12 @@ Deno.serve(async (req: Request) => {
   const validado = validarPedidoSync(corpo, hoje);
   if ("erro" in validado) return json({ error: validado.erro }, 400);
   const pedido = validado.pedido;
-  if (origemDaChamada === "agendador" && !(MODOS_DO_AGENDADOR as readonly Modo[]).includes(pedido.modo)) {
+  if (origemDaChamada === "agendador" && !(MODOS_DO_AGENDADOR as readonly string[]).includes(pedido.modo)) {
     return json({ error: "O agendador só pode pedir hoje ou fechamento." }, 403);
+  }
+  // Quem não é administrador só pode usar o botão "Atualizar agora"
+  if (origemDaChamada === "pessoa" && !ehAdmin && pedido.modo !== "agora") {
+    return json({ error: "Só administrador pode usar esta ação." }, 403);
   }
   if (!tokenEscallo) {
     return json({ error: "O token da Escallo não está cadastrado. No Supabase, abra Edge Functions, Secrets, e cadastre ESCALLO_TOKEN." }, 500);
@@ -112,6 +121,20 @@ Deno.serve(async (req: Request) => {
     if (!config?.enabled) return json({ pulado: "sincronização desligada" });
   }
 
+  // ---- "Atualizar agora": no máximo 1 atualização a cada 5 minutos (conta qualquer execução que gravou, inclusive a do agendador) ----
+  if (pedido.modo === "agora") {
+    const { data: ultima } = await servico
+      .from("sync_runs")
+      .select("finished_at")
+      .eq("status", "ok")
+      .neq("mode", "simulacao")
+      .order("finished_at", { ascending: false })
+      .limit(1);
+    const fim = ultima && ultima[0]?.finished_at ? new Date(ultima[0].finished_at as string) : null;
+    const limite = limiteAtualizarAgora(fim, new Date());
+    if (limite) return json({ error: limite.mensagem, atualizadoHaMin: limite.atualizadoHaMin, tenteEmMin: limite.tenteEmMin }, 429);
+  }
+
   // ---- Registro da execução; sem execuções sobrepostas ----
   const inicio = Date.now();
   const limiteParado = new Date(inicio - SEM_RESPOSTA_APOS_MIN * 60_000).toISOString();
@@ -121,17 +144,17 @@ Deno.serve(async (req: Request) => {
     .eq("status", "executando")
     .lt("started_at", limiteParado);
   const { data: emAndamento } = await servico.from("sync_runs").select("id").eq("status", "executando").limit(1);
-  const dias = pedido.dias ?? [];
+  const dias = pedido.modo === "agora" ? [hoje] : (pedido.dias ?? []);
   if (emAndamento && emAndamento.length > 0) {
     await servico.from("sync_runs").insert({
-      mode: pedido.modo, triggered_by: origemDaChamada, days: dias, status: "pulado",
+      mode: modoRegistrado(pedido.modo), triggered_by: origemDaChamada, days: dias, status: "pulado",
       finished_at: new Date().toISOString(), error: "execução anterior ainda em andamento", duration_ms: 0,
     });
     return json({ pulado: "execução anterior ainda em andamento" }, 409);
   }
   const { data: corrida, error: erroRegistro } = await servico
     .from("sync_runs")
-    .insert({ mode: pedido.modo, triggered_by: origemDaChamada, days: dias })
+    .insert({ mode: modoRegistrado(pedido.modo), triggered_by: origemDaChamada, days: dias })
     .select("id")
     .single();
   if (erroRegistro || !corrida) return json({ error: "Não consegui registrar a execução." }, 500);

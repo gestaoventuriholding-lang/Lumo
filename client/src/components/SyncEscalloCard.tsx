@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSyncStatus } from "@/contexts/SyncStatusContext";
 import { definirAgendadorAtivo, executarSync, type RespostaSync } from "@/lib/syncApi";
-import { diaMesSp, diaSp, horaSp, MODE_LABEL, STATUS_LABEL, type SyncRun } from "@/lib/syncStatus";
+import { diaMesSp, diaSp, horaSp, MINUTOS_SEM_SUCESSO_PARA_ALERTA, MODE_LABEL, STATUS_LABEL, type SyncRun } from "@/lib/syncStatus";
 import { cn } from "@/lib/utils";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR");
@@ -39,7 +39,7 @@ function diasDaExecucao(r: SyncRun): string {
 
 /** Configurações: ligar/desligar o agendador, rodar a sincronização agora e ver as últimas execuções. Só administrador. */
 export default function SyncEscalloCard() {
-  const { runs, enabled, loaded, readError, atualizadoTexto, alerta, refresh } = useSyncStatus();
+  const { runs, enabled, loaded, readError, atualizadoTexto, alerta, tempoReal, refresh } = useSyncStatus();
   const [ocupado, setOcupado] = useState<null | "ligar" | "simular" | "manual">(null);
   const [confirmar, setConfirmar] = useState<null | "ligar" | "manual">(null);
   const [simulacao, setSimulacao] = useState<RespostaSync | null>(null);
@@ -93,7 +93,7 @@ export default function SyncEscalloCard() {
           <div>
             <CardTitle>Sincronização com a Escallo</CardTitle>
             <CardDescription>
-              Traz os relatórios de ligação e WhatsApp do dia sem baixar planilha. Segunda a sábado, a cada 30 minutos das 7h às 19h, e uma vez de madrugada para fechar o dia anterior.
+              Traz os relatórios de ligação e WhatsApp do dia sem baixar planilha. Segunda a sábado, de hora em hora das 7h às 19h, e uma vez de madrugada (3h30) para fechar o dia anterior.
             </CardDescription>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function SyncEscalloCard() {
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
             {alerta.tipo === "falha"
               ? "A sincronização falhou duas vezes seguidas. Veja o erro na lista abaixo."
-              : `A sincronização não conclui há mais de 90 minutos (${alerta.minutos} min).`}
+              : `A sincronização não conclui há mais de ${MINUTOS_SEM_SUCESSO_PARA_ALERTA} minutos (${alerta.minutos} min).`}
           </p>
         )}
 
@@ -118,7 +118,7 @@ export default function SyncEscalloCard() {
           <div>
             <p className="font-medium text-foreground">Agendador automático</p>
             <p className="text-sm text-muted-foreground">
-              {enabled ? "Ligado: roda sozinho nos horários acima." : "Desligado: nada roda sozinho. Você ainda pode simular e sincronizar à mão."}
+              {enabled ? "Ligado: roda sozinho nos horários acima (de hora em hora, no minuto 0)." : "Desligado: nada roda sozinho. Você ainda pode simular e sincronizar à mão."}
             </p>
           </div>
           <Switch
@@ -140,6 +140,13 @@ export default function SyncEscalloCard() {
           </Button>
           <span className="text-xs text-muted-foreground tabular-nums">{atualizadoTexto ?? "Ainda sem nenhuma sincronização concluída"}</span>
         </div>
+        <p className="text-xs text-muted-foreground" data-testid="sync-tempo-real">
+          {tempoReal === "ativo"
+            ? "Tempo real ativo: as telas se atualizam sozinhas assim que a sincronização grava."
+            : tempoReal === "conectando"
+              ? "Conectando ao tempo real…"
+              : "Tempo real indisponível agora: as telas se atualizam a cada 5 minutos e ao voltar para a aba."}
+        </p>
 
         {simulacao && (
           <div className="rounded-lg border border-border p-3 text-sm" data-testid="sync-simulacao">
@@ -196,7 +203,7 @@ export default function SyncEscalloCard() {
             <AlertDialogTitle>{confirmar === "ligar" ? "Ligar o agendador automático?" : "Sincronizar hoje agora?"}</AlertDialogTitle>
             <AlertDialogDescription>
               {confirmar === "ligar"
-                ? "A partir de agora o Ellos busca os relatórios na Escallo sozinho, a cada 30 minutos das 7h às 19h (segunda a sábado) e fecha o dia anterior de madrugada. Você pode desligar aqui a qualquer momento."
+                ? "A partir de agora o Ellos busca os relatórios na Escallo sozinho, de hora em hora das 7h às 19h (segunda a sábado), e fecha o dia anterior às 3h30. Você pode desligar aqui a qualquer momento."
                 : "Busca hoje na Escallo e grava no Ellos agora. Linhas vindas de planilha ou lançadas à mão não são sobrescritas. Rodar de novo só atualiza o dia."}
             </AlertDialogDescription>
           </AlertDialogHeader>

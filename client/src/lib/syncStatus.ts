@@ -62,7 +62,10 @@ export const STATUS_LABEL: Record<SyncStatus, string> = {
 
 /** Regras do alerta (combinadas com a Amanda) */
 export const FALHAS_SEGUIDAS_PARA_ALERTA = 2;
-export const MINUTOS_SEM_SUCESSO_PARA_ALERTA = 90;
+// O agendador roda de hora em hora; 150 minutos = uma rodada perdida mais a folga
+export const MINUTOS_SEM_SUCESSO_PARA_ALERTA = 150;
+/** Botão "Atualizar agora": no máximo 1 atualização a cada 5 minutos (o servidor também confere) */
+export const JANELA_ATUALIZAR_AGORA_MIN = 5;
 
 const TIMEZONE = "America/Sao_Paulo";
 
@@ -99,7 +102,7 @@ export function textoAtualizado(runs: SyncRun[], agora: Date = new Date()): stri
   return diaSp(quando) === diaSp(agora) ? `Atualizado às ${horaSp(quando)}` : `Atualizado em ${diaMesSp(quando)} às ${horaSp(quando)}`;
 }
 
-/** Horário em que o agendador deveria estar rodando: seg a sáb, das 07:00 às 19:30 (Brasília) */
+/** Horário em que o agendador deveria estar rodando: seg a sáb, das 07:00 às 19:30 (a última rodada é às 19:00; Brasília) */
 export function emHorarioComercial(agora: Date): boolean {
   const partes = new Intl.DateTimeFormat("en-US", { timeZone: TIMEZONE, weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(agora);
   const dia = partes.find((p) => p.type === "weekday")?.value;
@@ -117,7 +120,7 @@ export type AlertaSync =
 /**
  * Quando mostrar alerta no sino:
  *  - "falha": as DUAS últimas execuções (que contam) terminaram com erro;
- *  - "parada": o agendador está ligado, é horário comercial e faz mais de 90 minutos sem sucesso.
+ *  - "parada": o agendador está ligado, é horário comercial e faz mais de 150 minutos sem sucesso.
  * Com o agendador desligado não há alerta de parada (e execuções manuais com erro seguem a regra da falha).
  */
 export function avaliarSincronizacao(runs: SyncRun[], agendadorLigado: boolean, agora: Date = new Date()): AlertaSync | null {
@@ -173,4 +176,25 @@ export function alertaParaSino(alerta: AlertaSync | null): PerformanceAlert[] {
     alertLevel: "yellow",
     timestamp: ref.toISOString(),
   }];
+}
+
+/**
+ * Botão "Atualizar agora": se a última atualização que gravou (de qualquer origem) foi há menos de 5 minutos,
+ * devolve o aviso; senão null. É a mesma regra da função escallo-sync, que é quem de fato impede.
+ */
+export function limiteAtualizarAgora(
+  runs: SyncRun[],
+  agora: Date = new Date(),
+  janelaMin: number = JANELA_ATUALIZAR_AGORA_MIN
+): { atualizadoHaMin: number; tenteEmMin: number; mensagem: string } | null {
+  const ok = ultimoSucesso(runs);
+  if (!ok) return null;
+  const fim = new Date(ok.finishedAt ?? ok.startedAt).getTime();
+  const decorridoMs = agora.getTime() - fim;
+  if (decorridoMs >= janelaMin * 60_000 || decorridoMs < 0) return null;
+  const atualizadoHaMin = Math.floor(decorridoMs / 60_000);
+  const tenteEmMin = Math.max(1, Math.ceil((janelaMin * 60_000 - decorridoMs) / 60_000));
+  const plural = (n: number) => (n === 1 ? "1 minuto" : `${n} minutos`);
+  const ha = atualizadoHaMin === 0 ? "menos de 1 minuto" : plural(atualizadoHaMin);
+  return { atualizadoHaMin, tenteEmMin, mensagem: `Atualizado há ${ha}. Tente de novo em ${plural(tenteEmMin)}.` };
 }

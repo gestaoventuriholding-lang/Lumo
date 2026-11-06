@@ -41,9 +41,13 @@ export interface RespostaSync {
   planos: { dia: string; resumo: { linhasLigacao: number; linhasWhatsapp: number; atendimentosLigacao: number; atendimentosWhatsapp: number } }[];
 }
 
-/** Pede à função escallo-sync uma simulação (não grava) ou uma execução manual. Só administrador. */
-export async function executarSync(modo: "simulacao" | "manual", dias: string[]): Promise<RespostaSync> {
-  const { data, error } = await getSupabase().functions.invoke("escallo-sync", { body: { modo, dias } });
+/**
+ * Pede à função escallo-sync uma simulação (não grava) ou uma execução manual (só administrador),
+ * ou "agora" (qualquer pessoa da equipe: hoje, no máximo 1 vez a cada 5 minutos).
+ */
+export async function executarSync(modo: "simulacao" | "manual" | "agora", dias: string[] = []): Promise<RespostaSync> {
+  const body = modo === "agora" ? { modo } : { modo, dias };
+  const { data, error } = await getSupabase().functions.invoke("escallo-sync", { body });
   if (error) throw new Error((await traduzirErroDaFuncao(error)).replace("escallo-rel025", "escallo-sync"));
   const r = data as RespostaSync | { pulado?: string } | null;
   if (r && "pulado" in r && r.pulado) throw new Error(`A sincronização não rodou: ${r.pulado}.`);

@@ -8,6 +8,7 @@ import {
   emHorarioComercial,
   execucoesQueContam,
   horaSp,
+  limiteAtualizarAgora,
   runFromRow,
   textoAtualizado,
   ultimoSucesso,
@@ -15,6 +16,8 @@ import {
 } from "./syncStatus";
 import { mesclarPorId } from "./cloudStore";
 import SyncEscalloCard, { resumoDaExecucao } from "@/components/SyncEscalloCard";
+import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
+import { limiteAtualizarAgora as limiteDoServidor, modoRegistrado, validarPedidoSync, diasDoPedido } from "../../../supabase/functions/escallo-sync/sincronizar";
 
 // Quinta 05/11/2026. Brasília = UTC-3. Todos os dados são inventados.
 const iso = (hhmmBrasilia: string, dia = "2026-11-05") => {
@@ -75,13 +78,14 @@ describe("sincronização: alerta de falha (segunda execução seguida com erro)
   });
 });
 
-describe("sincronização: alerta de 90 minutos sem sucesso", () => {
-  it("com o agendador ligado, em horário comercial, passou de 90 min: alerta", () => {
-    const a = avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("13:31")));
-    expect(a).toMatchObject({ tipo: "parada", minutos: 91 });
+describe("sincronização: alerta de 150 minutos sem sucesso (o agendador roda de hora em hora)", () => {
+  it("com o agendador ligado, em horário comercial, passou de 150 min: alerta", () => {
+    const a = avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("14:31")));
+    expect(a).toMatchObject({ tipo: "parada", minutos: 151 });
   });
-  it("até 90 minutos não alerta", () => {
-    expect(avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("13:30")))).toBeNull();
+  it("até 150 minutos não alerta (uma rodada perdida de hora em hora ainda cabe)", () => {
+    expect(avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("14:30")))).toBeNull();
+    expect(avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("13:31")))).toBeNull(); // 91 min: antes alertava, agora não
   });
   it("agendador desligado, fora do horário ou domingo: não alerta", () => {
     const runs = [run({ status: "ok", hora: "08:00" })];
@@ -107,9 +111,9 @@ describe("sincronização: alerta no sino", () => {
     expect(falha1[0]).toMatchObject({ alertLevel: "red", attendantName: "Sincronização com a Escallo", kind: "sync" });
     expect(falha1[0].id).toBeLessThan(0);
     expect(falha1[0].id).not.toBe(falha2[0].id);
-    const parada = alertaParaSino(avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("14:00"))));
+    const parada = alertaParaSino(avaliarSincronizacao([run({ status: "ok", hora: "12:00" })], true, new Date(iso("14:31"))));
     expect(parada[0]).toMatchObject({ alertLevel: "yellow", kind: "sync" });
-    expect(parada[0].message).toContain("90 minutos");
+    expect(parada[0].message).toContain("150 minutos");
   });
   it("sem problema não há alerta, e o erro mostrado não traz token", () => {
     expect(alertaParaSino(null)).toEqual([]);
@@ -166,5 +170,79 @@ describe("Dashboard: hora da sincronização", () => {
     const src = readFileSync(join(process.cwd(), "client", "src", "pages", "Dashboard.tsx"), "utf8");
     expect(src).not.toContain("Dados atualizados em");
     expect(src).toContain("atualizadoTexto");
+  });
+});
+
+describe("Atualizar agora: no máximo 1 vez a cada 5 minutos", () => {
+  it("antes de 5 minutos avisa há quanto tempo atualizou e em quanto tempo tentar", () => {
+    const runs = [run({ status: "ok", hora: "14:00" })];
+    expect(limiteAtualizarAgora(runs, new Date(iso("14:00")))).toMatchObject({ atualizadoHaMin: 0, tenteEmMin: 5, mensagem: "Atualizado há menos de 1 minuto. Tente de novo em 5 minutos." });
+    expect(limiteAtualizarAgora(runs, new Date(iso("14:02")))?.mensagem).toBe("Atualizado há 2 minutos. Tente de novo em 3 minutos.");
+    expect(limiteAtualizarAgora(runs, new Date(iso("14:04")))?.mensagem).toBe("Atualizado há 4 minutos. Tente de novo em 1 minuto.");
+  });
+  it("a partir de 5 minutos libera; sem nenhuma atualização também", () => {
+    expect(limiteAtualizarAgora([run({ status: "ok", hora: "14:00" })], new Date(iso("14:05")))).toBeNull();
+    expect(limiteAtualizarAgora([], new Date(iso("14:00")))).toBeNull();
+  });
+  it("só conta execução que gravou: simulação, erro e pulada não seguram o botão", () => {
+    const runs = [run({ status: "ok", mode: "simulacao", hora: "14:01" }), run({ status: "erro", hora: "14:01" }), run({ status: "pulado", hora: "14:01" }), run({ status: "ok", hora: "13:00" })];
+    expect(limiteAtualizarAgora(runs, new Date(iso("14:02")))).toBeNull();
+  });
+  it("conta também a execução do agendador (qualquer origem)", () => {
+    expect(limiteAtualizarAgora([run({ status: "ok", triggeredBy: "agendador", hora: "14:00" })], new Date(iso("14:03")))).not.toBeNull();
+  });
+  it("a tela e o servidor aplicam exatamente a mesma regra", () => {
+    const fim = new Date(iso("14:00"));
+    for (const minutos of [0, 1, 2, 3, 4, 5, 6, 30]) {
+      const agora = new Date(fim.getTime() + minutos * 60_000 + 20_000);
+      expect(limiteDoServidor(fim, agora)).toEqual(limiteAtualizarAgora([run({ status: "ok", hora: "14:00" })], agora));
+    }
+  });
+});
+
+describe("Atualizar agora: pedido à função", () => {
+  it("'agora' não leva dias, escolhe hoje e fica registrado como execução manual", () => {
+    expect(validarPedidoSync({ modo: "agora" }, "2026-11-05")).toEqual({ pedido: { modo: "agora" } });
+    expect("erro" in validarPedidoSync({ modo: "agora", dias: ["2026-11-03"] }, "2026-11-05")).toBe(true);
+    expect(diasDoPedido({ modo: "agora" }, "2026-11-05")).toEqual(["2026-11-05"]);
+    expect(modoRegistrado("agora")).toBe("manual");
+    expect(modoRegistrado("hoje")).toBe("hoje");
+  });
+  it("a função deixa a equipe usar só 'agora' e o administrador o resto; o agendador só hoje e fechamento", () => {
+    const src = readFileSync(join(process.cwd(), "supabase", "functions", "escallo-sync", "index.ts"), "utf8");
+    expect(src).toContain('rpc("is_member")');
+    expect(src).toMatch(/!ehAdmin && pedido\.modo !== "agora"/);
+    expect(src).toContain("429");
+    expect(src).toContain("limiteAtualizarAgora");
+  });
+});
+
+describe("Atualizar agora: botão no Dashboard", () => {
+  it("aparece no cabeçalho do Dashboard com o texto do botão", () => {
+    const html = renderToStaticMarkup(<AtualizarAgoraButton />);
+    expect(html).toContain("Atualizar agora");
+    expect(html).not.toContain("Atualizando");
+    const src = readFileSync(join(process.cwd(), "client", "src", "pages", "Dashboard.tsx"), "utf8");
+    expect(src).toContain("<AtualizarAgoraButton />");
+  });
+  it("mostra 'Atualizando…' enquanto roda e desabilita o botão", () => {
+    const src = readFileSync(join(process.cwd(), "client", "src", "components", "AtualizarAgoraButton.tsx"), "utf8");
+    expect(src).toContain('"Atualizando…"');
+    expect(src).toContain("disabled={atualizando}");
+  });
+});
+
+describe("Tempo real", () => {
+  it("assina as quatro tabelas, com atualização de reserva e debounce", () => {
+    const src = readFileSync(join(process.cwd(), "client", "src", "contexts", "SyncStatusContext.tsx"), "utf8");
+    for (const t of ["performance_records", "productivity_reports", "login_alerts", "sync_runs"]) expect(src).toContain(t);
+    expect(src).toContain("postgres_changes");
+    expect(src).toContain("visibilitychange"); // reserva ao voltar para a aba
+    expect(src).toContain("INTERVALO_ATUALIZACAO_MS");
+  });
+  it("o card de Configurações explica quando o tempo real está indisponível", () => {
+    const html = renderToStaticMarkup(<SyncEscalloCard />);
+    expect(html).toContain("Tempo real indisponível agora");
+    expect(html).toContain("de hora em hora das 7h às 19h");
   });
 });

@@ -3,14 +3,19 @@
 import { hojeSaoPaulo, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import { montarPlanoDia, type PlanoDia } from "./plano.ts";
 
+/** Modos que ficam registrados em sync_runs */
 export type Modo = "hoje" | "fechamento" | "manual" | "simulacao";
-export const MODOS: readonly Modo[] = ["hoje", "fechamento", "manual", "simulacao"];
+/** O que se pode pedir à função. "agora" é o botão "Atualizar agora" (qualquer pessoa da equipe): sincroniza hoje e fica registrado como "manual". */
+export type ModoPedido = Modo | "agora";
+export const MODOS: readonly ModoPedido[] = ["hoje", "fechamento", "manual", "simulacao", "agora"];
+/** Intervalo mínimo entre duas atualizações pelo botão (qualquer execução que gravou conta) */
+export const JANELA_ATUALIZAR_AGORA_MIN = 5;
 /** Modos que o agendador (chave secreta) pode pedir. Os outros só um administrador logado. */
 export const MODOS_DO_AGENDADOR: readonly Modo[] = ["hoje", "fechamento"];
 export const MAX_DIAS_POR_PEDIDO = 7;
 
 export interface PedidoSync {
-  modo: Modo;
+  modo: ModoPedido;
   /** Só em manual e simulação */
   dias?: string[];
 }
@@ -32,7 +37,7 @@ export interface Deps {
 }
 
 export interface ResultadoSync {
-  modo: Modo;
+  modo: ModoPedido;
   gravou: boolean;
   dias: string[];
   planos: PlanoDia[];
@@ -62,8 +67,8 @@ export function validarPedidoSync(corpo: unknown, hoje: string): { pedido: Pedid
   if (typeof c.modo !== "string" || !(MODOS as readonly string[]).includes(c.modo)) {
     return { erro: `Informe o modo: ${MODOS.join(", ")}.` };
   }
-  const modo = c.modo as Modo;
-  if (modo === "hoje" || modo === "fechamento") {
+  const modo = c.modo as ModoPedido;
+  if (modo === "hoje" || modo === "fechamento" || modo === "agora") {
     if (c.dias !== undefined) return { erro: `O modo ${modo} não aceita dias: ele escolhe o dia sozinho.` };
     return { pedido: { modo } };
   }
@@ -80,9 +85,33 @@ export function validarPedidoSync(corpo: unknown, hoje: string): { pedido: Pedid
 
 /** Dias que cada modo cobre. hoje = o dia de hoje; fechamento = o dia anterior inteiro. */
 export function diasDoPedido(pedido: PedidoSync, hoje: string): string[] {
-  if (pedido.modo === "hoje") return [hoje];
+  if (pedido.modo === "hoje" || pedido.modo === "agora") return [hoje];
   if (pedido.modo === "fechamento") return [somarDias(hoje, -1)];
   return pedido.dias ?? [];
+}
+
+/** Modo como fica gravado em sync_runs ("agora" é uma execução manual) */
+export function modoRegistrado(modo: ModoPedido): Modo {
+  return modo === "agora" ? "manual" : modo;
+}
+
+/**
+ * Limite do botão "Atualizar agora": no máximo 1 atualização a cada 5 minutos.
+ * `ultimoSucessoFim` é o fim da última execução que gravou (de qualquer origem). Devolve null se pode rodar.
+ */
+export function limiteAtualizarAgora(
+  ultimoSucessoFim: Date | null,
+  agora: Date,
+  janelaMin: number = JANELA_ATUALIZAR_AGORA_MIN
+): { atualizadoHaMin: number; tenteEmMin: number; mensagem: string } | null {
+  if (!ultimoSucessoFim) return null;
+  const decorridoMs = agora.getTime() - ultimoSucessoFim.getTime();
+  if (decorridoMs >= janelaMin * 60_000 || decorridoMs < 0) return null;
+  const atualizadoHaMin = Math.floor(decorridoMs / 60_000);
+  const tenteEmMin = Math.max(1, Math.ceil((janelaMin * 60_000 - decorridoMs) / 60_000));
+  const plural = (n: number) => (n === 1 ? "1 minuto" : `${n} minutos`);
+  const ha = atualizadoHaMin === 0 ? "menos de 1 minuto" : plural(atualizadoHaMin);
+  return { atualizadoHaMin, tenteEmMin, mensagem: `Atualizado há ${ha}. Tente de novo em ${plural(tenteEmMin)}.` };
 }
 
 /** Tira o token de qualquer texto e limita o tamanho (para o registro e para as respostas) */
@@ -97,7 +126,7 @@ const VAZIA: ResultadoGravacao = { inseridas: 0, atualizadas: 0, puladas_manuais
 
 export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string = hojeSaoPaulo()): Promise<ResultadoSync> {
   const dias = diasDoPedido(pedido, hoje);
-  const gravar = pedido.modo !== "simulacao";
+  const gravar = pedido.modo !== "simulacao"; // hoje, fechamento, manual e agora gravam
   const colaboradores = await deps.lerColaboradores();
   const limite = await deps.lerLimiteLogin();
 

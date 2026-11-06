@@ -69,6 +69,7 @@ import {
 import ChartAreaGradient from "@/components/ChartAreaGradient";
 import { ChannelIcon } from "@/components/ChannelBadge";
 import { useSyncStatus } from "@/contexts/SyncStatusContext";
+import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
 import { cn } from "@/lib/utils";
 
 function EmptySection({ message }: { message: string }) {
@@ -368,7 +369,8 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start">
+          <AtualizarAgoraButton />
           <ManagementReportButton variant="outline" className="gap-2 bg-card" />
           <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2 bg-card">
             <Download className="h-4 w-4" />
