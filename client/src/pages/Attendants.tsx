@@ -44,9 +44,9 @@ import AttendantOccupancyMap from "@/components/AttendantOccupancyMap";
 import ChannelBadge from "@/components/ChannelBadge";
 import { desligadoEmTexto, isTerminated } from "@/lib/attendantStatus";
 import { CANAL_LIGACAO_E_WHATSAPP } from "@/types/attendant";
+import { FUNCAO_ATENDIMENTO, FUNCAO_CONFIRMACAO, FUNCOES, isConfirmacao, type Funcao } from "@/lib/attendantRole";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
-const ATTENDANT_ROLE = "Atendente";
 
 const serviceChannelOptions: { value: Attendant["serviceChannel"]; label: string }[] = [
   { value: "Ligação", label: "Ligação" },
@@ -55,6 +55,7 @@ const serviceChannelOptions: { value: Attendant["serviceChannel"]; label: string
 ];
 
 type FiltroSituacao = "ativos" | "desligados" | "todos";
+type FiltroFuncao = "todas" | Funcao;
 
 export default function Attendants() {
   const {
@@ -67,6 +68,7 @@ export default function Attendants() {
   } = useEllosData();
   const [searchTerm, setSearchTerm] = useState("");
   const [situacao, setSituacao] = useState<FiltroSituacao>("ativos");
+  const [funcaoFiltro, setFuncaoFiltro] = useState<FiltroFuncao>("todas");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -77,8 +79,9 @@ export default function Attendants() {
 
   // Código da Escallo digitado à mão (texto, para aceitar vazio)
   const [escalloCodigoTexto, setEscalloCodigoTexto] = useState("");
-  const [formData, setFormData] = useState<Omit<Attendant, "id" | "registrationDate" | "role" | "escalloCodigo">>({
+  const [formData, setFormData] = useState<Omit<Attendant, "id" | "registrationDate" | "escalloCodigo">>({
     name: "",
+    role: FUNCAO_ATENDIMENTO,
     serviceChannel: "Ligação",
     workingHours: "",
     jornadaStart: "",
@@ -92,8 +95,9 @@ export default function Attendants() {
       .filter((attendant) => attendant.name.toLowerCase().includes(searchTerm.toLowerCase()))
       .filter((attendant) =>
         situacao === "todos" ? true : situacao === "desligados" ? isTerminated(attendant) : !isTerminated(attendant)
-      );
-  }, [attendants, searchTerm, situacao]);
+      )
+      .filter((attendant) => funcaoFiltro === "todas" || (funcaoFiltro === FUNCAO_CONFIRMACAO ? isConfirmacao(attendant) : !isConfirmacao(attendant)));
+  }, [attendants, searchTerm, situacao, funcaoFiltro]);
 
   // Paginação
   const totalPages = Math.ceil(filteredAttendants.length / itemsPerPage);
@@ -114,6 +118,7 @@ export default function Attendants() {
       setEditingId(attendant.id);
       setFormData({
         name: attendant.name,
+        role: isConfirmacao(attendant) ? FUNCAO_CONFIRMACAO : FUNCAO_ATENDIMENTO,
         serviceChannel: attendant.serviceChannel,
         workingHours: attendant.workingHours,
         jornadaStart: attendant.jornadaStart,
@@ -127,6 +132,7 @@ export default function Attendants() {
       setEditingId(null);
       setFormData({
         name: "",
+        role: FUNCAO_ATENDIMENTO,
         serviceChannel: "Ligação",
         workingHours: "",
         jornadaStart: "",
@@ -143,6 +149,7 @@ export default function Attendants() {
     setEscalloCodigoTexto("");
     setFormData({
       name: "",
+      role: FUNCAO_ATENDIMENTO,
       serviceChannel: "Ligação",
       workingHours: "",
       jornadaStart: "",
@@ -192,7 +199,6 @@ export default function Attendants() {
 
     const payload = {
       ...formData,
-      role: ATTENDANT_ROLE,
       escalloCodigo: codigoLido.codigo,
       terminatedOn: formData.terminatedOn || null,
     };
@@ -320,6 +326,28 @@ export default function Attendants() {
                 <SelectItem value="todos">Todos</SelectItem>
               </SelectContent>
             </Select>
+            <label htmlFor="filtro-funcao" className="ml-2 text-sm text-muted-foreground">
+              Função
+            </label>
+            <Select
+              value={funcaoFiltro}
+              onValueChange={(value: FiltroFuncao) => {
+                setFuncaoFiltro(value);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger id="filtro-funcao" className="w-52 border-border/50" data-testid="filtro-funcao">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                {FUNCOES.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bulk Delete Bar */}
@@ -409,6 +437,14 @@ export default function Attendants() {
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
                         {attendant.name}
+                        {isConfirmacao(attendant) && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                            data-testid="selo-confirmacao"
+                          >
+                            {FUNCAO_CONFIRMACAO}
+                          </span>
+                        )}
                         {attendant.terminatedOn && (
                           <span
                             className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
@@ -545,6 +581,30 @@ export default function Attendants() {
                 }
                 className="border-border/50"
               />
+            </div>
+
+            {/* Função */}
+            <div className="space-y-2">
+              <label htmlFor="funcao" className="text-sm font-medium text-foreground">
+                Função *
+              </label>
+              <Select value={formData.role} onValueChange={(value: Funcao) => setFormData({ ...formData, role: value })}>
+                <SelectTrigger id="funcao" className="border-border/50">
+                  <SelectValue placeholder="Selecione a função" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FUNCOES.map((f) => (
+                    <SelectItem key={f.value} value={f.value}>
+                      {f.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {formData.role === FUNCAO_CONFIRMACAO && (
+                <p className="text-xs text-muted-foreground">
+                  Fica fora dos rankings, das médias e das metas do atendimento. O trabalho dela continua gravado.
+                </p>
+              )}
             </div>
 
             {/* Canal */}

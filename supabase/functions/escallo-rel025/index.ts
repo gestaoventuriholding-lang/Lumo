@@ -29,8 +29,10 @@ const ORIGENS_PERMITIDAS = [
   /^http:\/\/localhost:\d+$/,
 ];
 
+// Endereços extras permitidos (separados por vírgula), definidos no secret ORIGENS_EXTRAS do projeto. Só o projeto de teste usa (teste.venturiholding.com.br).
+const ORIGENS_EXTRAS = (Deno.env.get("ORIGENS_EXTRAS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 function origemPermitida(origem: string | null): string | null {
-  return origem && ORIGENS_PERMITIDAS.some((re) => re.test(origem)) ? origem : null;
+  return origem && (ORIGENS_PERMITIDAS.some((re) => re.test(origem)) || ORIGENS_EXTRAS.includes(origem)) ? origem : null;
 }
 
 function cabecalhos(origem: string | null): Record<string, string> {

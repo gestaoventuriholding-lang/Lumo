@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSyncStatus } from "@/contexts/SyncStatusContext";
-import { definirAgendadorAtivo, executarSync, type RespostaSync } from "@/lib/syncApi";
+import { MENSAGEM_SYNC_TESTE, definirAgendadorAtivo, executarSync, sincronizacaoDesativada, type RespostaSync } from "@/lib/syncApi";
 import { diaMesSp, diaSp, horaSp, MINUTOS_SEM_SUCESSO_PARA_ALERTA, MODE_LABEL, STATUS_LABEL, type SyncRun } from "@/lib/syncStatus";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +45,7 @@ export default function SyncEscalloCard() {
   const [confirmar, setConfirmar] = useState<null | "ligar" | "manual">(null);
   const [simulacao, setSimulacao] = useState<RespostaSync | null>(null);
   const hoje = diaSp(new Date());
+  const desativado = sincronizacaoDesativada();
 
   const mudarAgendador = async (ativo: boolean) => {
     setOcupado("ligar");
@@ -100,6 +101,12 @@ export default function SyncEscalloCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
+        {desativado && (
+          <p className="flex items-start gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-foreground" role="note" data-testid="sync-teste-aviso">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            {MENSAGEM_SYNC_TESTE}
+          </p>
+        )}
         {readError && (
           <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-foreground" role="alert">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
@@ -124,18 +131,19 @@ export default function SyncEscalloCard() {
           </div>
           <Switch
             checked={enabled}
-            disabled={!loaded || ocupado !== null}
+            disabled={!loaded || ocupado !== null || desativado}
+            title={desativado ? MENSAGEM_SYNC_TESTE : undefined}
             aria-label="Agendador automático"
             onCheckedChange={(ligar) => (ligar ? setConfirmar("ligar") : void mudarAgendador(false))}
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="outline" disabled={ocupado !== null} onClick={() => void simularHoje()}>
+        <div className="flex flex-wrap items-center gap-3" title={desativado ? MENSAGEM_SYNC_TESTE : undefined}>
+          <Button variant="outline" disabled={ocupado !== null || desativado} title={desativado ? MENSAGEM_SYNC_TESTE : undefined} onClick={() => void simularHoje()}>
             {ocupado === "simular" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
             Simular hoje
           </Button>
-          <Button disabled={ocupado !== null} onClick={() => setConfirmar("manual")}>
+          <Button disabled={ocupado !== null || desativado} title={desativado ? MENSAGEM_SYNC_TESTE : undefined} onClick={() => setConfirmar("manual")}>
             {ocupado === "manual" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
             Sincronizar hoje agora
           </Button>
