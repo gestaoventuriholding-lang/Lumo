@@ -90,14 +90,14 @@ describe("sincronização: alerta de 150 minutos sem sucesso (o agendador roda d
   it("agendador desligado, fora do horário ou domingo: não alerta", () => {
     const runs = [run({ status: "ok", hora: "08:00" })];
     expect(avaliarSincronizacao(runs, false, new Date(iso("14:00")))).toBeNull();
-    expect(avaliarSincronizacao(runs, true, new Date(iso("20:00")))).toBeNull();
+    expect(avaliarSincronizacao(runs, true, new Date(iso("21:00")))).toBeNull();
     expect(avaliarSincronizacao(runs, true, new Date(iso("14:00", "2026-11-08")))).toBeNull();
   });
-  it("horário comercial: segunda a sábado das 07:00 às 19:30", () => {
-    expect(emHorarioComercial(new Date(iso("06:59")))).toBe(false);
-    expect(emHorarioComercial(new Date(iso("07:00")))).toBe(true);
-    expect(emHorarioComercial(new Date(iso("19:30")))).toBe(true);
-    expect(emHorarioComercial(new Date(iso("19:31")))).toBe(false);
+  it("horário comercial: segunda a sábado das 06:00 às 20:30 (rodadas de hora em hora, de 06:00 a 20:00)", () => {
+    expect(emHorarioComercial(new Date(iso("05:59")))).toBe(false);
+    expect(emHorarioComercial(new Date(iso("06:00")))).toBe(true);
+    expect(emHorarioComercial(new Date(iso("20:30")))).toBe(true);
+    expect(emHorarioComercial(new Date(iso("20:31")))).toBe(false);
     expect(emHorarioComercial(new Date(iso("10:00", "2026-11-07")))).toBe(true); // sábado
     expect(emHorarioComercial(new Date(iso("10:00", "2026-11-08")))).toBe(false); // domingo
   });
@@ -243,6 +243,6 @@ describe("Tempo real", () => {
   it("o card de Configurações explica quando o tempo real está indisponível", () => {
     const html = renderToStaticMarkup(<SyncEscalloCard />);
     expect(html).toContain("Tempo real indisponível agora");
-    expect(html).toContain("de hora em hora das 7h às 19h");
+    expect(html).toContain("de hora em hora das 6h às 20h");
   });
 });

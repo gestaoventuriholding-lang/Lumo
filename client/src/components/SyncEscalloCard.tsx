@@ -93,7 +93,7 @@ export default function SyncEscalloCard() {
           <div>
             <CardTitle>Sincronização com a Escallo</CardTitle>
             <CardDescription>
-              Traz os relatórios de ligação e WhatsApp do dia sem baixar planilha. Segunda a sábado, de hora em hora das 7h às 19h, e uma vez de madrugada (3h30) para fechar o dia anterior.
+              Traz os relatórios de ligação e WhatsApp do dia sem baixar planilha. Segunda a sábado, de hora em hora das 6h às 20h, e uma vez de madrugada (3h30) para fechar o dia anterior.
             </CardDescription>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function SyncEscalloCard() {
             <AlertDialogTitle>{confirmar === "ligar" ? "Ligar o agendador automático?" : "Sincronizar hoje agora?"}</AlertDialogTitle>
             <AlertDialogDescription>
               {confirmar === "ligar"
-                ? "A partir de agora o Ellos busca os relatórios na Escallo sozinho, de hora em hora das 7h às 19h (segunda a sábado), e fecha o dia anterior às 3h30. Você pode desligar aqui a qualquer momento."
+                ? "A partir de agora o Ellos busca os relatórios na Escallo sozinho, de hora em hora das 6h às 20h (segunda a sábado), e fecha o dia anterior às 3h30. Você pode desligar aqui a qualquer momento."
                 : "Busca hoje na Escallo e grava no Ellos agora. Linhas vindas de planilha ou lançadas à mão não são sobrescritas. Rodar de novo só atualiza o dia."}
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -102,7 +102,7 @@ export function textoAtualizado(runs: SyncRun[], agora: Date = new Date()): stri
   return diaSp(quando) === diaSp(agora) ? `Atualizado às ${horaSp(quando)}` : `Atualizado em ${diaMesSp(quando)} às ${horaSp(quando)}`;
 }
 
-/** Horário em que o agendador deveria estar rodando: seg a sáb, das 07:00 às 19:30 (a última rodada é às 19:00; Brasília) */
+/** Horário em que o agendador deveria estar rodando: seg a sáb, das 06:00 às 20:30 (rodadas de hora em hora, de 06:00 a 20:00; Brasília) */
 export function emHorarioComercial(agora: Date): boolean {
   const partes = new Intl.DateTimeFormat("en-US", { timeZone: TIMEZONE, weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(agora);
   const dia = partes.find((p) => p.type === "weekday")?.value;
@@ -110,7 +110,7 @@ export function emHorarioComercial(agora: Date): boolean {
   const m = Number(partes.find((p) => p.type === "minute")?.value);
   if (!dia || dia === "Sun") return false;
   const minutos = h * 60 + m;
-  return minutos >= 7 * 60 && minutos <= 19 * 60 + 30;
+  return minutos >= 6 * 60 && minutos <= 20 * 60 + 30;
 }
 
 export type AlertaSync =
