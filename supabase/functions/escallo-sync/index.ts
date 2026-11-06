@@ -30,13 +30,15 @@ const ORIGEM_PERMITIDA = [
   /^https:\/\/ellos-git-[a-z0-9-]+-venturi-holding\.vercel\.app$/,
   /^http:\/\/localhost:\d+$/,
 ];
+// Endereços extras permitidos (separados por vírgula), definidos no secret ORIGENS_EXTRAS do projeto. Só o projeto de teste usa (teste.venturiholding.com.br).
+const ORIGENS_EXTRAS = (Deno.env.get("ORIGENS_EXTRAS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const SEM_RESPOSTA_APOS_MIN = 10;
 
 const esperar = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 Deno.serve(async (req: Request) => {
   const origemHeader = req.headers.get("Origin");
-  const origem = origemHeader && ORIGEM_PERMITIDA.some((re) => re.test(origemHeader)) ? origemHeader : null;
+  const origem = origemHeader && (ORIGEM_PERMITIDA.some((re) => re.test(origemHeader)) || ORIGENS_EXTRAS.includes(origemHeader)) ? origemHeader : null;
   const cab: Record<string, string> = { "Content-Type": "application/json", "Cache-Control": "no-store", Vary: "Origin" };
   if (origem) {
     cab["Access-Control-Allow-Origin"] = origem;
