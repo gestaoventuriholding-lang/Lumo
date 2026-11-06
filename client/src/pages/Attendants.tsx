@@ -42,6 +42,8 @@ import { formatJornada, isValidJornada } from "@/lib/attendantSchedule";
 import { lerCodigoDigitado } from "@/lib/escalloVinculos";
 import AttendantOccupancyMap from "@/components/AttendantOccupancyMap";
 import ChannelBadge from "@/components/ChannelBadge";
+import { desligadoEmTexto, isTerminated } from "@/lib/attendantStatus";
+import { CANAL_LIGACAO_E_WHATSAPP } from "@/types/attendant";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
 const ATTENDANT_ROLE = "Atendente";
@@ -49,7 +51,10 @@ const ATTENDANT_ROLE = "Atendente";
 const serviceChannelOptions: { value: Attendant["serviceChannel"]; label: string }[] = [
   { value: "Ligação", label: "Ligação" },
   { value: "WhatsApp", label: "WhatsApp" },
+  { value: CANAL_LIGACAO_E_WHATSAPP, label: CANAL_LIGACAO_E_WHATSAPP },
 ];
+
+type FiltroSituacao = "ativos" | "desligados" | "todos";
 
 export default function Attendants() {
   const {
@@ -61,6 +66,7 @@ export default function Attendants() {
     removeAttendants,
   } = useEllosData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [situacao, setSituacao] = useState<FiltroSituacao>("ativos");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -82,10 +88,12 @@ export default function Attendants() {
 
   // Filtrar por busca
   const filteredAttendants = useMemo(() => {
-    return attendants.filter((attendant) =>
-      attendant.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [attendants, searchTerm]);
+    return attendants
+      .filter((attendant) => attendant.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter((attendant) =>
+        situacao === "todos" ? true : situacao === "desligados" ? isTerminated(attendant) : !isTerminated(attendant)
+      );
+  }, [attendants, searchTerm, situacao]);
 
   // Paginação
   const totalPages = Math.ceil(filteredAttendants.length / itemsPerPage);
@@ -111,6 +119,7 @@ export default function Attendants() {
         jornadaStart: attendant.jornadaStart,
         jornadaEnd: attendant.jornadaEnd,
         observation: attendant.observation,
+        terminatedOn: attendant.terminatedOn ?? null,
       });
       setEscalloCodigoTexto(attendant.escalloCodigo != null ? String(attendant.escalloCodigo) : "");
     } else {
@@ -175,7 +184,18 @@ export default function Attendants() {
       }
     }
 
-    const payload = { ...formData, role: ATTENDANT_ROLE, escalloCodigo: codigoLido.codigo };
+    // "Desligado" marcado exige o último dia trabalhado
+    if (formData.terminatedOn === "") {
+      toast.error("Informe o último dia trabalhado do colaborador desligado");
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      role: ATTENDANT_ROLE,
+      escalloCodigo: codigoLido.codigo,
+      terminatedOn: formData.terminatedOn || null,
+    };
 
     if (editingId) {
       updateAttendant(editingId, payload);
@@ -280,6 +300,27 @@ export default function Attendants() {
               className="pl-10 h-11 border-border/50"
             />
           </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="filtro-situacao" className="text-sm text-muted-foreground">
+              Situação
+            </label>
+            <Select
+              value={situacao}
+              onValueChange={(value: FiltroSituacao) => {
+                setSituacao(value);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger id="filtro-situacao" className="w-44 border-border/50" data-testid="filtro-situacao">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ativos">Ativos</SelectItem>
+                <SelectItem value="desligados">Desligados</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Bulk Delete Bar */}
           {selectedIds.size > 0 && (
@@ -368,6 +409,14 @@ export default function Attendants() {
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
                         {attendant.name}
+                        {attendant.terminatedOn && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                            data-testid="selo-desligado"
+                          >
+                            {desligadoEmTexto(attendant.terminatedOn)}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <ChannelBadge channel={attendant.serviceChannel} />
@@ -591,6 +640,37 @@ export default function Attendants() {
                 <p className="text-xs text-primary font-medium">
                   {formatJornada(formData)}
                 </p>
+              )}
+            </div>
+
+            {/* Desligamento */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="desligado"
+                  checked={formData.terminatedOn != null}
+                  onCheckedChange={(marcado) =>
+                    setFormData({ ...formData, terminatedOn: marcado === true ? "" : null })
+                  }
+                />
+                <label htmlFor="desligado" className="text-sm font-medium text-foreground">
+                  Desligado
+                </label>
+              </div>
+              {formData.terminatedOn != null && (
+                <div className="space-y-1">
+                  <label htmlFor="terminated-on" className="text-sm font-medium text-foreground">
+                    Data de desligamento *
+                  </label>
+                  <Input
+                    id="terminated-on"
+                    type="date"
+                    value={formData.terminatedOn}
+                    onChange={(e) => setFormData({ ...formData, terminatedOn: e.target.value })}
+                    className="border-border/50"
+                  />
+                  <p className="text-xs text-muted-foreground">Último dia trabalhado</p>
+                </div>
               )}
             </div>
 

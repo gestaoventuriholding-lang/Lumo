@@ -4,7 +4,8 @@
 //  - só grava linha de um canal para quem teve atendimento NAQUELE canal (> 0);
 //  - login e pausa são do agente: o maior login entre os dois canais decide a regra do limite (padrão 12 h);
 //  - login acima do limite: grava os atendimentos, esvazia login/pausa/ocupação/chamadas por hora NOS DOIS canais e gera 1 alerta;
-//  - a linha "_media" do rel090 é ignorada.
+//  - a linha "_media" do rel090 é ignorada;
+//  - colaborador DESLIGADO (terminated_on = último dia trabalhado): do dia seguinte em diante nada é gravado e a linha vira aviso.
 import {
   ligarColaboradores,
   LOGIN_LIMITE_PADRAO_SEGUNDOS,
@@ -45,6 +46,20 @@ export interface LinhaSync {
   media_min: number;
 }
 
+/** Colaborador como a sincronização o lê: terminated_on é o ÚLTIMO DIA TRABALHADO (vazio = ativo) */
+export type ColaboradorSync = Colaborador & { terminated_on?: string | null };
+
+/** Atendimento da Escallo de alguém desligado em data anterior ao dia sincronizado: ignorado e avisado no log */
+export interface AvisoSync {
+  tipo: "desligado";
+  colaborador_id: number;
+  nome: string;
+  dia: string;
+  canal: "Ligação" | "WhatsApp";
+  atendimentos: number;
+  terminated_on: string;
+}
+
 export interface AlertaSync {
   attendant_id: number;
   login_seconds: number;
@@ -55,6 +70,8 @@ export interface PlanoDia {
   dia: string;
   linhas: LinhaSync[];
   alertas: AlertaSync[];
+  /** Avisos do dia (não impedem a gravação do resto) */
+  avisos: AvisoSync[];
   resumo: {
     rel025Agentes: number;
     rel090Agentes: number;
@@ -64,6 +81,7 @@ export interface PlanoDia {
     atendimentosWhatsapp: number;
     loginEsvaziado: number;
     semVinculoComAtendimento: number;
+    ignoradosDesligados: number;
   };
 }
 
@@ -96,17 +114,35 @@ export function montarPlanoDia(args: {
   dia: string;
   rel025: RegistroEscallo[];
   rel090: RegistroEscallo[];
-  colaboradores: Colaborador[];
+  colaboradores: ColaboradorSync[];
   /** Limite de login por dia, em segundos; null = regra desligada */
   limiteLoginSegundos: number | null;
 }): PlanoDia {
   const { dia, rel025, rel090, colaboradores } = args;
   const limite = args.limiteLoginSegundos;
-  const porCodigo = new Map<number, Colaborador>();
+  const porCodigo = new Map<number, ColaboradorSync>();
   for (const c of colaboradores) if (typeof c.escallo_codigo === "number") porCodigo.set(c.escallo_codigo, c);
+  const porId = new Map<number, ColaboradorSync>(colaboradores.map((c) => [c.id, c]));
+
+  // Desligado: o último dia trabalhado ainda vale; do dia seguinte em diante nada é gravado (datas AAAA-MM-DD comparam como texto)
+  const avisos: AvisoSync[] = [];
+  const desligadoNoDia = (id: number): string | null => {
+    const t = porId.get(id)?.terminated_on;
+    return t && dia > t ? t : null;
+  };
+  const avisar = (id: number, canal: "Ligação" | "WhatsApp", atendimentos: number, terminatedOn: string) => {
+    if (atendimentos <= 0) return; // sem atendimento não há o que ignorar
+    avisos.push({ tipo: "desligado", colaborador_id: id, nome: porId.get(id)?.name ?? "", dia, canal, atendimentos, terminated_on: terminatedOn });
+  };
 
   // ---- ligação (limite null aqui: o login bruto entra na regra do dia, que olha os dois canais) ----
-  const { vinculados, sobras } = ligarColaboradores(rel025, colaboradores, dia, null);
+  const ligacao = ligarColaboradores(rel025, colaboradores, dia, null);
+  const sobras = ligacao.sobras;
+  const vinculados = ligacao.vinculados.filter((v) => {
+    const t = desligadoNoDia(v.attendantId);
+    if (t) avisar(v.attendantId, "Ligação", v.produtividade.attendances_count, t);
+    return !t;
+  });
   let semVinculo = 0;
   for (const s of sobras) {
     if (s.motivo !== "sem_vinculo" || s.codigo === null) continue;
@@ -124,6 +160,11 @@ export function montarPlanoDia(args: {
     const linha = converterRegistro090(r, dia);
     if (!colab) {
       if (linha.attendances_count > 0) semVinculo += 1;
+      continue;
+    }
+    const desligadoEm = desligadoNoDia(colab.id);
+    if (desligadoEm) {
+      avisar(colab.id, "WhatsApp", linha.attendances_count, desligadoEm);
       continue;
     }
     if (!chat.has(colab.id)) chat.set(colab.id, linha); // código repetido: vale o primeiro
@@ -171,6 +212,7 @@ export function montarPlanoDia(args: {
     dia,
     linhas,
     alertas,
+    avisos,
     resumo: {
       rel025Agentes: rel025.length,
       rel090Agentes: rel090.filter((r) => codigoAgente090(r) !== null).length,
@@ -180,6 +222,7 @@ export function montarPlanoDia(args: {
       atendimentosWhatsapp: atendChat,
       loginEsvaziado: esvaziadas,
       semVinculoComAtendimento: semVinculo,
+      ignoradosDesligados: avisos.length,
     },
   };
 }

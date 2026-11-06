@@ -30,6 +30,7 @@ export function resumoDaExecucao(r: SyncRun): string {
   if (r.rowsSkippedManual > 0) partes.push(`${fmt(r.rowsSkippedManual)} de planilha/manual preservadas`);
   if (r.loginBlanked > 0) partes.push(`${fmt(r.loginBlanked)} com login desconsiderado`);
   if (r.alertsCreated > 0) partes.push(`${fmt(r.alertsCreated)} alerta(s) novo(s)`);
+  if (r.ignoredTerminated > 0) partes.push(`${fmt(r.ignoredTerminated)} ignorada(s): pessoa desligada`);
   return partes.join(" · ");
 }
 

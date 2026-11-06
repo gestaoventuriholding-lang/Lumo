@@ -18,6 +18,7 @@ import { getMonthString } from "@/lib/dateRangeFilter";
 import type { Absence, AbsenceType } from "@/types/absence";
 import { pageContainerVariants, pageItemVariants, staggerContainerVariants, cardItemVariants } from "@/lib/motionVariants";
 import AnimatedNumber from "@/components/AnimatedNumber";
+import { attendantsActiveOn } from "@/lib/attendantStatus";
 
 const absenceTypes = {
   vacation: { label: "Férias", color: "bg-muted text-foreground border-border" },
@@ -436,7 +437,7 @@ export default function Absences() {
                   <SelectValue placeholder="Selecione o colaborador" />
                 </SelectTrigger>
                 <SelectContent>
-                  {attendants.map((attendant) => (
+                  {[...attendantsActiveOn(attendants, form.endDate || form.startDate), ...attendants.filter((a) => String(a.id) === form.attendantId && !attendantsActiveOn([a], form.endDate || form.startDate).length)].map((attendant) => (
                     <SelectItem key={attendant.id} value={String(attendant.id)}>
                       {attendant.name}
                     </SelectItem>

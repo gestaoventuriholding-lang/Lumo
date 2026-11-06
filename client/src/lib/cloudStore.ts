@@ -64,18 +64,26 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       observation: str(a.observation),
       registration_date: nullable(a.registrationDate) ?? undefined,
       escallo_codigo: a.escalloCodigo ?? null,
+      active: !a.terminatedOn,
+      terminated_on: nullable(a.terminatedOn),
     }),
     fromRow: (r) => ({
       id: num(r.id),
       name: str(r.name),
       role: str(r.role),
-      serviceChannel: r.service_channel === "WhatsApp" ? "WhatsApp" : "Ligação",
+      serviceChannel:
+        r.service_channel === "WhatsApp"
+          ? "WhatsApp"
+          : r.service_channel === "Ligação e WhatsApp"
+            ? "Ligação e WhatsApp"
+            : "Ligação",
       workingHours: str(r.working_hours),
       jornadaStart: str(r.jornada_start),
       jornadaEnd: str(r.jornada_end),
       observation: str(r.observation),
       registrationDate: str(r.registration_date),
       escalloCodigo: r.escallo_codigo == null ? null : Number(r.escallo_codigo),
+      terminatedOn: r.terminated_on ? String(r.terminated_on) : null,
     }),
   },
   [KEYS.performance]: {

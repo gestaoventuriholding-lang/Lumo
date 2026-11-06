@@ -1,7 +1,7 @@
 // Ellos: orquestra uma sincronização (quais dias, buscar, montar, gravar). Sem Deno e sem Supabase aqui: tudo que toca o
 // mundo de fora entra por `deps`, então a mesma lógica roda no servidor, nos testes e na simulação local.
-import { hojeSaoPaulo, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
-import { montarPlanoDia, type PlanoDia } from "./plano.ts";
+import { hojeSaoPaulo, type RegistroEscallo } from "./mapeamento.ts";
+import { montarPlanoDia, type AvisoSync, type ColaboradorSync, type PlanoDia } from "./plano.ts";
 
 /** Modos que ficam registrados em sync_runs */
 export type Modo = "hoje" | "fechamento" | "manual" | "simulacao";
@@ -29,7 +29,7 @@ export interface ResultadoGravacao {
 
 export interface Deps {
   buscarRelatorio(rel: "rel025" | "rel090", dia: string): Promise<RegistroEscallo[]>;
-  lerColaboradores(): Promise<Colaborador[]>;
+  lerColaboradores(): Promise<ColaboradorSync[]>;
   /** null = regra do login desligada */
   lerLimiteLogin(): Promise<number | null>;
   aplicarDia(plano: PlanoDia): Promise<ResultadoGravacao>;
@@ -47,7 +47,10 @@ export interface ResultadoSync {
     rel090Agentes: number;
     loginEsvaziado: number;
     semVinculoComAtendimento: number;
+    ignoradosDesligados: number;
   };
+  /** Avisos de todos os dias (ex.: atendimento de desligado, ignorado) */
+  avisos: AvisoSync[];
 }
 
 const dataValida = (s: unknown): s is string => {
@@ -159,6 +162,8 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       rel090Agentes: soma((p) => p.resumo.rel090Agentes),
       loginEsvaziado: soma((p) => p.resumo.loginEsvaziado),
       semVinculoComAtendimento: soma((p) => p.resumo.semVinculoComAtendimento),
+      ignoradosDesligados: soma((p) => p.resumo.ignoradosDesligados),
     },
+    avisos: planos.flatMap((p) => p.avisos),
   };
 }
