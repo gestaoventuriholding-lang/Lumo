@@ -92,20 +92,17 @@ describe("tema dos gráficos: contraste", () => {
         expect(contraste(resolver(t, v), resolver(t, "card")), `${nome}: --${v}`).toBeGreaterThanOrEqual(3);
       }
     });
-    it(`Ligação é laranja e WhatsApp é verde (matizes diferentes entre si e do azul da marca) no modo ${nome}`, () => {
+    it(`Ligação é azul e WhatsApp é verde (matizes bem diferentes entre si) no modo ${nome}`, () => {
       const lig = matiz(resolver(t, "channel-ligacao"));
       const wa = matiz(resolver(t, "channel-whatsapp"));
-      const marca = matiz(resolver(t, "chart-1"));
-      expect(lig).toBeGreaterThan(10);
-      expect(lig).toBeLessThan(40); // laranja
-      expect(wa).toBeGreaterThan(75);
-      expect(wa).toBeLessThan(150); // verde
-      expect(marca).toBeGreaterThan(200);
-      expect(marca).toBeLessThan(225); // azul da marca
+      expect(lig).toBeGreaterThan(225);
+      expect(lig).toBeLessThan(255); // azul
+      expect(wa).toBeGreaterThan(100);
+      expect(wa).toBeLessThan(140); // verde
     });
-    it(`o verde do WhatsApp é outro verde que o de "bom" (status) no modo ${nome}`, () => {
+    it(`o verde do WhatsApp não é o mesmo verde de "bom" (status) no modo ${nome}; "bom" sempre leva seta ou símbolo`, () => {
       const diferenca = Math.abs(matiz(resolver(t, "channel-whatsapp")) - matiz(resolver(t, "success")));
-      expect(Math.min(diferenca, 360 - diferenca)).toBeGreaterThanOrEqual(40);
+      expect(Math.min(diferenca, 360 - diferenca)).toBeGreaterThanOrEqual(15);
     });
     it(`texto do canal passa em 4,5:1 sobre o cartão e sobre o selo no modo ${nome}`, () => {
       for (const canal of ["ligacao", "whatsapp"]) {

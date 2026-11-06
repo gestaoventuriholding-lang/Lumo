@@ -127,14 +127,15 @@
   --chart-5: #0693e3;
   --chart-grid: #dce4ef;
   --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
-  /* Canais: Ligação = laranja, WhatsApp = verde-limão (outro verde que o de "bom": ver --success). A cor do canal
-     vai sempre junto do nome ou do ícone do canal. O azul é só da marca e do total geral. */
-  --channel-ligacao: #d65a00;
-  --channel-ligacao-text: #a84700;
-  --channel-ligacao-soft: rgba(214, 90, 0, 0.12);
-  --channel-whatsapp: #4d7c0f;
-  --channel-whatsapp-text: #3f6a0a;
-  --channel-whatsapp-soft: rgba(77, 124, 15, 0.14);
+  /* Canais (escolha da Amanda): Ligação = azul puro (#0000ff) e WhatsApp = verde puro (#00ff00). O verde puro não aparece
+     sobre fundo branco (1,4:1), então no modo claro o WhatsApp usa o verde mais forte que ainda se lê (3:1). A cor do canal
+     vai sempre junto do nome ou do ícone do canal. */
+  --channel-ligacao: #0000ff;
+  --channel-ligacao-text: #0000ff;
+  --channel-ligacao-soft: rgba(0, 0, 255, 0.12);
+  --channel-whatsapp: #00aa00;
+  --channel-whatsapp-text: #007800;
+  --channel-whatsapp-soft: rgba(0, 170, 0, 0.14);
   --heat-low: #e3eefb; /* mapa de calor: do baixo ao alto (azul) */
   --heat-high: var(--brand);
   --heat-text-high: #ffffff; /* texto sobre as células mais fortes */
@@ -211,12 +212,13 @@
   --chart-5: #22c7f0;
   --chart-grid: #1d3256;
   --chart-area-top: 0.38;
-  --channel-ligacao: #ff7a1a;
-  --channel-ligacao-text: #ff9a4d;
-  --channel-ligacao-soft: rgba(255, 122, 26, 0.16);
-  --channel-whatsapp: #8cd32f;
-  --channel-whatsapp-text: #a8e25a;
-  --channel-whatsapp-soft: rgba(140, 211, 47, 0.16);
+  /* Escuro: o verde puro (#00ff00) aparece como escolhido; o azul puro (#0000ff) some no fundo azul-marinho (2:1), então usa o azul mais forte que ainda se lê (3:1) */
+  --channel-ligacao: #5252ff;
+  --channel-ligacao-text: #8585ff;
+  --channel-ligacao-soft: rgba(82, 82, 255, 0.16);
+  --channel-whatsapp: #00ff00;
+  --channel-whatsapp-text: #00ff00;
+  --channel-whatsapp-soft: rgba(0, 255, 0, 0.16);
   --heat-low: #0f2547;
   --heat-text-high: #06101f;
 
