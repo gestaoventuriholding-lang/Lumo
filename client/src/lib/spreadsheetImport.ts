@@ -9,7 +9,7 @@ import {
   pickDominantServiceChannel,
   toAttendantServiceChannel,
 } from "@/lib/attendantsStorage";
-import type { AttendantServiceChannel } from "@/types/attendant";
+import { CANAL_LIGACAO_E_WHATSAPP, type AttendantRecordChannel } from "@/types/attendant";
 
 export type ImportField = "attendant" | "date" | "channel" | "count" | "averageTime";
 
@@ -1575,8 +1575,8 @@ export function buildImportPlan(
 
 function collectImportChannelCountsByName(
   plan: ImportPlan
-): Map<string, Map<AttendantServiceChannel, number>> {
-  const byName = new Map<string, Map<AttendantServiceChannel, number>>();
+): Map<string, Map<AttendantRecordChannel, number>> {
+  const byName = new Map<string, Map<AttendantRecordChannel, number>>();
 
   for (const row of plan.valid) {
     if (row.status === "skip") continue;
@@ -1585,7 +1585,7 @@ function collectImportChannelCountsByName(
     if (!serviceChannel) continue;
 
     const key = normalizeName(row.attendantName);
-    const counts = byName.get(key) ?? new Map<AttendantServiceChannel, number>();
+    const counts = byName.get(key) ?? new Map<AttendantRecordChannel, number>();
     counts.set(serviceChannel, (counts.get(serviceChannel) ?? 0) + 1);
     byName.set(key, counts);
   }
@@ -1593,9 +1593,9 @@ function collectImportChannelCountsByName(
   return byName;
 }
 
-function applyImportChannelsToAttendants(
+export function applyImportChannelsToAttendants(
   attendants: Attendant[],
-  channelCountsByName: Map<string, Map<AttendantServiceChannel, number>>
+  channelCountsByName: Map<string, Map<AttendantRecordChannel, number>>
 ): Attendant[] {
   if (channelCountsByName.size === 0) return attendants;
 
@@ -1603,6 +1603,8 @@ function applyImportChannelsToAttendants(
     const counts = channelCountsByName.get(normalizeName(attendant.name));
     if (!counts) return attendant;
 
+    // quem atende nos dois canais continua assim: a planilha de um canal só não muda o cadastro
+    if (attendant.serviceChannel === CANAL_LIGACAO_E_WHATSAPP) return attendant;
     const serviceChannel = pickDominantServiceChannel(counts);
     if (attendant.serviceChannel === serviceChannel) return attendant;
 
@@ -1648,7 +1650,7 @@ export function executePerformanceImport(
     let attendant = attendantByName.get(normalizeName(row.attendantName));
     if (!attendant && options.createAttendants) {
       const serviceChannel =
-        toAttendantServiceChannel(row.channel) ?? ("Ligação" as AttendantServiceChannel);
+        toAttendantServiceChannel(row.channel) ?? ("Ligação" as AttendantRecordChannel);
 
       const created = createAttendant(
         {

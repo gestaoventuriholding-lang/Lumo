@@ -30,7 +30,7 @@ function run(extra: Partial<SyncRun> & { status: SyncRun["status"]; hora: string
   contador += 1;
   return {
     id: `r${contador}`, mode: "hoje", triggeredBy: "agendador", days: ["2026-11-05"], startedAt: iso(hora), finishedAt: iso(hora),
-    rowsInserted: 0, rowsUpdated: 0, rowsSkippedManual: 0, loginBlanked: 0, alertsCreated: 0, unlinkedWithActivity: 0, error: null, durationMs: 1000,
+    rowsInserted: 0, rowsUpdated: 0, rowsSkippedManual: 0, loginBlanked: 0, alertsCreated: 0, unlinkedWithActivity: 0, ignoredTerminated: 0, error: null, durationMs: 1000,
     ...resto,
   };
 }

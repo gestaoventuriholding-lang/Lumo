@@ -20,6 +20,8 @@ export interface SyncRun {
   loginBlanked: number;
   alertsCreated: number;
   unlinkedWithActivity: number;
+  /** Linhas da Escallo de pessoa desligada (depois do último dia trabalhado): ignoradas, com aviso no log */
+  ignoredTerminated: number;
   error: string | null;
   durationMs: number | null;
 }
@@ -42,6 +44,7 @@ export function runFromRow(r: Row): SyncRun {
     loginBlanked: n(r.login_blanked),
     alertsCreated: n(r.alerts_created),
     unlinkedWithActivity: n(r.unlinked_with_activity),
+    ignoredTerminated: n(r.ignored_terminated),
     error: r.error ? String(r.error) : null,
     durationMs: typeof r.duration_ms === "number" ? r.duration_ms : null,
   };

@@ -1,4 +1,5 @@
-import type { Attendant, AttendantServiceChannel } from "@/types/attendant";
+import type { Attendant, AttendantRecordChannel } from "@/types/attendant";
+import { attendsChannel } from "@/lib/attendantStatus";
 
 export interface TimeSlot {
   minutes: number;
@@ -16,7 +17,7 @@ export interface OccupancyRow {
 }
 
 export interface OccupancyMapData {
-  channel: AttendantServiceChannel;
+  channel: AttendantRecordChannel;
   channelLabel: string;
   slots: TimeSlot[];
   counts: number[];
@@ -55,10 +56,10 @@ function isActiveInSlot(startMin: number, endMin: number, slotMin: number): bool
 
 export function buildOccupancyMap(
   attendants: Attendant[],
-  channel: AttendantServiceChannel
+  channel: AttendantRecordChannel
 ): OccupancyMapData {
   const channelAttendants = attendants
-    .filter((attendant) => attendant.serviceChannel === channel)
+    .filter((attendant) => attendsChannel(attendant, channel))
     .sort((a, b) => {
       const aStart = parseTimeToMinutes(a.jornadaStart) ?? 9999;
       const bStart = parseTimeToMinutes(b.jornadaStart) ?? 9999;

@@ -1,4 +1,5 @@
 import { newId as createId } from "@/lib/ids";
+import { attendantsActiveOn } from "@/lib/attendantStatus";
 import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -664,7 +665,9 @@ export default function Performance() {
                   setForm({
                     ...form,
                     attendantId: value,
-                    channel: attendant?.serviceChannel ?? form.channel,
+                    // quem atende nos dois canais mantém o canal escolhido no formulário
+                    channel:
+                      attendant && attendant.serviceChannel !== "Ligação e WhatsApp" ? attendant.serviceChannel : form.channel,
                   });
                 }}
               >
@@ -672,7 +675,7 @@ export default function Performance() {
                   <SelectValue placeholder="Selecione o colaborador" />
                 </SelectTrigger>
                 <SelectContent>
-                  {attendants.map((attendant) => (
+                  {[...attendantsActiveOn(attendants, form.date), ...attendants.filter((a) => String(a.id) === form.attendantId && !attendantsActiveOn([a], form.date).length)].map((attendant) => (
                     <SelectItem key={attendant.id} value={String(attendant.id)}>
                       {attendant.name} · {attendant.serviceChannel}
                     </SelectItem>

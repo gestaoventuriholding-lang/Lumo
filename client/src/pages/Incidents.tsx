@@ -33,6 +33,7 @@ import {
   cardItemVariants,
 } from "@/lib/motionVariants";
 import { cn } from "@/lib/utils";
+import { attendantsActiveOn } from "@/lib/attendantStatus";
 import {
   INCIDENT_DESCRIPTION_MAX,
   INCIDENT_PROTOCOL_MAX,
@@ -103,8 +104,13 @@ export default function Incidents() {
   const [form, setForm] = useState<FormState>(emptyForm);
 
   const sortedAttendants = useMemo(
-    () => [...attendants].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
-    [attendants]
+    () =>
+      [
+        ...attendantsActiveOn(attendants, form.occurredOn),
+        // quem já está escolhido continua na lista, mesmo desligado na data
+        ...attendants.filter((a) => String(a.id) === form.attendantId && !attendantsActiveOn([a], form.occurredOn).length),
+      ].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    [attendants, form.occurredOn, form.attendantId]
   );
 
   const counts = useMemo(

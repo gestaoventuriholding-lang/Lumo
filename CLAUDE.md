@@ -132,6 +132,8 @@ A API da Escallo é lida **por dia fechado**, para trazer os relatórios sem bai
 - **Alertas** (`login_alerts`, um por colaborador e dia): aparecem no sininho com "Tempo logado desconsiderado — verificar se a
   pessoa deslogou"; o gestor marca **visto** (continua na lista) ou **resolvido** (sai). A situação é compartilhada pela equipe
   (diferente dos outros alertas do sino, que guardam "lido" só no navegador e zeram todo dia). Pré-visualização: `?demoalerta=1`.
+- **Colaborador desligado** (`attendants.active` + `terminated_on`, o ÚLTIMO DIA TRABALHADO): a pessoa continua nos históricos dos dias em que trabalhou e some das listas de escolha (desempenho, faltas, ocorrências) a partir do dia seguinte. A sincronização com a Escallo não grava nada dela depois dessa data e registra um aviso em `sync_runs.warnings` (`ignored_terminated`). Quem não está cadastrado segue ignorado.
+- **Canal "Ligação e WhatsApp"** (cadastro do colaborador): a pessoa aparece nos dois canais (`attendsChannel` em `lib/attendantStatus.ts`). Os registros de desempenho continuam sempre em um canal só.
 - **Gravação de dados da Escallo** ainda não é um botão no app: foi feita em scripts locais (pasta `scripts/`, não versionada),
   sempre com simulação, backup e desfazer. A Fase B de 29/10 gravou só Ligação (8 colaboradores) com origem `API Escallo`.
 

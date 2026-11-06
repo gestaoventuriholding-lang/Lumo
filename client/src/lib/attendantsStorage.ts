@@ -1,5 +1,6 @@
 import { readJSON, writeJSON } from "@/lib/cloudStore";
-import type { Attendant, AttendantInput, AttendantServiceChannel } from "@/types/attendant";
+import type { Attendant, AttendantInput, AttendantRecordChannel, AttendantServiceChannel } from "@/types/attendant";
+import { CANAL_LIGACAO_E_WHATSAPP } from "@/types/attendant";
 import type { AttendanceChannel } from "@/types/goals";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import { newId } from "@/lib/ids";
@@ -21,7 +22,7 @@ export function loadAttendants(): Attendant[] {
 function normalizeAttendant(raw: Attendant): Attendant {
   const channel = raw.serviceChannel;
   const serviceChannel: AttendantServiceChannel =
-    channel === "WhatsApp" ? "WhatsApp" : "Ligação";
+    channel === "WhatsApp" ? "WhatsApp" : channel === CANAL_LIGACAO_E_WHATSAPP ? CANAL_LIGACAO_E_WHATSAPP : "Ligação";
 
   return {
     ...raw,
@@ -37,15 +38,15 @@ export function saveAttendants(attendants: Attendant[]): void {
 
 export function toAttendantServiceChannel(
   channel: AttendanceChannel
-): AttendantServiceChannel | null {
+): AttendantRecordChannel | null {
   if (channel === "Ligação" || channel === "WhatsApp") return channel;
   return null;
 }
 
 export function pickDominantServiceChannel(
-  counts: Map<AttendantServiceChannel, number>
-): AttendantServiceChannel {
-  let dominant: AttendantServiceChannel = "Ligação";
+  counts: Map<AttendantRecordChannel, number>
+): AttendantRecordChannel {
+  let dominant: AttendantRecordChannel = "Ligação";
   let bestCount = 0;
 
   for (const [channel, count] of counts) {

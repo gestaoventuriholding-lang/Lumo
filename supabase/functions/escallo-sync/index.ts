@@ -165,7 +165,7 @@ Deno.serve(async (req: Request) => {
       return await buscarEscallo(tokenEscallo, rel, dia);
     },
     async lerColaboradores() {
-      const { data, error } = await servico.from("attendants").select("id, name, escallo_codigo");
+      const { data, error } = await servico.from("attendants").select("id, name, escallo_codigo, terminated_on");
       if (error) throw new Error("não consegui ler os colaboradores");
       return data as Colaborador[];
     },
@@ -191,6 +191,7 @@ Deno.serve(async (req: Request) => {
       rows_inserted: resultado.gravacao.inseridas, rows_updated: resultado.gravacao.atualizadas,
       rows_skipped_manual: resultado.gravacao.puladas_manuais, login_blanked: resultado.totais.loginEsvaziado,
       alerts_created: resultado.gravacao.alertas_novos, unlinked_with_activity: resultado.totais.semVinculoComAtendimento,
+      ignored_terminated: resultado.totais.ignoradosDesligados, warnings: resultado.avisos.slice(0, 50),
       duration_ms: Date.now() - inicio,
     }).eq("id", corrida.id);
     console.log(`escallo-sync: ${pedido.modo} ${resultado.dias.join(",")} ok (${resultado.gravacao.inseridas} novas, ${resultado.gravacao.atualizadas} atualizadas)`);
