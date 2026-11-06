@@ -3,7 +3,7 @@
  * variáveis de client/src/index.css (nenhuma cor escrita no código). Assim os gráficos acompanham o modo claro e o
  * escuro sozinhos e sempre usam a paleta aprovada.
  *
- * Regras: Ligação é azul e WhatsApp é verde (escolha da Amanda: #0000ff e #00ff00, com o tom mais forte que ainda se lê em cada modo),
+ * Regras: Ligação é azul e WhatsApp é verde (escolha da Amanda; os valores ficam em index.css, no tom mais forte que ainda se lê em cada modo),
  * sempre junto do nome ou do ícone do canal; verde = bom, vermelho = ruim, amarelo = atenção, sempre com seta ou símbolo.
  * Área: linha com degradê que some para baixo. Grade tracejada e apagada.
  */
