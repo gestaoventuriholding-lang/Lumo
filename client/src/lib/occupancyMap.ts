@@ -9,6 +9,8 @@ export interface TimeSlot {
 export interface OccupancyRow {
   attendantId: number;
   name: string;
+  /** Função do colaborador (Atendente ou Confirmação de agenda) */
+  role: string;
   workingHours: string;
   jornadaStart: string;
   jornadaEnd: string;
@@ -104,6 +106,7 @@ export function buildOccupancyMap(
     return {
       attendantId: attendant.id,
       name: attendant.name,
+      role: attendant.role,
       workingHours: attendant.workingHours,
       jornadaStart: attendant.jornadaStart,
       jornadaEnd: attendant.jornadaEnd,

@@ -1,5 +1,7 @@
 import { newId as createId } from "@/lib/ids";
 import { attendantsActiveOn } from "@/lib/attendantStatus";
+import { useAtendimentoData } from "@/hooks/useAtendimentoData";
+import ConfirmacaoAgendaCard from "@/components/ConfirmacaoAgendaCard";
 import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,7 +118,6 @@ export default function Performance() {
   const {
     attendants,
     performanceRecords: records,
-    productivityRecords,
     productivityLimits,
     removeProductivityRecords,
     productionGoals,
@@ -124,6 +125,13 @@ export default function Performance() {
     updatePerformanceRecord,
     removePerformanceRecord,
   } = useEllosData();
+  // Rankings, médias, metas e produtividade: só o atendimento. A Confirmação de agenda fica de fora (cartão próprio).
+  // A tabela de lançamentos e o formulário continuam com todos, para poder editar.
+  const {
+    attendants: atendentesMetricas,
+    performanceRecords: registrosMetricas,
+    productivityRecords,
+  } = useAtendimentoData();
   const {
     period,
     dateRange,
@@ -146,7 +154,7 @@ export default function Performance() {
 
   const isDayDetailView = period === "day" || drillDownDay !== "";
 
-  const attendantIds = useMemo(() => new Set(attendants.map((a) => a.id)), [attendants]);
+  const attendantIds = useMemo(() => new Set(atendentesMetricas.map((a) => a.id)), [atendentesMetricas]);
 
   const availableDays = useMemo(
     () => getDaysWithRecordsInRange(records, dateRange),
@@ -163,36 +171,36 @@ export default function Performance() {
 
   // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
   const summaryRecords = useMemo(
-    () => mergePeriodTotals(records, productivityRecords, displayRange),
-    [records, productivityRecords, displayRange]
+    () => mergePeriodTotals(registrosMetricas, productivityRecords, displayRange),
+    [registrosMetricas, productivityRecords, displayRange]
   );
 
   const attendantSummaries = useMemo(
-    () => buildAttendantSummaries(summaryRecords, attendants, productionGoals, displayRange),
-    [summaryRecords, attendants, productionGoals, displayRange]
+    () => buildAttendantSummaries(summaryRecords, atendentesMetricas, productionGoals, displayRange),
+    [summaryRecords, atendentesMetricas, productionGoals, displayRange]
   );
 
   const ligacaoSummaries = useMemo(
     () =>
-      buildAttendantSummaries(summaryRecords, attendants, productionGoals, displayRange, "Ligação"),
-    [summaryRecords, attendants, productionGoals, displayRange]
+      buildAttendantSummaries(summaryRecords, atendentesMetricas, productionGoals, displayRange, "Ligação"),
+    [summaryRecords, atendentesMetricas, productionGoals, displayRange]
   );
 
   const whatsappSummaries = useMemo(
     () =>
-      buildAttendantSummaries(summaryRecords, attendants, productionGoals, displayRange, "WhatsApp"),
-    [summaryRecords, attendants, productionGoals, displayRange]
+      buildAttendantSummaries(summaryRecords, atendentesMetricas, productionGoals, displayRange, "WhatsApp"),
+    [summaryRecords, atendentesMetricas, productionGoals, displayRange]
   );
 
   const kpis = useMemo(() => kpisFromSummaries(attendantSummaries), [attendantSummaries]);
 
   const previousInfo = useMemo(() => previousRange(displayRange), [displayRange]);
   const previousKpis = useMemo(() => {
-    const prevRecords = mergePeriodTotals(records, productivityRecords, previousInfo);
+    const prevRecords = mergePeriodTotals(registrosMetricas, productivityRecords, previousInfo);
     return kpisFromSummaries(
-      buildAttendantSummaries(prevRecords, attendants, productionGoals, { ...previousInfo })
+      buildAttendantSummaries(prevRecords, atendentesMetricas, productionGoals, { ...previousInfo })
     );
-  }, [records, productivityRecords, attendants, productionGoals, previousInfo]);
+  }, [registrosMetricas, productivityRecords, atendentesMetricas, productionGoals, previousInfo]);
 
   const summaryRows = useMemo(
     () =>
@@ -387,6 +395,10 @@ export default function Performance() {
           </Tabs>
         </motion.div>
       )}
+
+      <motion.div variants={pageItemVariants}>
+        <ConfirmacaoAgendaCard range={displayRange} />
+      </motion.div>
 
       <motion.div variants={pageItemVariants}>
         <PerformanceRankings

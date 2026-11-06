@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import { usePeriodFilter } from "@/contexts/PeriodFilterContext";
+import { useAtendimentoData } from "@/hooks/useAtendimentoData";
 import type { DashboardPeriod } from "@/lib/dateRangeFilter";
 import { getMonthString } from "@/lib/dateRangeFilter";
 import { mergePeriodTotals } from "@/lib/periodTotals";
@@ -51,7 +52,9 @@ export default function ManagementReportButton({
   size = "default",
   className,
 }: ManagementReportButtonProps) {
-  const { attendants, performanceRecords: dailyRecords, productivityRecords, productionGoals } = useEllosData();
+  const { productionGoals } = useEllosData();
+  // O relatório de gestão do atendimento não inclui a Confirmação de agenda
+  const { attendants, performanceRecords: dailyRecords, productivityRecords } = useAtendimentoData();
   const { period, selectedDay, selectedWeek, selectedMonth } = usePeriodFilter();
 
   const [open, setOpen] = useState(false);
