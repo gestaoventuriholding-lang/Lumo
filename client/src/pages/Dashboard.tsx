@@ -68,6 +68,8 @@ import {
 } from "@/lib/chartTheme";
 import ChartAreaGradient from "@/components/ChartAreaGradient";
 import { ChannelIcon } from "@/components/ChannelBadge";
+import { useSyncStatus } from "@/contexts/SyncStatusContext";
+import { cn } from "@/lib/utils";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -341,13 +343,8 @@ export default function Dashboard() {
     },
   ];
 
-  const lastUpdated = new Date().toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Hora da última sincronização com a Escallo que deu certo (não a hora em que a página abriu)
+  const { atualizadoTexto, alerta: alertaSync } = useSyncStatus();
 
   return (
     <motion.div
@@ -512,9 +509,15 @@ export default function Dashboard() {
         </div>
       </motion.details>
 
-      <p className="text-center text-xs text-muted-foreground">
-        Dados atualizados em {lastUpdated}
-      </p>
+      {atualizadoTexto && (
+        <p
+          className={cn("text-center text-xs tabular-nums", alertaSync ? "font-medium text-warning" : "text-muted-foreground")}
+          data-testid="sync-atualizado"
+        >
+          {atualizadoTexto}
+          {alertaSync && " · a sincronização com a Escallo está com problema (veja o sino)"}
+        </p>
+      )}
 
       <ExportModal open={showExportModal} onOpenChange={setShowExportModal} />
     </motion.div>

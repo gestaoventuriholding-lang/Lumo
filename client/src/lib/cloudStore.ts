@@ -393,6 +393,10 @@ const cache = new Map<string, unknown>();
 const synced = new Map<string, unknown>();
 let queue: Promise<void> = Promise.resolve();
 let errorShown = false;
+// Sobe a cada gravação das telas. A atualização automática desiste se isso mudar enquanto ela busca no banco.
+let writeVersion = 0;
+let lastRefreshAt = 0;
+const refreshListeners = new Set<() => void>();
 
 export function isCloudEnabled(): boolean {
   return cloudUserId !== null;
@@ -493,6 +497,7 @@ export function flushCloud(): Promise<void> {
 }
 
 function scheduleSync(key: string, next: unknown) {
+  writeVersion += 1;
   const prev = synced.get(key);
   synced.set(key, structuredCloneSafe(next));
   const userId = cloudUserId!;
@@ -608,6 +613,7 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
   const supabase = getSupabase();
   cache.clear();
   synced.clear();
+  lastRefreshAt = Date.now();
 
   const [attendantRows, ...otherRows] = await Promise.all([
     fetchAll("attendants", "name"),
@@ -744,4 +750,81 @@ export function disableCloud(): void {
   cloudUserId = null;
   cache.clear();
   synced.clear();
+}
+
+// ---------------------------------------------------------------
+// Atualização automática (a cada 5 minutos e ao voltar para a aba)
+// ---------------------------------------------------------------
+// A sincronização com a Escallo grava direto no banco. Para a tela acompanhar sem recarregar, busca só o que mudou
+// (updated_at recente) nas três tabelas que ela escreve e mescla no cache.
+const SYNCED_KEYS = [KEYS.performance, KEYS.productivity, KEYS.loginAlerts] as const;
+/** Margem para diferença de relógio entre este computador e o servidor */
+const SKEW_MARGIN_MS = 5 * 60_000;
+
+/** Quem quer saber quando o cache mudou por uma atualização automática (os contextos recarregam o estado) */
+export function subscribeCloudRefresh(listener: () => void): () => void {
+  refreshListeners.add(listener);
+  return () => refreshListeners.delete(listener);
+}
+
+/** Mescla itens buscados no cache pelo id: troca o que mudou no mesmo lugar e acrescenta o que é novo. */
+export function mesclarPorId(atual: Item[], buscados: Item[]): { lista: Item[]; mudou: boolean } {
+  const mapa = new Map(atual.map((item) => [String(item.id), item]));
+  let mudou = false;
+  for (const novo of buscados) {
+    const anterior = mapa.get(String(novo.id));
+    if (!anterior || JSON.stringify(anterior) !== JSON.stringify(novo)) {
+      mapa.set(String(novo.id), novo);
+      mudou = true;
+    }
+  }
+  return { lista: [...mapa.values()], mudou };
+}
+
+async function fetchChanged(table: string, since: string): Promise<Row[]> {
+  const supabase = getSupabase();
+  const pageSize = 1000;
+  const rows: Row[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .gte("updated_at", since)
+      .order("id", { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+    rows.push(...((data ?? []) as Row[]));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows;
+}
+
+/**
+ * Traz do banco o que a sincronização gravou desde a última vez. Devolve true se algo mudou.
+ * Espera as gravações pendentes terminarem e desiste (sem erro) se alguém gravar durante a busca,
+ * para nunca desfazer uma alteração feita na tela. Tenta de novo no próximo ciclo.
+ */
+export async function refreshSyncedCollections(): Promise<boolean> {
+  if (!cloudUserId) return false;
+  await queue;
+  const versao = writeVersion;
+  const inicio = Date.now();
+  const desde = new Date(lastRefreshAt - SKEW_MARGIN_MS).toISOString();
+  const nomes = new Map(((cache.get(KEYS.attendants) as Item[] | undefined) ?? []).map((a) => [num(a.id), str(a.name)]));
+  const buscados = await Promise.all(SYNCED_KEYS.map((key) => fetchChanged(COLLECTIONS[key].table, desde)));
+  if (versao !== writeVersion || !cloudUserId) return false;
+
+  let mudou = false;
+  SYNCED_KEYS.forEach((key, i) => {
+    if (buscados[i].length === 0) return;
+    const itens = buscados[i].map((row) => COLLECTIONS[key].fromRow(row, { attendantNames: nomes }));
+    const resultado = mesclarPorId((cache.get(key) as Item[] | undefined) ?? [], itens);
+    if (!resultado.mudou) return;
+    cache.set(key, resultado.lista);
+    synced.set(key, structuredCloneSafe(resultado.lista));
+    mudou = true;
+  });
+  lastRefreshAt = inicio;
+  if (mudou) refreshListeners.forEach((l) => l());
+  return mudou;
 }

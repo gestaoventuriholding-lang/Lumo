@@ -11,6 +11,7 @@ import { applyPreset, ACTIVE_PRESET } from "./lib/themePreset";
 import { EllosDataProvider } from "./contexts/EllosDataContext";
 import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import { PeriodFilterProvider } from "./contexts/PeriodFilterContext";
+import { SyncStatusProvider } from "./contexts/SyncStatusContext";
 import ImportPage from "@/pages/Import";
 import DashboardLayout from "./components/DashboardLayout";
 import AuthGate from "./components/AuthGate";
@@ -115,7 +116,9 @@ function App() {
               <EllosDataProvider>
                 <PeriodFilterProvider>
                   <UserPreferencesProvider>
-                    <Router />
+                    <SyncStatusProvider>
+                      <Router />
+                    </SyncStatusProvider>
                   </UserPreferencesProvider>
                 </PeriodFilterProvider>
               </EllosDataProvider>
