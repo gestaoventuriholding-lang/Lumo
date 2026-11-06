@@ -1,7 +1,13 @@
 // Ellos: conversa com o servidor sobre a sincronização com a Escallo (ler execuções, ligar/desligar, rodar agora).
-import { getSupabase } from "@/lib/supabase";
+import { ambiente, getSupabase } from "@/lib/supabase";
 import { traduzirErroDaFuncao } from "@/lib/escalloVinculos";
 import { runFromRow, type SyncRun } from "@/lib/syncStatus";
+
+/** No ambiente de teste a sincronização com a Escallo fica desativada (sem token e sem agendador); na produção nada muda */
+export const MENSAGEM_SYNC_TESTE = "Ambiente de teste: a sincronização com a Escallo está desativada. Os dados exibidos são inventados.";
+export function sincronizacaoDesativada(): boolean {
+  return ambiente === "teste";
+}
 
 export interface SyncState {
   runs: SyncRun[];
@@ -46,6 +52,8 @@ export interface RespostaSync {
  * ou "agora" (qualquer pessoa da equipe: hoje, no máximo 1 vez a cada 5 minutos).
  */
 export async function executarSync(modo: "simulacao" | "manual" | "agora", dias: string[] = []): Promise<RespostaSync> {
+  // teste: nem chama a função (que não tem token da Escallo) e explica o motivo
+  if (sincronizacaoDesativada()) throw new Error(MENSAGEM_SYNC_TESTE);
   const body = modo === "agora" ? { modo } : { modo, dias };
   const { data, error } = await getSupabase().functions.invoke("escallo-sync", { body });
   if (error) throw new Error((await traduzirErroDaFuncao(error)).replace("escallo-rel025", "escallo-sync"));

@@ -228,7 +228,7 @@ describe("Atualizar agora: botão no Dashboard", () => {
   it("mostra 'Atualizando…' enquanto roda e desabilita o botão", () => {
     const src = readFileSync(join(process.cwd(), "client", "src", "components", "AtualizarAgoraButton.tsx"), "utf8");
     expect(src).toContain('"Atualizando…"');
-    expect(src).toContain("disabled={atualizando}");
+    expect(src).toContain("disabled={atualizando || desativado}");
   });
 });
 

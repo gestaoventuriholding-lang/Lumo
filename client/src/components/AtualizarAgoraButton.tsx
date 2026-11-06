@@ -3,7 +3,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useSyncStatus } from "@/contexts/SyncStatusContext";
-import { executarSync } from "@/lib/syncApi";
+import { MENSAGEM_SYNC_TESTE, executarSync, sincronizacaoDesativada } from "@/lib/syncApi";
 import { limiteAtualizarAgora } from "@/lib/syncStatus";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ export default function AtualizarAgoraButton({ className }: { className?: string
   const { runs, refresh } = useSyncStatus();
   const [atualizando, setAtualizando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const desativado = sincronizacaoDesativada();
 
   const clicar = async () => {
     const limite = limiteAtualizarAgora(runs);
@@ -42,17 +43,26 @@ export default function AtualizarAgoraButton({ className }: { className?: string
 
   return (
     <div className="flex flex-col items-stretch gap-1 sm:items-end">
-      <Button
-        variant="outline"
-        onClick={() => void clicar()}
-        disabled={atualizando}
-        aria-busy={atualizando}
-        className={cn("gap-2 bg-card", className)}
-        data-testid="atualizar-agora"
-      >
-        {atualizando ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-        {atualizando ? "Atualizando…" : "Atualizar agora"}
-      </Button>
+      {/* o balão fica no invólucro: botão desabilitado não recebe o mouse */}
+      <span title={desativado ? MENSAGEM_SYNC_TESTE : undefined} className="inline-flex" data-testid="atualizar-agora-envolucro">
+        <Button
+          variant="outline"
+          onClick={() => void clicar()}
+          disabled={atualizando || desativado}
+          aria-busy={atualizando}
+          aria-describedby={desativado ? "atualizar-agora-motivo" : undefined}
+          className={cn("gap-2 bg-card", className)}
+          data-testid="atualizar-agora"
+        >
+          {atualizando ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {atualizando ? "Atualizando…" : "Atualizar agora"}
+        </Button>
+      </span>
+      {desativado && (
+        <span id="atualizar-agora-motivo" className="sr-only">
+          {MENSAGEM_SYNC_TESTE}
+        </span>
+      )}
       {aviso && (
         <p className="text-xs text-muted-foreground" role="status" data-testid="atualizar-agora-aviso">
           {aviso}
