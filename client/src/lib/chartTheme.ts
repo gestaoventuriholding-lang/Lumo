@@ -3,9 +3,9 @@
  * variáveis de client/src/index.css (nenhuma cor escrita no código). Assim os gráficos acompanham o modo claro e o
  * escuro sozinhos e sempre usam a paleta aprovada.
  *
- * Regras: o laranja é a marca e o TOTAL geral; Ligação é azul e WhatsApp é verde-limão (diferente do verde de "bom"), sempre
- * junto do nome ou do ícone do canal; verde = bom, vermelho = ruim, amarelo = atenção; o laranja nunca marca alerta.
- * Área: linha laranja com degradê que some para baixo. Grade tracejada e apagada.
+ * Regras: Ligação é azul e WhatsApp é verde (escolha da Amanda; os valores ficam em index.css, no tom mais forte que ainda se lê em cada modo),
+ * sempre junto do nome ou do ícone do canal; verde = bom, vermelho = ruim, amarelo = atenção, sempre com seta ou símbolo.
+ * Área: linha com degradê que some para baixo. Grade tracejada e apagada.
  */
 
 export const chartColors = {
