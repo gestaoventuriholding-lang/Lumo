@@ -3,7 +3,7 @@
  */
 
 export type AttendanceChannel = "Ligação" | "WhatsApp" | "E-mail" | "Outros";
-export type JobRole = "Atendente";
+export type JobRole = "Atendente" | "Confirmação de agenda";
 export type GoalStatus = "Ativo" | "Inativo";
 export type AlertLevel = "green" | "yellow" | "red";
 

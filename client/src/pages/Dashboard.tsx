@@ -71,6 +71,8 @@ import { ChannelIcon } from "@/components/ChannelBadge";
 import { useSyncStatus } from "@/contexts/SyncStatusContext";
 import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
 import { cn } from "@/lib/utils";
+import { useAtendimentoData } from "@/hooks/useAtendimentoData";
+import ConfirmacaoAgendaCard from "@/components/ConfirmacaoAgendaCard";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -195,7 +197,9 @@ export default function Dashboard() {
   const [analysisNote, setAnalysisNote] = useState(() => loadAnalysisNote());
   const { period, dateRange } = usePeriodFilter();
 
-  const { attendants, performanceRecords: dailyRecords, productivityRecords, absences, productionGoals } = useEllosData();
+  const { attendants: todosColaboradores, absences, productionGoals } = useEllosData();
+  // Métricas, médias e contagens são do atendimento; a Confirmação de agenda aparece à parte (cartão próprio)
+  const { attendants, performanceRecords: dailyRecords, productivityRecords, confirmacao } = useAtendimentoData();
   // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
   const performanceRecords = useMemo(
     () => mergePeriodTotals(dailyRecords, productivityRecords, dateRange),
@@ -273,7 +277,10 @@ export default function Dashboard() {
     {
       title: "Total de Colaboradores",
       value: String(dashboardStats.totalAttendants),
-      comparison: `${attendants.length} cadastrados no sistema`,
+      comparison:
+        confirmacao.attendants.length > 0
+          ? `${todosColaboradores.length} cadastrados · ${confirmacao.attendants.length} de confirmação de agenda`
+          : `${todosColaboradores.length} cadastrados no sistema`,
       trend: "neutral" as const,
       icon: Users,
       iconBg: "bg-primary-soft",
@@ -392,6 +399,10 @@ export default function Dashboard() {
         {mainCards.map((card) => (
           <DashboardKpiCard key={card.title} {...card} />
         ))}
+      </motion.div>
+
+      <motion.div variants={pageItemVariants}>
+        <ConfirmacaoAgendaCard range={dateRange} />
       </motion.div>
 
       <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">

@@ -351,7 +351,17 @@ function OccupancyRowView({
           {initials(row.name)}
         </span>
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-medium text-foreground">{row.name}</p>
+          <p className="truncate text-sm font-medium text-foreground">
+            {row.name}
+            {row.role === "Confirmação de agenda" && (
+              <span
+                className="ml-2 inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 align-middle text-[10px] font-medium text-muted-foreground"
+                data-testid="selo-confirmacao"
+              >
+                Confirmação
+              </span>
+            )}
+          </p>
           <p className="truncate text-[11px] text-muted-foreground">
             {row.hasSchedule
               ? `${row.jornadaStart.slice(0, 5)}–${row.jornadaEnd.slice(0, 5)} · ${formatHours(duration)}`
