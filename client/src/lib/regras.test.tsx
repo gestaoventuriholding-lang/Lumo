@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -332,5 +332,38 @@ describe("tela de Regras", () => {
     await user.click(screen.getByTestId("salvar-regra"));
     const c = cartao("Regra nova de teste");
     expect(within(c).getByTestId("status-regra").textContent).toBe("Faltam 4");
+  });
+
+  it("texto longo: resumido no cartão com 'Ver mais'; curto não mostra o botão", async () => {
+    window.localStorage.clear();
+    saveAttendants([ana]);
+    const longo = Array.from({ length: 12 }, (_, i) => `Linha ${i + 1} da regra com bastante texto para ocupar espaço.`).join(String.fromCharCode(10));
+    saveRules([regra(30, { title: "Regra longa", description: longo }), regra(31, { title: "Regra curta", description: "Texto curto." })]);
+    saveRuleSignatures([]);
+    const user = userEvent.setup();
+    abrir();
+    const c = cartao("Regra longa");
+    expect(within(c).getByTestId("texto-regra").className).toContain("line-clamp-3");
+    await user.click(within(c).getByTestId("ver-mais"));
+    expect(within(c).getByTestId("texto-regra").className).not.toContain("line-clamp-3");
+    expect(within(c).getByTestId("ver-mais").textContent).toBe("Ver menos");
+    expect(within(cartao("Regra curta")).queryByTestId("ver-mais")).toBeNull();
+  });
+
+  it("formulário: descrição com rolagem própria, meio rolável e contador com aviso perto do limite", async () => {
+    const user = userEvent.setup();
+    abrir();
+    await user.click(screen.getByTestId("nova-regra"));
+    const campo = screen.getByLabelText(/Descrição/) as HTMLTextAreaElement;
+    expect(campo.className).toContain("max-h-60");
+    expect(campo.className).toContain("overflow-y-auto");
+    expect(screen.getByTestId("regra-formulario").className).toContain("overflow-y-auto");
+    expect(screen.getByTestId("contador-descricao").textContent).toContain("0 de 4.000 caracteres");
+    expect(screen.getByTestId("salvar-regra")).toBeTruthy(); // botões fora da área rolável
+    expect(screen.getByTestId("regra-formulario").contains(screen.getByTestId("salvar-regra"))).toBe(false);
+    fireEvent.change(campo, { target: { value: "x".repeat(3700) } });
+    expect(screen.getByTestId("contador-descricao").textContent).toContain("chegando ao limite");
+    fireEvent.change(campo, { target: { value: "x".repeat(4000) } });
+    expect(screen.getByTestId("contador-descricao").textContent).toContain("Limite atingido");
   });
 });

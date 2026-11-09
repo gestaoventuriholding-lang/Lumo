@@ -355,7 +355,7 @@ export default function Rules() {
                   </div>
                 </div>
 
-                <p className="whitespace-pre-line text-sm text-foreground">{rule.description}</p>
+                <TextoDaRegra texto={rule.description} />
 
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                   <span className="text-muted-foreground tabular-nums">
@@ -383,7 +383,7 @@ export default function Rules() {
 
       {/* Nova regra, edição e nova versão */}
       <Dialog open={dialogo?.tipo === "regra"} onOpenChange={(aberto) => !aberto && setDialogo(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
           <DialogHeader>
             <DialogTitle>
               {dialogo?.tipo === "regra" && dialogo.modo === "nova" && "Nova regra"}
@@ -396,14 +396,15 @@ export default function Rules() {
                 : "Depois da primeira assinatura o texto não muda mais: será preciso criar uma nova versão."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="-mx-1 space-y-4 overflow-y-auto px-1" data-testid="regra-formulario">
             <div className="space-y-2">
               <Label htmlFor="regra-titulo">Título *</Label>
               <Input id="regra-titulo" value={form.title} maxLength={RULE_TITLE_MAX} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="regra-descricao">Descrição *</Label>
-              <Textarea id="regra-descricao" rows={6} value={form.description} maxLength={RULE_DESCRIPTION_MAX} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Textarea id="regra-descricao" rows={6} className="max-h-60 overflow-y-auto" value={form.description} maxLength={RULE_DESCRIPTION_MAX} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <ContadorDescricao tamanho={form.description.length} max={RULE_DESCRIPTION_MAX} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -629,5 +630,43 @@ function AssinaturasDaRegra({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Descrição da regra no cartão: resumida em 3 linhas, com "Ver mais" quando passa disso */
+const LINHAS_RESUMO = 3;
+const CARACTERES_POR_LINHA = 110;
+const QUEBRA_DE_LINHA = new RegExp(String.fromCharCode(13) + "?" + String.fromCharCode(10));
+export function descricaoLonga(texto: string): boolean {
+  const linhas = texto.split(QUEBRA_DE_LINHA).reduce((n, l) => n + Math.max(1, Math.ceil(l.length / CARACTERES_POR_LINHA)), 0);
+  return linhas > LINHAS_RESUMO;
+}
+
+function TextoDaRegra({ texto }: { texto: string }) {
+  const [aberto, setAberto] = useState(false);
+  const longo = descricaoLonga(texto);
+  return (
+    <div className="min-w-0 space-y-1">
+      <p className={cn("whitespace-pre-line break-words text-sm text-foreground", longo && !aberto && "line-clamp-3")} data-testid="texto-regra">
+        {texto}
+      </p>
+      {longo && (
+        <Button variant="link" size="sm" className="h-auto p-0" onClick={() => setAberto(!aberto)} aria-expanded={aberto} data-testid="ver-mais">
+          {aberto ? "Ver menos" : "Ver mais"}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** Contador de caracteres: avisa a partir de 90% do limite do banco */
+export function ContadorDescricao({ tamanho, max }: { tamanho: number; max: number }) {
+  const perto = tamanho >= max * 0.9;
+  const cheio = tamanho >= max;
+  return (
+    <p className={cn("text-xs tabular-nums", perto ? "text-warning" : "text-muted-foreground")} data-testid="contador-descricao" role={perto ? "status" : undefined}>
+      {tamanho.toLocaleString("pt-BR")} de {max.toLocaleString("pt-BR")} caracteres
+      {cheio ? ". Limite atingido: resuma o texto para poder salvar tudo." : perto ? ". Você está chegando ao limite." : ""}
+    </p>
   );
 }
