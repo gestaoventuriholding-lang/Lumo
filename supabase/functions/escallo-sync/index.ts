@@ -27,10 +27,8 @@ const URL_BASE = "https://checkuplaboratoriodeanalisesclinicasltda-6b2800.escall
 const ORIGEM_PERMITIDA = [
   /^https:\/\/ellos\.venturiholding\.com\.br$/,
   /^https:\/\/lumo-lyart\.vercel\.app$/,
-  /^https:\/\/ellos-git-[a-z0-9-]+-venturi-holding\.vercel\.app$/,
-  /^http:\/\/localhost:\d+$/,
 ];
-// Endereços extras permitidos (separados por vírgula), definidos no secret ORIGENS_EXTRAS do projeto. Só o projeto de teste usa (teste.venturiholding.com.br).
+// Endereços extras permitidos (separados por vírgula), definidos no secret ORIGENS_EXTRAS do projeto. Só o projeto de teste usa (teste.venturiholding.com.br e a pré-visualização da branch teste).
 const ORIGENS_EXTRAS = (Deno.env.get("ORIGENS_EXTRAS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const SEM_RESPOSTA_APOS_MIN = 10;
 

@@ -4,7 +4,7 @@
 // Proteção:
 //  - exige login (JWT) e confere se a pessoa é da equipe (public.is_member());
 //  - o token da Escallo fica só no secret ESCALLO_TOKEN e nunca volta na resposta nem vai para os logs;
-//  - só o Ellos oficial, o localhost e as pré-visualizações da Vercel podem chamar pelo navegador.
+//  - só o Ellos oficial (e o alias antigo) pode chamar pelo navegador; pré-visualizações e localhost ficam de fora.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   ligarColaboradores,
@@ -22,14 +22,9 @@ const URL_ESCALLO =
 const ORIGENS_PERMITIDAS = [
   /^https:\/\/ellos\.venturiholding\.com\.br$/,
   /^https:\/\/lumo-lyart\.vercel\.app$/,
-  // Pré-visualizações da Vercel. "lumo-" é o nome atual do projeto; "ellos-" vale depois que ele for renomeado.
-  // Os dois ficam aceitos durante a troca de nome.
-  /^https:\/\/lumo-git-[a-z0-9-]+-venturi-holding\.vercel\.app$/,
-  /^https:\/\/ellos-git-[a-z0-9-]+-venturi-holding\.vercel\.app$/,
-  /^http:\/\/localhost:\d+$/,
 ];
 
-// Endereços extras permitidos (separados por vírgula), definidos no secret ORIGENS_EXTRAS do projeto. Só o projeto de teste usa (teste.venturiholding.com.br).
+// Endereços extras permitidos (separados por vírgula), definidos no secret ORIGENS_EXTRAS do projeto. Só o projeto de teste usa (teste.venturiholding.com.br e a pré-visualização da branch teste).
 const ORIGENS_EXTRAS = (Deno.env.get("ORIGENS_EXTRAS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 function origemPermitida(origem: string | null): string | null {
   return origem && (ORIGENS_PERMITIDAS.some((re) => re.test(origem)) || ORIGENS_EXTRAS.includes(origem)) ? origem : null;
