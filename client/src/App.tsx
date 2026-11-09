@@ -19,6 +19,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Attendants = lazy(() => import("./pages/Attendants"));
+const Rules = lazy(() => import("./pages/Rules"));
 const Performance = lazy(() => import("./pages/Performance"));
 const Absences = lazy(() => import("./pages/Absences"));
 const Incidents = lazy(() => import("./pages/Incidents"));
@@ -57,6 +58,7 @@ function AppRoutes() {
               <Route path="/performance" component={Performance} />
               <Route path="/absences" component={Absences} />
               <Route path="/incidents" component={Incidents} />
+              <Route path="/rules" component={Rules} />
               <Route path="/escallo-vinculos" component={EscalloVinculos} />
               <Route path="/amostra-visual" component={AmostraVisual} />
               <Route path="/structure" component={Structure} />

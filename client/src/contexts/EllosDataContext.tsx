@@ -16,6 +16,8 @@ import type {
   CalendarEventUpdateInput,
 } from "@/types/calendarEvent";
 import type { Incident, IncidentInput } from "@/types/incident";
+import type { Rule, RuleSignature } from "@/types/rule";
+import { loadRules, loadRuleSignatures, saveRules, saveRuleSignatures } from "@/lib/ruleStorage";
 import type { LoginAlert, LoginAlertStatus } from "@/types/loginAlert";
 import { loadLoginAlerts, saveLoginAlerts } from "@/lib/loginAlertStorage";
 import { loginLimitSeconds } from "@/lib/loginLimit";
@@ -89,6 +91,12 @@ interface EllosDataContextValue {
   updateCalendarEvent: (id: number, input: CalendarEventUpdateInput) => void;
   removeCalendarEvent: (id: number) => void;
 
+  /** Regras do setor e as assinaturas por pessoa (compartilhadas pela equipe) */
+  rules: Rule[];
+  ruleSignatures: RuleSignature[];
+  setRules: (updater: Rule[] | ((prev: Rule[]) => Rule[])) => void;
+  setRuleSignatures: (updater: RuleSignature[] | ((prev: RuleSignature[]) => RuleSignature[])) => void;
+
   addIncident: (input: IncidentInput) => Incident;
   updateIncident: (id: number, input: IncidentInput) => void;
   removeIncident: (id: number) => void;
@@ -137,6 +145,8 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
   );
   const [incidents, setIncidentsState] = useState<Incident[]>(() => loadIncidents());
   const [loginAlerts, setLoginAlertsState] = useState<LoginAlert[]>(() => loadLoginAlerts());
+  const [rules, setRulesState] = useState<Rule[]>(() => loadRules());
+  const [ruleSignatures, setRuleSignaturesState] = useState<RuleSignature[]>(() => loadRuleSignatures());
   const [productionGoals, setProductionGoalsState] = useState<ProductionGoal[]>(() =>
     loadProductionGoals()
   );
@@ -195,6 +205,25 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setLoginAlertsState((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         saveLoginAlerts(next);
+        return next;
+      });
+    },
+    []
+  );
+
+  const setRules = useCallback((updater: Rule[] | ((prev: Rule[]) => Rule[])) => {
+    setRulesState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      saveRules(next);
+      return next;
+    });
+  }, []);
+
+  const setRuleSignatures = useCallback(
+    (updater: RuleSignature[] | ((prev: RuleSignature[]) => RuleSignature[])) => {
+      setRuleSignaturesState((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        saveRuleSignatures(next);
         return next;
       });
     },
@@ -269,8 +298,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setPerformanceRecords((prev) => prev.filter((r) => r.attendantId !== id));
       setAbsences((prev) => prev.filter((a) => a.attendantId !== id));
       setLoginAlerts((prev) => prev.filter((a) => a.attendantId !== id));
+      setRuleSignatures((prev) => prev.filter((s) => s.attendantId !== id));
     },
-    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts, setRuleSignatures]
   );
 
   const removeAttendants = useCallback(
@@ -280,8 +310,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setPerformanceRecords((prev) => prev.filter((r) => !idSet.has(r.attendantId)));
       setAbsences((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
       setLoginAlerts((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
+      setRuleSignatures((prev) => prev.filter((s) => !idSet.has(s.attendantId)));
     },
-    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts, setRuleSignatures]
   );
 
   const addAbsence = useCallback(
@@ -584,6 +615,10 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       absences,
       calendarEvents,
       incidents,
+      rules,
+      ruleSignatures,
+      setRules,
+      setRuleSignatures,
       productionGoals,
       roleGoals,
       productivityLimits,
@@ -623,6 +658,10 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       absences,
       calendarEvents,
       incidents,
+      rules,
+      ruleSignatures,
+      setRules,
+      setRuleSignatures,
       productionGoals,
       roleGoals,
       productivityLimits,

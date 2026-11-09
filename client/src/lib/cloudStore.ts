@@ -32,6 +32,8 @@ export const KEYS = {
   workingHours: "ellos-working-hours",
   incidents: "ellos-incidents",
   loginAlerts: "ellos-login-alerts",
+  rules: "ellos-rules",
+  ruleSignatures: "ellos-rule-signatures",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -316,6 +318,62 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
         updatedAt: str(r.updated_at),
       };
     },
+  },
+  // Regras do setor. created_by_email NÃO é enviado: o banco preenche pelo login de quem cria.
+  [KEYS.rules]: {
+    table: "rules",
+    order: "effective_from",
+    toRow: (r) => ({
+      id: r.id,
+      title: str(r.title).trim(),
+      description: str(r.description).trim(),
+      category: nullable(optStr(r.category)),
+      effective_from: r.effectiveFrom,
+      applies_to: r.appliesTo,
+      status: r.status,
+      archived_at: nullable(r.archivedAt),
+      version: num(r.version) || 1,
+      previous_id: nullable(r.previousId),
+      created_at: nullable(r.createdAt) ?? undefined,
+      updated_at: nullable(r.updatedAt) ?? undefined,
+    }),
+    fromRow: (r) => ({
+      id: num(r.id),
+      title: str(r.title),
+      description: str(r.description),
+      category: optStr(r.category),
+      effectiveFrom: str(r.effective_from),
+      appliesTo: str(r.applies_to),
+      status: str(r.status),
+      archivedAt: optStr(r.archived_at),
+      version: num(r.version) || 1,
+      previousId: r.previous_id == null ? undefined : num(r.previous_id),
+      createdByEmail: str(r.created_by_email),
+      createdAt: str(r.created_at),
+      updatedAt: str(r.updated_at),
+    }),
+  },
+  [KEYS.ruleSignatures]: {
+    table: "rule_signatures",
+    order: "signed_on",
+    toRow: (s) => ({
+      id: s.id,
+      rule_id: s.ruleId,
+      attendant_id: s.attendantId,
+      signed_on: s.signedOn,
+      note: str(s.note).trim(),
+      created_at: nullable(s.createdAt) ?? undefined,
+      updated_at: nullable(s.updatedAt) ?? undefined,
+    }),
+    fromRow: (r) => ({
+      id: num(r.id),
+      ruleId: num(r.rule_id),
+      attendantId: num(r.attendant_id),
+      signedOn: str(r.signed_on),
+      note: str(r.note),
+      createdAt: str(r.created_at),
+      updatedAt: str(r.updated_at),
+    }),
   },
   [KEYS.loginAlerts]: {
     table: "login_alerts",
@@ -637,6 +695,8 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     fetchAll("working_hours_options", "created_at").catch((): Row[] => []),
     fetchAll("incidents", "occurred_on").catch((): Row[] => []),
     fetchAll("login_alerts", "alert_date").catch((): Row[] => []),
+    fetchAll("rules", "effective_from").catch((): Row[] => []),
+    fetchAll("rule_signatures", "signed_on").catch((): Row[] => []),
   ]);
   const attendantNames = new Map(attendantRows.map((r) => [num(r.id), str(r.name)]));
   const ctx = { attendantNames };
@@ -654,6 +714,8 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     KEYS.workingHours,
     KEYS.incidents,
     KEYS.loginAlerts,
+    KEYS.rules,
+    KEYS.ruleSignatures,
   ];
   const allRows = [attendantRows, ...otherRows];
   keysInOrder.forEach((key, index) => {
