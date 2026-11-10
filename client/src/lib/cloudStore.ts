@@ -34,6 +34,10 @@ export const KEYS = {
   loginAlerts: "ellos-login-alerts",
   rules: "ellos-rules",
   ruleSignatures: "ellos-rule-signatures",
+  auditSettings: "ellos-audit-settings",
+  auditChecklists: "ellos-audit-checklists",
+  auditItems: "ellos-audit-items",
+  audits: "ellos-audits",
 } as const;
 
 type Row = Record<string, unknown>;
@@ -375,6 +379,103 @@ const COLLECTIONS: Record<string, CollectionSpec> = {
       updatedAt: str(r.updated_at),
     }),
   },
+  // Auditoria de atendimento. Não guarda conversa nem áudio: só o protocolo.
+  [KEYS.auditSettings]: {
+    table: "audit_settings",
+    order: "created_at",
+    toRow: (s) => ({ id: 1, min_score: num(s.minScore), monthly_target: num(s.monthlyTarget) }),
+    fromRow: (r) => ({ id: 1, minScore: num(r.min_score), monthlyTarget: num(r.monthly_target) }),
+  },
+  [KEYS.auditChecklists]: {
+    table: "audit_checklists",
+    order: "created_at",
+    toRow: (c) => ({
+      id: c.id,
+      name: str(c.name).trim(),
+      funcao: c.funcao,
+      version: num(c.version) || 1,
+      previous_id: nullable(c.previousId),
+      status: c.status,
+      created_at: nullable(c.createdAt) ?? undefined,
+    }),
+    fromRow: (r) => ({
+      id: num(r.id),
+      name: str(r.name),
+      funcao: str(r.funcao),
+      version: num(r.version) || 1,
+      previousId: r.previous_id == null ? undefined : num(r.previous_id),
+      status: str(r.status),
+      createdAt: str(r.created_at),
+      updatedAt: str(r.updated_at),
+    }),
+  },
+  [KEYS.auditItems]: {
+    table: "audit_checklist_items",
+    order: "position",
+    toRow: (i) => ({
+      id: i.id,
+      checklist_id: i.checklistId,
+      position: num(i.position),
+      title: str(i.title).trim(),
+      hint: str(i.hint).trim(),
+      weight: num(i.weight),
+      eliminatory: Boolean(i.eliminatory),
+      active: i.active !== false,
+    }),
+    fromRow: (r) => ({
+      id: num(r.id),
+      checklistId: num(r.checklist_id),
+      position: num(r.position),
+      title: str(r.title),
+      hint: str(r.hint),
+      weight: num(r.weight),
+      eliminatory: Boolean(r.eliminatory),
+      active: r.active !== false,
+    }),
+  },
+  // score, eliminated e auditor_email são preenchidos pelo banco (gatilho / login)
+  [KEYS.audits]: {
+    table: "audits",
+    order: "attended_on",
+    toRow: (a) => ({
+      id: a.id,
+      attendant_id: a.attendantId,
+      checklist_id: a.checklistId,
+      channel: a.channel,
+      attended_on: a.attendedOn,
+      protocol: str(a.protocol).trim(),
+      answers: ((a.answers as Item[]) ?? []).map((x) => ({ item_id: x.itemId, result: x.result, note: str(x.note).trim() })),
+      general_note: str(a.generalNote).trim(),
+      feedback: str(a.feedback).trim(),
+      feedback_given_on: nullable(a.feedbackGivenOn),
+      ack_mode: nullable(a.ackMode),
+      ack_at: nullable(a.ackAt),
+      created_at: nullable(a.createdAt) ?? undefined,
+    }),
+    fromRow: (r) => ({
+      id: num(r.id),
+      attendantId: num(r.attendant_id),
+      checklistId: num(r.checklist_id),
+      channel: str(r.channel),
+      attendedOn: str(r.attended_on),
+      protocol: str(r.protocol),
+      answers: (Array.isArray(r.answers) ? (r.answers as Row[]) : []).map((x) => ({
+        itemId: num(x.item_id),
+        result: str(x.result),
+        note: str(x.note),
+      })),
+      score: r.score == null ? undefined : Number(r.score),
+      eliminated: Boolean(r.eliminated),
+      generalNote: str(r.general_note),
+      feedback: str(r.feedback),
+      feedbackGivenOn: optStr(r.feedback_given_on),
+      ackMode: optStr(r.ack_mode),
+      ackAt: optStr(r.ack_at),
+      auditorEmail: str(r.auditor_email),
+      createdAt: str(r.created_at),
+      updatedAt: str(r.updated_at),
+    }),
+  },
   [KEYS.loginAlerts]: {
     table: "login_alerts",
     order: "alert_date",
@@ -697,6 +798,10 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     fetchAll("login_alerts", "alert_date").catch((): Row[] => []),
     fetchAll("rules", "effective_from").catch((): Row[] => []),
     fetchAll("rule_signatures", "signed_on").catch((): Row[] => []),
+    fetchAll("audit_settings", "created_at").catch((): Row[] => []),
+    fetchAll("audit_checklists", "created_at").catch((): Row[] => []),
+    fetchAll("audit_checklist_items", "position").catch((): Row[] => []),
+    fetchAll("audits", "attended_on").catch((): Row[] => []),
   ]);
   const attendantNames = new Map(attendantRows.map((r) => [num(r.id), str(r.name)]));
   const ctx = { attendantNames };
@@ -716,6 +821,10 @@ export async function hydrateCloud(userId: string): Promise<{ migrated: boolean 
     KEYS.loginAlerts,
     KEYS.rules,
     KEYS.ruleSignatures,
+    KEYS.auditSettings,
+    KEYS.auditChecklists,
+    KEYS.auditItems,
+    KEYS.audits,
   ];
   const allRows = [attendantRows, ...otherRows];
   keysInOrder.forEach((key, index) => {

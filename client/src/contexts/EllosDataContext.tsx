@@ -18,6 +18,11 @@ import type {
 import type { Incident, IncidentInput } from "@/types/incident";
 import type { Rule, RuleSignature } from "@/types/rule";
 import { loadRules, loadRuleSignatures, saveRules, saveRuleSignatures } from "@/lib/ruleStorage";
+import {
+  loadAuditChecklists, loadAuditItems, loadAuditSettings, loadAudits,
+  saveAuditChecklists, saveAuditItems, saveAuditSettings, saveAudits,
+} from "@/lib/auditStorage";
+import type { Audit, AuditChecklist, AuditItem, AuditSettings } from "@/types/audit";
 import type { LoginAlert, LoginAlertStatus } from "@/types/loginAlert";
 import { loadLoginAlerts, saveLoginAlerts } from "@/lib/loginAlertStorage";
 import { loginLimitSeconds } from "@/lib/loginLimit";
@@ -97,6 +102,16 @@ interface EllosDataContextValue {
   setRules: (updater: Rule[] | ((prev: Rule[]) => Rule[])) => void;
   setRuleSignatures: (updater: RuleSignature[] | ((prev: RuleSignature[]) => RuleSignature[])) => void;
 
+  /** Auditoria de atendimento: checklists (com versões), critérios, auditorias e metas */
+  auditChecklists: AuditChecklist[];
+  auditItems: AuditItem[];
+  audits: Audit[];
+  auditSettings: AuditSettings;
+  setAuditChecklists: (updater: AuditChecklist[] | ((prev: AuditChecklist[]) => AuditChecklist[])) => void;
+  setAuditItems: (updater: AuditItem[] | ((prev: AuditItem[]) => AuditItem[])) => void;
+  setAudits: (updater: Audit[] | ((prev: Audit[]) => Audit[])) => void;
+  setAuditSettings: (settings: AuditSettings) => void;
+
   addIncident: (input: IncidentInput) => Incident;
   updateIncident: (id: number, input: IncidentInput) => void;
   removeIncident: (id: number) => void;
@@ -147,6 +162,10 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
   const [loginAlerts, setLoginAlertsState] = useState<LoginAlert[]>(() => loadLoginAlerts());
   const [rules, setRulesState] = useState<Rule[]>(() => loadRules());
   const [ruleSignatures, setRuleSignaturesState] = useState<RuleSignature[]>(() => loadRuleSignatures());
+  const [auditChecklists, setAuditChecklistsState] = useState<AuditChecklist[]>(() => loadAuditChecklists());
+  const [auditItems, setAuditItemsState] = useState<AuditItem[]>(() => loadAuditItems());
+  const [audits, setAuditsState] = useState<Audit[]>(() => loadAudits());
+  const [auditSettings, setAuditSettingsState] = useState<AuditSettings>(() => loadAuditSettings());
   const [productionGoals, setProductionGoalsState] = useState<ProductionGoal[]>(() =>
     loadProductionGoals()
   );
@@ -230,6 +249,35 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const setAuditChecklists = useCallback((updater: AuditChecklist[] | ((prev: AuditChecklist[]) => AuditChecklist[])) => {
+    setAuditChecklistsState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      saveAuditChecklists(next);
+      return next;
+    });
+  }, []);
+
+  const setAuditItems = useCallback((updater: AuditItem[] | ((prev: AuditItem[]) => AuditItem[])) => {
+    setAuditItemsState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      saveAuditItems(next);
+      return next;
+    });
+  }, []);
+
+  const setAudits = useCallback((updater: Audit[] | ((prev: Audit[]) => Audit[])) => {
+    setAuditsState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      saveAudits(next);
+      return next;
+    });
+  }, []);
+
+  const setAuditSettings = useCallback((settings: AuditSettings) => {
+    setAuditSettingsState(settings);
+    saveAuditSettings(settings);
+  }, []);
+
   const setIncidents = useCallback(
     (updater: Incident[] | ((prev: Incident[]) => Incident[])) => {
       setIncidentsState((prev) => {
@@ -299,8 +347,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setAbsences((prev) => prev.filter((a) => a.attendantId !== id));
       setLoginAlerts((prev) => prev.filter((a) => a.attendantId !== id));
       setRuleSignatures((prev) => prev.filter((s) => s.attendantId !== id));
+      setAudits((prev) => prev.filter((a) => a.attendantId !== id));
     },
-    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts, setRuleSignatures]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts, setRuleSignatures, setAudits]
   );
 
   const removeAttendants = useCallback(
@@ -311,8 +360,9 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       setAbsences((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
       setLoginAlerts((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
       setRuleSignatures((prev) => prev.filter((s) => !idSet.has(s.attendantId)));
+      setAudits((prev) => prev.filter((a) => !idSet.has(a.attendantId)));
     },
-    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts, setRuleSignatures]
+    [setAttendants, setPerformanceRecords, setAbsences, setLoginAlerts, setRuleSignatures, setAudits]
   );
 
   const addAbsence = useCallback(
@@ -619,6 +669,14 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       ruleSignatures,
       setRules,
       setRuleSignatures,
+      auditChecklists,
+      auditItems,
+      audits,
+      auditSettings,
+      setAuditChecklists,
+      setAuditItems,
+      setAudits,
+      setAuditSettings,
       productionGoals,
       roleGoals,
       productivityLimits,
@@ -662,6 +720,14 @@ export function EllosDataProvider({ children }: { children: ReactNode }) {
       ruleSignatures,
       setRules,
       setRuleSignatures,
+      auditChecklists,
+      auditItems,
+      audits,
+      auditSettings,
+      setAuditChecklists,
+      setAuditItems,
+      setAudits,
+      setAuditSettings,
       productionGoals,
       roleGoals,
       productivityLimits,

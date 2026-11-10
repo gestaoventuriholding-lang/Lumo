@@ -2,6 +2,7 @@ import { flushCloud, isCloudEnabled, removeKey } from "@/lib/cloudStore";
 const OPERATIONAL_KEYS = [
   "ellos-attendants",
   "ellos-rule-signatures",
+  "ellos-audits",
   "ellos-performance-records",
   "ellos-productivity-reports",
   "ellos-productivity-limits",
@@ -19,6 +20,7 @@ const OPERATIONAL_KEYS = [
 const CLOUD_KEYS = new Set<string>([
   "ellos-attendants",
   "ellos-rule-signatures",
+  "ellos-audits",
   "ellos-performance-records",
   "ellos-productivity-reports",
   "ellos-productivity-limits",

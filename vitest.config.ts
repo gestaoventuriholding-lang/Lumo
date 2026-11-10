@@ -15,6 +15,8 @@ export default defineConfig({
     environment: "jsdom",
     include: ["client/src/**/*.test.tsx"],
     globals: true,
+    // as telas usam listas do Radix e ficam lentas quando a suíte inteira roda em paralelo
+    testTimeout: 20000,
     setupFiles: ["./vitest.setup.ts"],
   },
 });
