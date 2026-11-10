@@ -218,7 +218,7 @@ export default function Audits() {
                       <TableHead>Colaborador</TableHead>
                       {ultimosMeses.map((m) => (
                         <TableHead key={m} className="text-right">
-                          {monthLabel(m).replace(" de ", "/").slice(0, 8)}
+                          {m.slice(5, 7)}/{m.slice(0, 4)}
                         </TableHead>
                       ))}
                     </TableRow>
