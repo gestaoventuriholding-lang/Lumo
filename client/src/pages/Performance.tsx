@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +46,6 @@ import {
   compareAttendantSummaries,
   filterRecordsByRange,
   getDailyTarget,
-  getDaysWithRecordsInRange,
 } from "@/lib/performanceMetrics";
 import {
   formatAverageTime,
@@ -91,13 +89,6 @@ const emptyForm = (): FormState => ({
   averageTime: "",
 });
 
-function formatDayTabLabel(dateStr: string) {
-  return new Date(`${dateStr}T12:00:00`).toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  });
-}
 
 function resolveDisplayRange(
   period: "day" | "week" | "month",
@@ -112,7 +103,6 @@ function resolveDisplayRange(
   return dateRange;
 }
 
-const DRILL_ALL = "__all__";
 
 export default function Performance() {
   const {
@@ -155,11 +145,6 @@ export default function Performance() {
   const isDayDetailView = period === "day" || drillDownDay !== "";
 
   const attendantIds = useMemo(() => new Set(atendentesMetricas.map((a) => a.id)), [atendentesMetricas]);
-
-  const availableDays = useMemo(
-    () => getDaysWithRecordsInRange(records, dateRange),
-    [records, dateRange]
-  );
 
   const filteredRecords = useMemo(
     () =>
@@ -343,7 +328,6 @@ export default function Performance() {
     toast.success("Registro removido");
   };
 
-  const activeTab = period === "day" ? dateRange.start : drillDownDay || DRILL_ALL;
 
   return (
     <motion.div
@@ -373,28 +357,6 @@ export default function Performance() {
       </motion.div>
 
       <PeriodTotalsNotice range={displayRange} />
-
-      {period !== "day" && availableDays.length > 0 && (
-        <motion.div variants={pageItemVariants}>
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => setDrillDownDay(value === DRILL_ALL ? "" : value)}
-          >
-            <div className="overflow-x-auto pb-1">
-              <TabsList className="inline-flex h-auto w-max min-w-full flex-wrap justify-start gap-1 p-1">
-                <TabsTrigger value={DRILL_ALL} className="shrink-0 px-3 py-1.5 text-xs sm:text-sm">
-                  Período completo
-                </TabsTrigger>
-                {availableDays.map((day) => (
-                  <TabsTrigger key={day} value={day} className="shrink-0 px-3 py-1.5 text-xs sm:text-sm">
-                    {formatDayTabLabel(day)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-          </Tabs>
-        </motion.div>
-      )}
 
       <motion.div variants={pageItemVariants}>
         <ConfirmacaoAgendaCard range={displayRange} />
