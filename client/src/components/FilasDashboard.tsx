@@ -34,17 +34,22 @@ function MetricCard({ title, value, detail, delta, testId }: { title: string; va
 }
 
 /**
- * Cartões de TMA, TME, os 3 exames da URA (laboratoriais, imagem, cardiológicos), Outras e Abandono, e o gráfico dos 3 exames.
+ * Cartões de Atendimentos, TMA, TME, os 3 exames da URA (laboratoriais, imagem, cardiológicos), Outras e Abandono, e o gráfico dos 3 exames.
  * O TMA vem dos mesmos dados de atendimento do resto do Dashboard (recebido pronto); o resto vem das filas da Escallo.
  */
 export default function FilasDashboard({
   range,
   tmaMinutos,
   tmaAnteriorMinutos,
+  atendimentos,
+  atendimentosAnterior,
 }: {
   range: DateRange;
   tmaMinutos: number;
   tmaAnteriorMinutos: number;
+  /** Atendimentos do período (Ligação + WhatsApp), dos mesmos dados do resto do Dashboard */
+  atendimentos: { total: number; ligacao: number; whatsapp: number };
+  atendimentosAnterior: number;
 }) {
   const anterior = useMemo(() => previousRange(range), [range]);
   const janela = janelaDeBusca(range, anterior);
@@ -66,6 +71,13 @@ export default function FilasDashboard({
   return (
     <div className="space-y-4" data-testid="filas-dashboard">
       <motion.div variants={staggerContainerVariants} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          testId="cartao-atendimentos"
+          title="Atendimentos"
+          value={atendimentos.total > 0 ? formatCount(atendimentos.total) : "—"}
+          detail={atendimentos.total > 0 ? `Ligação ${formatCount(atendimentos.ligacao)} · WhatsApp ${formatCount(atendimentos.whatsapp)}` : undefined}
+          delta={comparar(atendimentos.total, atendimentosAnterior)}
+        />
         <MetricCard
           testId="cartao-tma"
           title="TMA"

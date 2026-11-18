@@ -408,6 +408,8 @@ export default function Dashboard() {
           range={dateRange}
           tmaMinutos={dashboardStats.averageTime}
           tmaAnteriorMinutos={previous.stats.averageTime}
+          atendimentos={channelTotals}
+          atendimentosAnterior={previous.stats.totalAttendances}
         />
       </motion.div>
 
