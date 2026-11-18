@@ -351,8 +351,9 @@ export default function Dashboard() {
             </div>
           </div>
           {channelDistribution.length > 0 ? (
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={220}>
+            <div>
+              <div className="relative h-[220px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={channelDistribution}
@@ -378,9 +379,10 @@ export default function Dashboard() {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-6">
-                <p className="font-display text-2xl font-bold text-foreground"><AnimatedNumber value={channelTotal} /></p>
-                <p className="text-xs text-muted-foreground">total</p>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <p className="font-display text-2xl font-bold leading-none text-foreground tabular-nums"><AnimatedNumber value={channelTotal} /></p>
+                <p className="mt-1 text-xs leading-none text-muted-foreground">total</p>
+              </div>
               </div>
               <div className="space-y-2">
                 {channelDistribution.map((item) => (
