@@ -2,20 +2,32 @@
 // Usa a chave de serviço (disponível só aqui, nunca no navegador) para criar contas com e-mail e senha.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Só as origens oficiais podem chamar pelo navegador. O ambiente de teste acrescenta as suas em ORIGENS_EXTRAS (secret).
+const ORIGENS_PERMITIDAS = [
+  /^https:\/\/ellos\.venturiholding\.com\.br$/,
+  /^https:\/\/lumo-lyart\.vercel\.app$/,
+];
+const ORIGENS_EXTRAS = (Deno.env.get("ORIGENS_EXTRAS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+function origemPermitida(origem: string | null): string | null {
+  return origem && (ORIGENS_PERMITIDAS.some((re) => re.test(origem)) || ORIGENS_EXTRAS.includes(origem)) ? origem : null;
+}
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+function cabecalhosCors(origem: string | null): Record<string, string> {
+  const h: Record<string, string> = { Vary: "Origin" };
+  if (origem) {
+    h["Access-Control-Allow-Origin"] = origem;
+    h["Access-Control-Allow-Headers"] = "authorization, x-client-info, apikey, content-type";
+    h["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+  }
+  return h;
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const cors = cabecalhosCors(origemPermitida(req.headers.get("Origin")));
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
