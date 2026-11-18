@@ -1,4 +1,4 @@
-// Ellos: lê e grava a Base de conhecimento (tabela knowledge_articles). RLS: a equipe lê, cria e edita; só o administrador apaga.
+// Ellos: lê e grava a Central (tabela knowledge_articles). RLS: a equipe lê, cria e edita; só o administrador apaga.
 import { getSupabase } from "@/lib/supabase";
 import type { KnowledgeArticle, KnowledgeInput } from "@/lib/knowledge";
 
@@ -28,7 +28,7 @@ const paraLinha = (i: KnowledgeInput) => ({ title: i.title.trim(), category: i.c
 
 export async function listarConhecimentos(): Promise<KnowledgeArticle[]> {
   const { data, error } = await getSupabase().from("knowledge_articles").select(COLUNAS).order("updated_at", { ascending: false }).limit(2000);
-  if (error) throw new Error("Não consegui carregar a base de conhecimento. Recarregue a página; se continuar, avise a Amanda.");
+  if (error) throw new Error("Não consegui carregar a Central. Recarregue a página; se continuar, avise a Amanda.");
   return (data ?? []).map((r) => deLinha(r as Linha));
 }
 

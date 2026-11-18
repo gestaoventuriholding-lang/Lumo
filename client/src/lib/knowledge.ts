@@ -1,4 +1,4 @@
-// Ellos: Base de conhecimento. Regras puras (validação, busca, categorias), sem tela e sem banco.
+// Ellos: Central (conhecimentos do call center). Regras puras (validação, busca, categorias), sem tela e sem banco.
 
 export const KNOWLEDGE_TITLE_MAX = 120;
 export const KNOWLEDGE_CATEGORY_MAX = 40;

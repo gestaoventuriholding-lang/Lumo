@@ -48,7 +48,7 @@ const mainMenuItems = [
   { icon: ClipboardCheck, label: "Auditoria", path: "/audits" },
   { icon: ClipboardList, label: "Ocorrências", path: "/incidents" },
   { icon: ScrollText, label: "Regras", path: "/rules" },
-  { icon: BookOpen, label: "Base de conhecimento", path: "/knowledge" },
+  { icon: BookOpen, label: "Central", path: "/knowledge" },
   { icon: LayoutGrid, label: "Estruturas", path: "/structure" },
   { icon: CalendarDays, label: "Calendário", path: "/calendar" },
   { icon: Upload, label: "Importar Relatório", path: "/import" },

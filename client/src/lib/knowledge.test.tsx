@@ -18,7 +18,7 @@ const itens = [
   a(3, "Orientação sem categoria", null, "Texto livre sobre ressonância magnética.", "2026-11-11T10:00:00Z"),
 ];
 
-describe("base de conhecimento: validação", () => {
+describe("central: validação", () => {
   const ok = { title: "Título", category: "Imagem", content: "Texto" };
   it("aceita um conhecimento completo e a categoria vazia", () => {
     expect(validateKnowledge(ok)).toBeNull();
@@ -36,7 +36,7 @@ describe("base de conhecimento: validação", () => {
   });
 });
 
-describe("base de conhecimento: busca e categorias", () => {
+describe("central: busca e categorias", () => {
   it("sem filtro, mostra todos do mais recente para o mais antigo", () => {
     expect(filterKnowledge(itens, "", "").map((x) => x.id)).toEqual([2, 3, 1]);
   });
