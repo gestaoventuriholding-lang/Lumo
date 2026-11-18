@@ -11,6 +11,7 @@
 //  - o token da Escallo (ESCALLO_TOKEN) fica só no secret e é tirado de qualquer mensagem, registro ou log;
 //  - os logs têm só contagens; nenhum dado de pessoa.
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import {
   MODOS_DO_AGENDADOR,
@@ -175,6 +176,14 @@ Deno.serve(async (req: Request) => {
       const horas = Number(data.limit_value);
       return data.status === "Ativo" ? (horas > 0 ? Math.round(horas * 3600) : LOGIN_LIMITE_PADRAO_SEGUNDOS) : null;
     },
+    async buscarFilas(dia) {
+      const [r001, r091] = await Promise.all([buscarEscallo(tokenEscallo, "rel001", dia), buscarEscallo(tokenEscallo, "rel091", dia)]);
+      return [...resumirLigacoes(dia, r001), ...resumirWhatsapp(dia, r091)];
+    },
+    async gravarFilas(linhas) {
+      const { error } = await servico.from("queue_daily").upsert(paraTabela(linhas), { onConflict: "date,channel,area" });
+      if (error) throw new Error("não consegui gravar as filas");
+    },
     async aplicarDia(plano) {
       const { data, error } = await servico.rpc("aplicar_sync_dia", { p: { dia: plano.dia, linhas: plano.linhas, alertas: plano.alertas } });
       if (error) throw new Error(`não consegui gravar o dia ${plano.dia}`);
@@ -207,11 +216,11 @@ Deno.serve(async (req: Request) => {
 });
 
 /** Uma chamada por dia (a paginação da Escallo não funciona): confere a quantidade e tenta de novo se falhar. */
-async function buscarEscallo(token: string, rel: "rel025" | "rel090", dia: string): Promise<RegistroEscallo[]> {
+async function buscarEscallo(token: string, rel: "rel025" | "rel090" | "rel001" | "rel091", dia: string): Promise<RegistroEscallo[]> {
   let ultimoErro = "";
   for (let tentativa = 1; tentativa <= 3; tentativa++) {
     try {
-      const resposta = await fetch(`${URL_BASE}/${rel}/?registros=100&pagina=0`, {
+      const resposta = await fetch(`${URL_BASE}/${rel}/?registros=${rel === "rel001" ? 5000 : 100}&pagina=0`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Partner ${token}` },
         body: JSON.stringify({ dataInicial: dia, dataFinal: dia, horarioInicial: "00:00:01", horarioFinal: "23:59:59", exibirUsuarioSistema: "1" }),

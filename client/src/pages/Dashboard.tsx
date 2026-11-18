@@ -74,6 +74,7 @@ import { cn } from "@/lib/utils";
 import { useAtendimentoData } from "@/hooks/useAtendimentoData";
 import ConfirmacaoAgendaCard from "@/components/ConfirmacaoAgendaCard";
 import QualidadeCard from "@/components/QualidadeCard";
+import FilasDashboard from "@/components/FilasDashboard";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -400,6 +401,14 @@ export default function Dashboard() {
         {mainCards.map((card) => (
           <DashboardKpiCard key={card.title} {...card} />
         ))}
+      </motion.div>
+
+      <motion.div variants={pageItemVariants}>
+        <FilasDashboard
+          range={dateRange}
+          tmaMinutos={dashboardStats.averageTime}
+          tmaAnteriorMinutos={previous.stats.averageTime}
+        />
       </motion.div>
 
       <motion.div variants={pageItemVariants}>

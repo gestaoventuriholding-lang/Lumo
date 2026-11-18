@@ -1,6 +1,7 @@
 // Ellos: orquestra uma sincronização (quais dias, buscar, montar, gravar). Sem Deno e sem Supabase aqui: tudo que toca o
 // mundo de fora entra por `deps`, então a mesma lógica roda no servidor, nos testes e na simulação local.
 import { hojeSaoPaulo, type RegistroEscallo } from "./mapeamento.ts";
+import type { LinhaFila } from "./filas.ts";
 import { montarPlanoDia, type AvisoSync, type ColaboradorSync, type PlanoDia } from "./plano.ts";
 
 /** Modos que ficam registrados em sync_runs */
@@ -33,6 +34,9 @@ export interface Deps {
   /** null = regra do login desligada */
   lerLimiteLogin(): Promise<number | null>;
   aplicarDia(plano: PlanoDia): Promise<ResultadoGravacao>;
+  /** Opcional: totais por fila (Ligação) e espera do WhatsApp do dia. Se falhar, o dia principal continua valendo. */
+  buscarFilas?(dia: string): Promise<LinhaFila[]>;
+  gravarFilas?(linhas: LinhaFila[]): Promise<void>;
   esperar(ms: number): Promise<void>;
 }
 
@@ -51,6 +55,8 @@ export interface ResultadoSync {
   };
   /** Avisos de todos os dias (ex.: atendimento de desligado, ignorado) */
   avisos: AvisoSync[];
+  /** Linhas de fila gravadas e, se algum dia falhou, o motivo (não derruba a sincronização) */
+  filas: { linhas: number; erros: string[] };
 }
 
 const dataValida = (s: unknown): s is string => {
@@ -135,6 +141,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
 
   const planos: PlanoDia[] = [];
   const gravacao = { ...VAZIA };
+  const filas = { linhas: 0, erros: [] as string[] };
   for (let i = 0; i < dias.length; i++) {
     const dia = dias[i];
     const rel025 = await deps.buscarRelatorio("rel025", dia);
@@ -147,6 +154,15 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       gravacao.atualizadas += r.atualizadas;
       gravacao.puladas_manuais += r.puladas_manuais;
       gravacao.alertas_novos += r.alertas_novos;
+      if (deps.buscarFilas && deps.gravarFilas) {
+        try {
+          const linhas = await deps.buscarFilas(dia);
+          if (linhas.length > 0) await deps.gravarFilas(linhas);
+          filas.linhas += linhas.length;
+        } catch (e) {
+          filas.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+        }
+      }
     }
     if (i < dias.length - 1) await deps.esperar(1500);
   }
@@ -165,5 +181,6 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       ignoradosDesligados: soma((p) => p.resumo.ignoradosDesligados),
     },
     avisos: planos.flatMap((p) => p.avisos),
+    filas,
   };
 }
