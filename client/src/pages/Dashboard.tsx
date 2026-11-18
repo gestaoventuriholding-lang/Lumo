@@ -67,8 +67,6 @@ import { useSyncStatus } from "@/contexts/SyncStatusContext";
 import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
 import { cn } from "@/lib/utils";
 import { useAtendimentoData } from "@/hooks/useAtendimentoData";
-import ConfirmacaoAgendaCard from "@/components/ConfirmacaoAgendaCard";
-import QualidadeCard from "@/components/QualidadeCard";
 import FilasDashboard from "@/components/FilasDashboard";
 
 function EmptySection({ message }: { message: string }) {
@@ -353,14 +351,6 @@ export default function Dashboard() {
           atendimentosAnterior={previous.stats.totalAttendances}
           atendimentosSpark={attendanceSpark}
         />
-      </motion.div>
-
-      <motion.div variants={pageItemVariants}>
-        <ConfirmacaoAgendaCard range={dateRange} />
-      </motion.div>
-
-      <motion.div variants={pageItemVariants}>
-        <QualidadeCard range={dateRange} />
       </motion.div>
 
       <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">
