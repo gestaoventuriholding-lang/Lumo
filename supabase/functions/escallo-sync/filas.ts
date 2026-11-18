@@ -62,10 +62,14 @@ export function resumirLigacoes(dia: string, registros: RegistroEscallo[]): Linh
 export function resumirWhatsapp(dia: string, registros: RegistroEscallo[]): LinhaFila[] {
   let atendidas = 0;
   let espera = 0;
+  // A Escallo põe a linha "Média" no fim, rotulada com uma hora que já existe (ex.: 21:00:00 com 58,92 atendimentos).
+  // Vale a PRIMEIRA linha de cada hora; a repetida é a média e não entra.
+  const vistas = new Set<string>();
   for (const r of registros) {
     const linha = r as Record<string, unknown>;
-    // só as linhas de hora cheia (a última linha da Escallo é a "Média"/"Total")
-    if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(String(linha.hora ?? "").trim())) continue;
+    const hora = String(linha.hora ?? "").trim();
+    if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(hora) || vistas.has(hora)) continue;
+    vistas.add(hora);
     const n = Math.max(0, Math.round(numero(linha.atendimentos)));
     if (n === 0) continue;
     atendidas += n;

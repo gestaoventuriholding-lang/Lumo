@@ -58,6 +58,17 @@ describe("filas: WhatsApp (rel091)", () => {
     expect(linhas).toEqual([{ dia: "2026-11-16", canal: "WhatsApp", area: "total", atendidas: 40, abandonadas: 0, espera_total_segundos: 10 * 100 + 30 * 200 }]);
   });
 
+  it("a linha Média da Escallo vem com hora repetida (ex.: 21:00:00): não conta como uma hora a mais", () => {
+    const horas = Array.from({ length: 24 }, (_, h) => ({
+      hora: `${String(h).padStart(2, "0")}:00:00`,
+      atendimentos: h === 7 ? 40 : h === 9 ? 60 : 0,
+      TMEAT: h === 7 ? 100 : h === 9 ? 200 : 0,
+    }));
+    const [linha] = resumirWhatsapp("2026-11-16", [...horas, { hora: "21:00:00", atendimentos: 50, TMEAT: 9999 }]);
+    expect(linha.atendidas).toBe(100);
+    expect(linha.espera_total_segundos).toBe(40 * 100 + 60 * 200);
+  });
+
   it("sem atendimentos não gera linha", () => {
     expect(resumirWhatsapp("2026-11-16", [{ hora: "06:00:00", atendimentos: 0, TMEAT: 0 }])).toEqual([]);
   });
