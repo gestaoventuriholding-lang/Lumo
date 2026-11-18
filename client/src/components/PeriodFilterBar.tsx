@@ -88,7 +88,6 @@ export default function PeriodFilterBar({
       {showScopeHint && (
         <div className="text-sm text-muted-foreground pb-2">
           Exibindo: <span className="font-medium text-foreground">{dateRange.label}</span>
-          <span className="hidden sm:inline text-xs ml-2">(sincronizado entre telas)</span>
         </div>
       )}
     </div>
