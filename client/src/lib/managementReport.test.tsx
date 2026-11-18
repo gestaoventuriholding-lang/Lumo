@@ -4,6 +4,7 @@ import type { ProductionGoal } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
 import {
   buildManagementReportData,
+  buildManagementReportPreview,
   hasManagementReportContent,
   managementReportFilename,
 } from "./managementReport";
@@ -156,5 +157,26 @@ describe("managementReportFilename", () => {
     expect(managementReportFilename(data)).toBe(
       "relatorio-gerencial-ellos-2026-06-02_2026-06-08.pdf"
     );
+  });
+});
+
+describe("relatório: seção Qualidade", () => {
+  const audit = (id: number, attendantId: number, score: number, channel: "Ligação" | "WhatsApp", attendedOn = "2026-06-09") =>
+    ({ id, attendantId, attendedOn, channel, protocol: "P" + id, score, eliminated: false } as never);
+  const audits = [audit(1, 1, 90, "Ligação"), audit(2, 2, 60, "WhatsApp"), audit(3, 2, 70, "Ligação", "2026-05-01")];
+  const opcoes = { period: "day" as const, periodValue: "2026-06-09", attendantIds: null, channels: "both" as const };
+
+  it("sem auditorias informadas o relatório não muda", () => {
+    expect(buildManagementReportPreview(attendants, [], productionGoals, opcoes).quality).toBeUndefined();
+  });
+
+  it("resume só o período, respeita colaboradores e canal", () => {
+    const todos = buildManagementReportPreview(attendants, [], productionGoals, opcoes, { audits, settings: { minScore: 85 } });
+    expect(todos.quality).toMatchObject({ totalAudits: 2, average: 75 });
+    expect(todos.quality?.belowMin.map((x) => x.attendant.name)).toEqual(["Bruno Costa"]);
+    const soLigacao = buildManagementReportPreview(attendants, [], productionGoals, { ...opcoes, channels: "Ligação" }, { audits, settings: { minScore: 85 } });
+    expect(soLigacao.quality).toMatchObject({ totalAudits: 1, average: 90 });
+    const soBruno = buildManagementReportPreview(attendants, [], productionGoals, { ...opcoes, attendantIds: [2] }, { audits, settings: { minScore: 85 } });
+    expect(soBruno.quality).toMatchObject({ totalAudits: 1, average: 60 });
   });
 });

@@ -14,6 +14,8 @@ import {
   type ProductivityTrendPoint,
 } from "@/lib/performanceMetrics";
 import { formatAverageTime } from "@/lib/performanceStorage";
+import type { Audit, AuditSettings } from "@/types/audit";
+import { qualidadeNoPeriodo, type QualidadePeriodo } from "@/lib/auditLogic";
 
 export type ManagementReportChannelFilter = "both" | AttendanceChannel;
 
@@ -63,6 +65,8 @@ export interface ManagementReportData {
   whatsappRanking: ManagementReportRankingRow[];
   belowGoal: ManagementReportBelowGoalRow[];
   productivityTrend: ProductivityTrendPoint[];
+  /** Resumo das auditorias de atendimento do período (só quando as auditorias são informadas) */
+  quality?: QualidadePeriodo;
 }
 
 function summariesToRankingRows(
@@ -296,10 +300,11 @@ export function buildManagementReportPreview(
   attendants: Attendant[],
   performanceRecords: DailyPerformanceRecord[],
   productionGoals: ProductionGoal[],
-  options: ManagementReportOptions
+  options: ManagementReportOptions,
+  auditoria?: { audits: Audit[]; settings: Pick<AuditSettings, "minScore"> }
 ): ManagementReportData {
   const dateRange = resolveManagementReportDateRange(options);
-  return buildManagementReportData({
+  const base = buildManagementReportData({
     period: options.period,
     dateRange,
     attendants,
@@ -310,4 +315,10 @@ export function buildManagementReportPreview(
       channels: options.channels,
     },
   });
+  if (!auditoria) return base;
+  // Mesmos filtros do relatório: colaboradores escolhidos e canal
+  const ids = options.attendantIds;
+  const colaboradores = ids ? attendants.filter((a) => ids.includes(a.id)) : attendants;
+  const audits = options.channels === "both" ? auditoria.audits : auditoria.audits.filter((a) => a.channel === options.channels);
+  return { ...base, quality: qualidadeNoPeriodo(audits, colaboradores, auditoria.settings, dateRange) };
 }

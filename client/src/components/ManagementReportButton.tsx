@@ -52,7 +52,7 @@ export default function ManagementReportButton({
   size = "default",
   className,
 }: ManagementReportButtonProps) {
-  const { productionGoals } = useEllosData();
+  const { productionGoals, audits, auditSettings } = useEllosData();
   // O relatório de gestão do atendimento não inclui a Confirmação de agenda
   const { attendants, performanceRecords: dailyRecords, productivityRecords } = useAtendimentoData();
   const { period, selectedDay, selectedWeek, selectedMonth } = usePeriodFilter();
@@ -116,9 +116,10 @@ export default function ManagementReportButton({
         attendants,
         performanceRecords,
         productionGoals,
-        reportOptions
+        reportOptions,
+        { audits, settings: auditSettings }
       ),
-    [attendants, performanceRecords, productionGoals, reportOptions]
+    [attendants, performanceRecords, productionGoals, reportOptions, audits, auditSettings]
   );
 
   const handlePeriodChange = (next: DashboardPeriod) => {
@@ -149,7 +150,7 @@ export default function ManagementReportButton({
     setIsGenerating(true);
     try {
       const { generateManagementReportPdfAsync } = await import("@/lib/managementReportPdf");
-      await generateManagementReportPdfAsync(preview);
+      await generateManagementReportPdfAsync(preview, auditSettings.minScore);
       toast.success("Relatório gerencial gerado", {
         description: `${preview.dateRange.label} · ${preview.filtersLabel}`,
       });
@@ -325,6 +326,13 @@ export default function ManagementReportButton({
                 {preview.summary.totalAttendances} atendimento(s) ·{" "}
                 {preview.summary.attendantsWithRecords} colaborador(es) com registro
               </p>
+              {preview.quality && (
+                <p className="text-muted-foreground" data-testid="previa-qualidade">
+                  Qualidade: {preview.quality.totalAudits === 0
+                    ? "sem auditorias no período"
+                    : `${preview.quality.totalAudits} auditoria(s), nota média ${preview.quality.average ?? "—"}`}
+                </p>
+              )}
               {channels !== "both" && (
                 <p className="text-xs text-muted-foreground">
                   Ranking e abaixo da meta só do canal selecionado.

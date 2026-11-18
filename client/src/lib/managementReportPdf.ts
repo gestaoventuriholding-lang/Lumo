@@ -215,6 +215,39 @@ function belowGoalTable(doc: jsPDF, y: number, rows: ManagementReportBelowGoalRo
   return (doc as JsPdfWithAutoTable).lastAutoTable.finalY + 8;
 }
 
+function qualityBlock(doc: jsPDF, y: number, quality: NonNullable<ManagementReportData["quality"]>, minScore: number): number {
+  y = drawSectionTitle(doc, y, "Qualidade (auditorias de atendimento)");
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  if (quality.totalAudits === 0) {
+    doc.text("Nenhuma auditoria de atendimento no periodo.", MARGIN, y);
+    return y + 8;
+  }
+  const media = quality.average !== undefined ? String(quality.average).replace(".", ",") : "-";
+  doc.text(
+    `Nota media: ${media} (minima ${minScore}) | ${quality.totalAudits} auditoria(s) | ${quality.eliminated} eliminada(s) | ${quality.withoutAudit} colaborador(es) sem auditoria`,
+    MARGIN,
+    y
+  );
+  y += 6;
+  if (quality.belowMin.length === 0) {
+    doc.setTextColor(22, 163, 74);
+    doc.text("Ninguem abaixo da nota minima no periodo.", MARGIN, y);
+    return y + 8;
+  }
+  autoTable(doc, {
+    startY: y,
+    margin: { left: MARGIN, right: MARGIN },
+    head: [["Colaborador", "Nota media"]],
+    body: quality.belowMin.map((x) => [x.attendant.name, String(x.average).replace(".", ",")]),
+    styles: { fontSize: 8, cellPadding: 2.5 },
+    headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [254, 242, 242] },
+    columnStyles: { 1: { halign: "right" } },
+  });
+  return (doc as JsPdfWithAutoTable).lastAutoTable.finalY + 8;
+}
+
 function drawTrendChart(
   doc: jsPDF,
   y: number,
@@ -323,7 +356,7 @@ function drawFooter(doc: jsPDF) {
   }
 }
 
-export function generateManagementReportPdf(data: ManagementReportData): void {
+export function generateManagementReportPdf(data: ManagementReportData, minScore = 85): void {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
   let y = drawHeader(doc, data);
@@ -336,6 +369,7 @@ export function generateManagementReportPdf(data: ManagementReportData): void {
   }
 
   y = belowGoalTable(doc, y, data.belowGoal);
+  if (data.quality) y = qualityBlock(doc, y, data.quality, minScore);
   drawTrendChart(doc, y, data.productivityTrend);
   drawFooter(doc);
 
@@ -343,7 +377,8 @@ export function generateManagementReportPdf(data: ManagementReportData): void {
 }
 
 export async function generateManagementReportPdfAsync(
-  data: ManagementReportData
+  data: ManagementReportData,
+  minScore = 85
 ): Promise<void> {
-  generateManagementReportPdf(data);
+  generateManagementReportPdf(data, minScore);
 }
