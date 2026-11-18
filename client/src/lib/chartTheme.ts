@@ -15,6 +15,8 @@ export const chartColors = {
   total: "var(--chart-1)",
   /** Séries genéricas (não são canais), em ordem de uso: a primeira é a principal */
   series: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+  /** Exames da URA, nesta ordem: laboratoriais, imagem, cardiológicos (laranja, roxo, rosa; sem azul nem verde, que são dos canais) */
+  exames: ["var(--exam-lab)", "var(--exam-imagem)", "var(--exam-cardio)"],
   /** Canais da central */
   ligacao: "var(--channel-ligacao)",
   whatsapp: "var(--channel-whatsapp)",

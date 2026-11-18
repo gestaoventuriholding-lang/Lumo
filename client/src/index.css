@@ -125,6 +125,10 @@
   --chart-3: #7686a3;
   --chart-4: #3a4a66;
   --chart-5: #0693e3;
+  /* Exames da URA (gráfico Exames por área): laranja, roxo e rosa, fora do azul e do verde dos canais */
+  --exam-lab: #f97316;
+  --exam-imagem: #7c3aed;
+  --exam-cardio: #db2777;
   --chart-grid: #dce4ef;
   --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
   /* Canais (escolha da Amanda): Ligação = azul puro (#0000ff) e WhatsApp = verde forte, um pouco mais suave que o puro. O verde
@@ -210,6 +214,10 @@
   --chart-3: #c3d0e6;
   --chart-4: #5b7199;
   --chart-5: #22c7f0;
+  /* Exames da URA (gráfico Exames por área): laranja, roxo e rosa, fora do azul e do verde dos canais */
+  --exam-lab: #fb923c;
+  --exam-imagem: #a78bfa;
+  --exam-cardio: #f472b6;
   --chart-grid: #1d3256;
   --chart-area-top: 0.38;
   /* Escuro: o verde forte aparece como escolhido; o azul puro (#0000ff) some no fundo azul-marinho (2:1), então usa o azul mais forte que ainda se lê (3:1) */
@@ -293,6 +301,10 @@ html[data-preset="laranja"] {
   --chart-3: #b8a892;
   --chart-4: #3f3832;
   --chart-5: #ff9a4d;
+  /* Exames da URA (gráfico Exames por área): laranja, roxo e rosa, fora do azul e do verde dos canais */
+  --exam-lab: #f97316;
+  --exam-imagem: #7c3aed;
+  --exam-cardio: #db2777;
   --chart-grid: #e5ded7;
   --chart-area-top: 0.34; /* opacidade do degradê no topo da área (sumindo para 0 embaixo) */
   /* Canais (preset laranja): Ligação = azul, WhatsApp = verde-limão */
@@ -372,6 +384,10 @@ html.dark[data-preset="laranja"] {
   --chart-3: #c8c8c8;
   --chart-4: #585858;
   --chart-5: #ffb27a;
+  /* Exames da URA (gráfico Exames por área): laranja, roxo e rosa, fora do azul e do verde dos canais */
+  --exam-lab: #fb923c;
+  --exam-imagem: #a78bfa;
+  --exam-cardio: #f472b6;
   --chart-grid: #222222;
   --chart-area-top: 0.38;
   --channel-ligacao: #4a90ff;

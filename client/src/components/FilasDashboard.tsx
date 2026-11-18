@@ -198,7 +198,7 @@ export default function FilasDashboard({
             <div className="mb-2 flex flex-wrap gap-4 text-xs text-foreground">
               {["Exames laboratoriais", "Exames por imagem", "Exames cardiológicos"].map((nome, i) => (
                 <span key={nome} className="inline-flex items-center gap-1.5">
-                  <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: chartColors.series[i] }} />
+                  <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: chartColors.exames[i] }} />
                   {nome}
                 </span>
               ))}
@@ -210,9 +210,9 @@ export default function FilasDashboard({
                   <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
                   <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
                   <Tooltip cursor={chartCursor} contentStyle={chartTooltipContentStyle} formatter={(v: number, nome: string) => [formatCount(v), nome]} />
-                  <Bar dataKey="analises" name="Exames laboratoriais" fill={chartColors.series[0]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
-                  <Bar dataKey="imagem" name="Exames por imagem" fill={chartColors.series[1]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
-                  <Bar dataKey="cardiologicos" name="Exames cardiológicos" fill={chartColors.series[2]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                  <Bar dataKey="analises" name="Exames laboratoriais" fill={chartColors.exames[0]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                  <Bar dataKey="imagem" name="Exames por imagem" fill={chartColors.exames[1]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                  <Bar dataKey="cardiologicos" name="Exames cardiológicos" fill={chartColors.exames[2]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
