@@ -384,7 +384,7 @@ export default function Attendants() {
           <Table>
             <TableHeader>
               <TableRow className="border-border/50 bg-muted/30">
-                <TableHead className="w-12">
+                <TableHead className="w-14 pl-5">
                   <Checkbox
                     checked={selectedIds.size === paginatedAttendants.length && paginatedAttendants.length > 0}
                     onCheckedChange={handleSelectAll}
@@ -429,7 +429,7 @@ export default function Attendants() {
                           : "hover:bg-muted/50"
                       }`}
                     >
-                      <TableCell className="w-12">
+                      <TableCell className="w-14 pl-5">
                         <Checkbox
                           checked={selectedIds.has(attendant.id)}
                           onCheckedChange={() => handleSelectRow(attendant.id)}
