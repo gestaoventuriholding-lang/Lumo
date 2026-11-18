@@ -139,7 +139,7 @@ export default function KnowledgeBase() {
             <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Central</h1>
+            <h1 className="text-2xl font-bold text-foreground">Base de conhecimento</h1>
             <p className="mt-1 text-muted-foreground">O que o call center precisa saber: procedimentos, orientações e respostas prontas, num só lugar</p>
           </div>
         </div>
