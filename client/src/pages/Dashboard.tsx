@@ -19,15 +19,11 @@ import { mergePeriodTotals } from "@/lib/periodTotals";
 import {
   Users,
   Download,
-  ArrowRight,
-  Trophy,
   BarChart3,
   PieChart as PieIcon,
 } from "lucide-react";
-import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import ExportModal from "@/components/ExportModal";
-import DetailedAnalysisSummary from "@/components/DetailedAnalysisSummary";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
 import { describeChange, previousRange } from "@/lib/periodComparison";
@@ -47,8 +43,6 @@ import {
   periodMetaLabel,
   periodScopePhrase,
 } from "@/lib/dateRangeFilter";
-import { buildDetailedAnalysisReport } from "@/lib/detailedAnalysisSummary";
-import { loadAnalysisNote } from "@/lib/analysisNoteStorage";
 import {
   chartActiveDot,
   chartAxisProps,
@@ -188,7 +182,6 @@ function toSparkData(values: number[]) {
 
 export default function Dashboard() {
   const [showExportModal, setShowExportModal] = useState(false);
-  const [analysisNote, setAnalysisNote] = useState(() => loadAnalysisNote());
   const { period, dateRange } = usePeriodFilter();
 
   const { attendants: todosColaboradores, absences, productionGoals } = useEllosData();
@@ -228,28 +221,6 @@ export default function Dashboard() {
   const totalAbsenceDays = useMemo(
     () => totalAbsenceDaysInRange(absences, dateRange),
     [absences, dateRange]
-  );
-
-  const detailedAnalysis = useMemo(
-    () =>
-      buildDetailedAnalysisReport(
-        performanceRecords,
-        attendants,
-        productionGoals,
-        absences,
-        dateRange,
-        periodScopePhrase(period),
-        analysisNote
-      ),
-    [
-      performanceRecords,
-      attendants,
-      productionGoals,
-      absences,
-      dateRange,
-      period,
-      analysisNote,
-    ]
   );
 
   const previous = useMemo(() => {
@@ -436,37 +407,6 @@ export default function Dashboard() {
           )}
         </div>
       </motion.div>
-
-      <motion.div variants={pageItemVariants}>
-        <Link
-          href="/performance"
-          className="ellos-panel-sm group flex items-center justify-between gap-3 p-4 transition-colors hover:border-primary/40"
-        >
-          <span className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Trophy className="h-5 w-5" />
-            </span>
-            <span>
-              <span className="block text-sm font-semibold text-foreground">Ranking e produtividade por colaboradora</span>
-              <span className="block text-xs text-muted-foreground">Veja quem mais atendeu, a meta e o TMA em Desempenho</span>
-            </span>
-          </span>
-          <ArrowRight className="h-[18px] w-[18px] text-primary transition-transform group-hover:translate-x-0.5" />
-        </Link>
-      </motion.div>
-
-      <motion.details variants={pageItemVariants} className="ellos-panel-sm overflow-hidden">
-        <summary className="cursor-pointer border-l-[3px] border-l-primary px-5 py-4 text-sm font-semibold text-foreground">
-          Análise detalhada
-        </summary>
-        <div className="border-t border-border/60 px-5 pb-5 pt-4">
-          <DetailedAnalysisSummary
-            report={detailedAnalysis}
-            note={analysisNote}
-            onNoteChange={setAnalysisNote}
-          />
-        </div>
-      </motion.details>
 
       {atualizadoTexto && (
         <p
