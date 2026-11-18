@@ -11,7 +11,7 @@
 //  - o token da Escallo (ESCALLO_TOKEN) fica só no secret e é tirado de qualquer mensagem, registro ou log;
 //  - os logs têm só contagens; nenhum dado de pessoa.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { iaParaTabela, resumirConsumoIA } from "./ia.ts";
+import { iaParaTabela, lerRel103Completo, resumirConsumoIA } from "./ia.ts";
 import { filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import {
@@ -254,14 +254,9 @@ async function buscarEscallo(token: string, rel: "rel025" | "rel090" | "rel001" 
   throw new Error(`${rel} ${dia}: ${textoSeguro(ultimoErro, token, 200)}`);
 }
 
-/**
- * rel103 (extrato de consumo da IA) devolve no máximo 100 linhas por chamada, mas a paginação (pagina=0, 1, 2…) funciona.
- * Lê até acabar; se passar de MAX_PAGINAS_IA falha de propósito (melhor ficar sem o dia do que gravar o total pela metade).
- */
-const MAX_PAGINAS_IA = 80;
+/** rel103 (extrato de consumo da IA) de um dia: lê todas as páginas (ver lerRel103Completo em ia.ts). */
 async function buscarEscalloPaginado(token: string, rel: "rel103", dia: string): Promise<RegistroEscallo[]> {
-  const todas: RegistroEscallo[] = [];
-  for (let pagina = 0; pagina < MAX_PAGINAS_IA; pagina++) {
+  return lerRel103Completo(async (pagina) => {
     const resposta = await fetch(`${URL_BASE}/${rel}/?registros=100&pagina=${pagina}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Partner ${token}` },
@@ -271,9 +266,6 @@ async function buscarEscalloPaginado(token: string, rel: "rel103", dia: string):
     const j = await resposta.json().catch(() => null);
     if (!resposta.ok || !j) throw new Error(`${rel} ${dia}: a Escallo respondeu ${resposta.status}`);
     const bruto = j.data?.registros;
-    const linhas: RegistroEscallo[] = Array.isArray(bruto) ? bruto : bruto && typeof bruto === "object" ? Object.values(bruto) : [];
-    todas.push(...linhas);
-    if (linhas.length < 100) return todas;
-  }
-  throw new Error(`${rel} ${dia}: mais de ${MAX_PAGINAS_IA * 100} linhas, não li tudo`);
+    return Array.isArray(bruto) ? bruto : bruto && typeof bruto === "object" ? Object.values(bruto) : [];
+  });
 }

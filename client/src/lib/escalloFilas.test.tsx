@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { areaDaFila, classificarFila, filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "../../../supabase/functions/escallo-sync/filas";
-import { iaParaTabela, resumirConsumoIA } from "../../../supabase/functions/escallo-sync/ia";
+import { iaParaTabela, lerRel103Completo, resumirConsumoIA } from "../../../supabase/functions/escallo-sync/ia";
 import { sincronizar, type Deps } from "../../../supabase/functions/escallo-sync/sincronizar";
 import type { RegistroEscallo } from "../../../supabase/functions/escallo-sync/mapeamento";
 
@@ -225,5 +225,37 @@ describe("consumo de FTokens da IA (rel103)", () => {
     const { d } = deps({ buscarIA: undefined, gravarIA: undefined });
     const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");
     expect(r.ia).toEqual({ dias: 0, erros: [] });
+  });
+});
+
+describe("consumo de IA: leitura paginada do rel103", () => {
+  // Dados inventados. A linha é identificada por data|protocolo|acao|fTokensAcao|dataHoraInicial.
+  const linhas = (n: number, desde = 0): RegistroEscallo[] => Array.from({ length: n }, (_, i) => ({ data: "2026-11-03 06:00:00", protocolo: `P${desde + i}`, acao: "x", fTokensAcao: 0.02 }));
+
+  it("consulta de vários dias: páginas de 100 até a última, sem repetir", async () => {
+    const paginas = [linhas(100, 0), linhas(100, 100), linhas(37, 200)];
+    const chamadas: number[] = [];
+    const r = await lerRel103Completo(async (p) => { chamadas.push(p); return paginas[p] ?? []; });
+    expect(r).toHaveLength(237);
+    expect(chamadas).toEqual([0, 1, 2]);
+  });
+
+  it("consulta de um dia: a API manda o dia inteiro (mais de 100) em toda página; lê uma vez só", async () => {
+    const dia = linhas(2145);
+    const chamadas: number[] = [];
+    const r = await lerRel103Completo(async (p) => { chamadas.push(p); return dia; });
+    expect(r).toHaveLength(2145);
+    expect(chamadas).toEqual([0]);
+  });
+
+  it("exatamente 100 linhas e a API ignora a paginação (página repetida): não duplica", async () => {
+    const cem = linhas(100);
+    const r = await lerRel103Completo(async () => cem);
+    expect(r).toHaveLength(100);
+  });
+
+  it("dia sem consumo: lista vazia; muitas páginas diferentes: falha em vez de gravar pela metade", async () => {
+    expect(await lerRel103Completo(async () => [])).toEqual([]);
+    await expect(lerRel103Completo(async (p) => linhas(100, p * 100), 3)).rejects.toThrow("não li tudo");
   });
 });
