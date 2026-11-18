@@ -353,7 +353,7 @@ export default function Performance() {
       </motion.div>
 
       <motion.div variants={pageItemVariants}>
-        <PeriodFilterBar />
+        <PeriodFilterBar showScopeHint={false} />
       </motion.div>
 
       <PeriodTotalsNotice range={displayRange} />
