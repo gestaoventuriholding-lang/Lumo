@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { janelaDeBusca, resumoAuto, resumoFilas, serieExames, type AutoDia, type FilaDia } from "./filasMetrics";
+import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoFilas, resumoIA, serieExames, type FilaDia, type IaDia } from "./filasMetrics";
 
 // Dados inventados.
 const f = (date: string, channel: FilaDia["channel"], area: FilaDia["area"], answered: number, abandoned: number, waitSecondsTotal: number): FilaDia => ({
@@ -70,19 +70,37 @@ describe("filas: janela de busca", () => {
   });
 });
 
-describe("filas: auto-atendimento do robô", () => {
-  const a = (date: string, contatos: number, autoAtendidos: number): AutoDia => ({ date, contatos, autoAtendidos, atendidos: 0, semExito: 0, comErro: 0 });
-  const dias = [a("2026-11-02", 100, 30), a("2026-11-03", 200, 90), a("2026-10-30", 50, 50)];
+describe("filas: consumo de IA (FTokens)", () => {
+  const d = (date: string, ftokens: number, contatos: number): IaDia => ({ date, ftokens, contatos, acoes: contatos });
+  const dias = [d("2026-11-02", 100, 80), d("2026-11-03", 300, 240), d("2026-10-30", 50, 40)];
 
-  it("soma só o período e calcula a % de contatos resolvidos pelo robô", () => {
-    const r = resumoAuto(dias, { start: "2026-11-01", end: "2026-11-30" });
-    expect(r).toMatchObject({ temDados: true, contatos: 300, autoAtendidos: 120 });
-    expect(r.pct).toBeCloseTo(40, 5);
+  it("soma só o período e calcula FTokens por contato", () => {
+    const r = resumoIA(dias, { start: "2026-11-01", end: "2026-11-30" });
+    expect(r).toMatchObject({ temDados: true, ftokens: 400, contatos: 320 });
+    expect(r.mediaPorContato).toBeCloseTo(1.25, 5);
   });
 
   it("período sem dados não inventa número", () => {
-    const r = resumoAuto(dias, { start: "2026-12-01", end: "2026-12-31" });
-    expect(r).toMatchObject({ temDados: false, contatos: 0, autoAtendidos: 0 });
-    expect(r.pct).toBeUndefined();
+    const r = resumoIA(dias, { start: "2026-12-01", end: "2026-12-31" });
+    expect(r).toMatchObject({ temDados: false, ftokens: 0, contatos: 0 });
+    expect(r.mediaPorContato).toBeUndefined();
+  });
+
+  it("mês da data: primeiro e último dia (inclusive fevereiro)", () => {
+    expect(mesDaData("2026-11-17")).toEqual({ start: "2026-11-01", end: "2026-11-30" });
+    expect(mesDaData("2026-02-03")).toEqual({ start: "2026-02-01", end: "2026-02-28" });
+  });
+
+  it("franquia do mês: acumula do dia 1 até o fim do período, mesmo com o filtro de um dia só", () => {
+    const f = franquiaDoMes(dias, { start: "2026-11-03", end: "2026-11-03" });
+    expect(f.usado).toBe(400);
+    expect(f.pct).toBeCloseTo((400 / IA_FTOKENS_CONTRATADOS) * 100, 5);
+    expect(f.esgotada).toBe(false);
+  });
+
+  it("franquia esgotada quando passa dos 5.000 contratados", () => {
+    const f = franquiaDoMes([d("2026-11-03", 3000, 100), d("2026-11-12", 2028.71, 100)], { start: "2026-11-01", end: "2026-11-17" });
+    expect(f.esgotada).toBe(true);
+    expect(f.pct).toBeCloseTo(100.57, 1);
   });
 });

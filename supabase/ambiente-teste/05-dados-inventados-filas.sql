@@ -19,8 +19,13 @@ select d::date, 'WhatsApp', 'total',
 from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d
 where extract(dow from d) <> 0;
 
--- Auto-atendimento do robô (rel097), inventado: contatos, resolvidos pelo robô, atendidos, sem êxito e com erro (as 4 faixas fecham com os contatos).
-delete from public.auto_atendimento_diario;
-insert into public.auto_atendimento_diario (date, contacts, self_served, served, no_success, errors)
-select d::date, c, round(c * 0.3)::int, round(c * 0.2)::int, c - round(c * 0.3)::int - round(c * 0.2)::int - round(c * 0.02)::int, round(c * 0.02)::int
-from (select d, 1500 + (extract(day from d)::int * 37) % 700 as c from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d where extract(dow from d) <> 0) t;
+-- Consumo de FTokens da IA (rel103), inventado: de segunda a sábado, com a franquia de 5.000 do mês esgotando no meio de outubro e de novembro (como o padrão real).
+delete from public.ia_consumo_diario;
+insert into public.ia_consumo_diario (date, ftokens, contacts, actions)
+select date, round(ft, 2), contatos, contatos + contatos / 4
+from (
+  select d::date as date, ft, contatos, sum(ft) over (partition by date_trunc('month', d) order by d) - ft as antes
+  from (select d, (150 + (extract(day from d)::int * 29) % 140)::numeric as ft, (120 + (extract(day from d)::int * 17) % 90) as contatos
+        from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d where extract(dow from d) <> 0) x
+) y
+where antes < 5000;

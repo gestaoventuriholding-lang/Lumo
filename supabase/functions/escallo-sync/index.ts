@@ -11,7 +11,7 @@
 //  - o token da Escallo (ESCALLO_TOKEN) fica só no secret e é tirado de qualquer mensagem, registro ou log;
 //  - os logs têm só contagens; nenhum dado de pessoa.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { autoParaTabela, resumirAutoAtendimento } from "./auto.ts";
+import { iaParaTabela, resumirConsumoIA } from "./ia.ts";
 import { filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import {
@@ -186,12 +186,12 @@ Deno.serve(async (req: Request) => {
       const { error } = await servico.from("queue_daily").upsert(paraTabela(linhas), { onConflict: "date,channel,area" });
       if (error) throw new Error("não consegui gravar as filas");
     },
-    async buscarAuto(dia) {
-      return resumirAutoAtendimento(dia, await buscarEscallo(tokenEscallo, "rel097", dia));
+    async buscarIA(dia) {
+      return resumirConsumoIA(dia, await buscarEscalloPaginado(tokenEscallo, "rel103", dia));
     },
-    async gravarAuto(auto) {
-      const { error } = await servico.from("auto_atendimento_diario").upsert(autoParaTabela(auto), { onConflict: "date" });
-      if (error) throw new Error("não consegui gravar o auto-atendimento");
+    async gravarIA(consumo) {
+      const { error } = await servico.from("ia_consumo_diario").upsert(iaParaTabela(consumo), { onConflict: "date" });
+      if (error) throw new Error("não consegui gravar o consumo de IA");
     },
     async aplicarDia(plano) {
       const { data, error } = await servico.rpc("aplicar_sync_dia", { p: { dia: plano.dia, linhas: plano.linhas, alertas: plano.alertas } });
@@ -225,7 +225,7 @@ Deno.serve(async (req: Request) => {
 });
 
 /** Uma chamada por dia (a paginação da Escallo não funciona): confere a quantidade e tenta de novo se falhar. */
-async function buscarEscallo(token: string, rel: "rel025" | "rel090" | "rel001" | "rel091" | "rel097", dia: string): Promise<RegistroEscallo[]> {
+async function buscarEscallo(token: string, rel: "rel025" | "rel090" | "rel001" | "rel091", dia: string): Promise<RegistroEscallo[]> {
   let ultimoErro = "";
   for (let tentativa = 1; tentativa <= 3; tentativa++) {
     try {
@@ -252,4 +252,28 @@ async function buscarEscallo(token: string, rel: "rel025" | "rel090" | "rel001" 
     if (tentativa < 3) await esperar(3000 * tentativa);
   }
   throw new Error(`${rel} ${dia}: ${textoSeguro(ultimoErro, token, 200)}`);
+}
+
+/**
+ * rel103 (extrato de consumo da IA) devolve no máximo 100 linhas por chamada, mas a paginação (pagina=0, 1, 2…) funciona.
+ * Lê até acabar; se passar de MAX_PAGINAS_IA falha de propósito (melhor ficar sem o dia do que gravar o total pela metade).
+ */
+const MAX_PAGINAS_IA = 80;
+async function buscarEscalloPaginado(token: string, rel: "rel103", dia: string): Promise<RegistroEscallo[]> {
+  const todas: RegistroEscallo[] = [];
+  for (let pagina = 0; pagina < MAX_PAGINAS_IA; pagina++) {
+    const resposta = await fetch(`${URL_BASE}/${rel}/?registros=100&pagina=${pagina}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Partner ${token}` },
+      body: JSON.stringify({ dataInicial: dia, dataFinal: dia, horarioInicial: "00:00:01", horarioFinal: "23:59:59", exibirUsuarioSistema: "1" }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const j = await resposta.json().catch(() => null);
+    if (!resposta.ok || !j) throw new Error(`${rel} ${dia}: a Escallo respondeu ${resposta.status}`);
+    const bruto = j.data?.registros;
+    const linhas: RegistroEscallo[] = Array.isArray(bruto) ? bruto : bruto && typeof bruto === "object" ? Object.values(bruto) : [];
+    todas.push(...linhas);
+    if (linhas.length < 100) return todas;
+  }
+  throw new Error(`${rel} ${dia}: mais de ${MAX_PAGINAS_IA * 100} linhas, não li tudo`);
 }

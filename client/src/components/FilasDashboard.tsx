@@ -7,8 +7,8 @@ import DashboardKpiCard from "@/components/DashboardKpiCard";
 import { motion, cardItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { useFilasDiarias } from "@/hooks/useFilasDiarias";
 import { describeChange, previousRange, type Change } from "@/lib/periodComparison";
-import { janelaDeBusca, resumoAuto, resumoFilas, serieExames } from "@/lib/filasMetrics";
-import { useAutoAtendimento } from "@/hooks/useAutoAtendimento";
+import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoFilas, resumoIA, serieExames } from "@/lib/filasMetrics";
+import { useConsumoIA } from "@/hooks/useConsumoIA";
 import { formatAverageTime } from "@/lib/performanceStorage";
 import {
   chartAxisProps,
@@ -21,6 +21,7 @@ import {
 import type { DateRange } from "@/lib/dateRangeFilter";
 
 const formatCount = (v: number) => v.toLocaleString("pt-BR");
+const formatDecimal = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const tempo = (segundos?: number) => (segundos !== undefined && segundos > 0 ? formatAverageTime(segundos / 60) : "—");
 
 export interface SubCartao {
@@ -80,9 +81,12 @@ export default function FilasDashboard({
   const janela = janelaDeBusca(range, anterior);
   const { rows, carregado } = useFilasDiarias(janela.start, janela.end);
 
-  const autoRows = useAutoAtendimento(janela.start, janela.end);
-  const autoAtual = useMemo(() => resumoAuto(autoRows, range), [autoRows, range]);
-  const autoAntes = useMemo(() => resumoAuto(autoRows, anterior), [autoRows, anterior]);
+  // O consumo de IA também precisa do mês inteiro até o fim do período, para mostrar quanto da franquia de 5.000 FTokens já foi usada
+  const inicioIA = [janela.start, mesDaData(range.end).start].sort()[0];
+  const iaRows = useConsumoIA(inicioIA, janela.end);
+  const iaAtual = useMemo(() => resumoIA(iaRows, range), [iaRows, range]);
+  const iaAntes = useMemo(() => resumoIA(iaRows, anterior), [iaRows, anterior]);
+  const franquia = useMemo(() => franquiaDoMes(iaRows, range), [iaRows, range]);
 
   const atual = useMemo(() => resumoFilas(rows, range), [rows, range]);
   const antes = useMemo(() => resumoFilas(rows, anterior), [rows, anterior]);
@@ -122,14 +126,17 @@ export default function FilasDashboard({
     },
     {
       testId: "cartao-consumo-ia",
-      title: "Consumo de IA",
-      value: autoAtual.autoAtendidos > 0 ? formatCount(autoAtual.autoAtendidos) : "—",
+      title: "Consumo de IA (FTokens)",
+      value: iaAtual.ftokens > 0 ? formatDecimal(iaAtual.ftokens) : "—",
       detail:
-        autoAtual.pct !== undefined
-          ? `${autoAtual.pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% dos ${formatCount(autoAtual.contatos)} contatos do WhatsApp`
-          : "contatos do WhatsApp",
-      legenda: "resolvidos pelo robô, sem atendente",
-      delta: comparar(autoAtual.autoAtendidos, autoAntes.autoAtendidos),
+        iaAtual.mediaPorContato !== undefined
+          ? `${formatCount(iaAtual.contatos)} contatos · ${formatDecimal(iaAtual.mediaPorContato)} por contato`
+          : "FTokens de contatos",
+      legenda:
+        franquia.usado > 0
+          ? `mês: ${formatDecimal(franquia.usado)} de ${formatCount(IA_FTOKENS_CONTRATADOS)} contratados (${franquia.pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%)${franquia.esgotada ? " · franquia esgotada" : ""}`
+          : `${formatCount(IA_FTOKENS_CONTRATADOS)} contratados por mês`,
+      delta: comparar(iaAtual.ftokens, iaAntes.ftokens, true),
     },
   ];
 

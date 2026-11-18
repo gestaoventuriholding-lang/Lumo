@@ -84,28 +84,45 @@ export function janelaDeBusca(atual: Periodo, anterior: Periodo): Periodo {
   return { start: atual.start < anterior.start ? atual.start : anterior.start, end: atual.end > anterior.end ? atual.end : anterior.end };
 }
 
-/** Auto-atendimento do robô (WhatsApp, rel097), um registro por dia */
-export interface AutoDia {
+/** FTokens contratados por mês (a IA da Escallo para quando a franquia acaba) */
+export const IA_FTOKENS_CONTRATADOS = 5000;
+
+/** Consumo de FTokens da IA (rel103), um registro por dia */
+export interface IaDia {
   date: string;
+  ftokens: number;
+  /** Contatos com consumo no dia */
   contatos: number;
-  /** Resolvidos pelo robô, sem atendente */
-  autoAtendidos: number;
-  atendidos: number;
-  semExito: number;
-  comErro: number;
+  acoes: number;
 }
 
-export interface ResumoAuto {
+export interface ResumoIA {
   temDados: boolean;
+  ftokens: number;
   contatos: number;
-  autoAtendidos: number;
-  /** % dos contatos resolvidos pelo robô; undefined se não há contatos */
-  pct?: number;
+  /** FTokens por contato; undefined se não há contatos */
+  mediaPorContato?: number;
 }
 
-export function resumoAuto(rows: AutoDia[], range: Periodo): ResumoAuto {
-  const lista = rows.filter((x) => x.date >= range.start && x.date <= range.end);
+export function resumoIA(rows: IaDia[], range: Periodo): ResumoIA {
+  const lista = noPeriodo(rows as unknown as FilaDia[], range) as unknown as IaDia[];
+  const ftokens = lista.reduce((s, x) => s + x.ftokens, 0);
   const contatos = lista.reduce((s, x) => s + x.contatos, 0);
-  const autoAtendidos = lista.reduce((s, x) => s + x.autoAtendidos, 0);
-  return { temDados: lista.length > 0, contatos, autoAtendidos, pct: contatos > 0 ? (autoAtendidos / contatos) * 100 : undefined };
+  return { temDados: lista.length > 0, ftokens, contatos, mediaPorContato: contatos > 0 ? ftokens / contatos : undefined };
+}
+
+/** Primeiro e último dia do mês da data (AAAA-MM-DD) */
+export function mesDaData(data: string): Periodo {
+  const [a, m] = data.split("-").map(Number);
+  const ultimo = new Date(Date.UTC(a, m, 0)).getUTCDate();
+  const mm = String(m).padStart(2, "0");
+  return { start: `${a}-${mm}-01`, end: `${a}-${mm}-${String(ultimo).padStart(2, "0")}` };
+}
+
+/** Quanto da franquia mensal já foi usado no mês da data final do período (até o fim do período) */
+export function franquiaDoMes(rows: IaDia[], range: Periodo): { usado: number; pct: number; esgotada: boolean } {
+  const mes = mesDaData(range.end);
+  const usado = rows.filter((x) => x.date >= mes.start && x.date <= range.end).reduce((s, x) => s + x.ftokens, 0);
+  const pct = (usado / IA_FTOKENS_CONTRATADOS) * 100;
+  return { usado, pct, esgotada: usado >= IA_FTOKENS_CONTRATADOS };
 }
