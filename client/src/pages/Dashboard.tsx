@@ -73,6 +73,7 @@ import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
 import { cn } from "@/lib/utils";
 import { useAtendimentoData } from "@/hooks/useAtendimentoData";
 import ConfirmacaoAgendaCard from "@/components/ConfirmacaoAgendaCard";
+import QualidadeCard from "@/components/QualidadeCard";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -403,6 +404,10 @@ export default function Dashboard() {
 
       <motion.div variants={pageItemVariants}>
         <ConfirmacaoAgendaCard range={dateRange} />
+      </motion.div>
+
+      <motion.div variants={pageItemVariants}>
+        <QualidadeCard range={dateRange} />
       </motion.div>
 
       <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 xl:grid-cols-3">

@@ -13,6 +13,7 @@ import {
   isChecklistUsed,
   itemsOf,
   monthlyAverages,
+  qualidadeNoPeriodo,
   pareceDadoPessoal,
   registerFeedback,
   totalWeight,
@@ -377,5 +378,30 @@ describe("auditoria: telas", () => {
     const salvas = JSON.parse(window.localStorage.getItem("ellos-audit-settings") ?? "[]");
     expect(salvas[0]).toMatchObject({ minScore: 90, monthlyTarget: 6 });
     expect(itemsOf(JSON.parse(window.localStorage.getItem("ellos-audit-items") ?? "[]"), checklist.id)).toHaveLength(items.length);
+  });
+});
+
+describe("auditoria: resumo de Qualidade (Dashboard e relatório)", () => {
+  const mes = hoje.slice(0, 7);
+  const lista = [
+    auditoria(1, 1, 90, `${mes}-01`), auditoria(2, 1, 80, `${mes}-02`),
+    auditoria(3, 2, 70, `${mes}-03`), auditoria(4, 2, 0, `${mes}-04`, { eliminated: true }),
+    auditoria(5, 9, 10, `${mes}-05`), // colaborador fora do atendimento (ex.: Confirmação de agenda): não conta
+    auditoria(6, 1, 60, `${dia(-60)}`), // fora do período
+  ];
+  const periodo = { start: `${mes}-01`, end: `${mes}-28` };
+
+  it("nota média, abaixo da mínima, sem auditoria e eliminadas só do período e do atendimento", () => {
+    const q = qualidadeNoPeriodo(lista, [ana, bia, caio], { minScore: 85 }, periodo);
+    expect(q.totalAudits).toBe(4);
+    expect(q.average).toBe(60);
+    expect(q.belowMin.map((x) => [x.attendant.name, x.average])).toEqual([["Bia Teste", 35]]);
+    expect(q.withoutAudit).toBe(1);
+    expect(q.eliminated).toBe(1);
+  });
+
+  it("sem auditorias no período não tem nota", () => {
+    const q = qualidadeNoPeriodo([], [ana], { minScore: 85 }, periodo);
+    expect(q).toMatchObject({ totalAudits: 0, average: undefined, withoutAudit: 1, eliminated: 0 });
   });
 });

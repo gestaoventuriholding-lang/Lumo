@@ -407,3 +407,42 @@ export function filterAudits(
     .filter((a) => !term || a.protocol.toLowerCase().includes(term) || (nomes.get(a.attendantId) ?? "").includes(term))
     .sort((a, b) => b.attendedOn.localeCompare(a.attendedOn) || b.createdAt.localeCompare(a.createdAt));
 }
+
+export interface QualidadePeriodo {
+  totalAudits: number;
+  /** Média das notas das auditorias do período (undefined se não houve nota) */
+  average?: number;
+  /** Colaboradores com nota média do período abaixo da nota mínima */
+  belowMin: { attendant: Pick<Attendant, "id" | "name">; average: number }[];
+  /** Colaboradores ativos no período sem nenhuma auditoria */
+  withoutAudit: number;
+  /** Auditorias eliminadas (item eliminatório "Não atende") */
+  eliminated: number;
+}
+
+/** Resumo de Qualidade para o Dashboard e o relatório gerencial: só colaboradores do atendimento passados em `attendants`. */
+export function qualidadeNoPeriodo(
+  audits: Audit[],
+  attendants: Pick<Attendant, "id" | "name">[],
+  settings: Pick<AuditSettings, "minScore">,
+  range: { start: string; end: string }
+): QualidadePeriodo {
+  const ids = new Set(attendants.map((a) => a.id));
+  const doPeriodo = auditsInPeriod(audits, range.start, range.end).filter((a) => ids.has(a.attendantId));
+  const notas = doPeriodo.map((a) => a.score).filter((n): n is number => n !== undefined);
+  const belowMin = attendants
+    .map((attendant) => {
+      const proprias = doPeriodo.map((a) => (a.attendantId === attendant.id ? a.score : undefined)).filter((n): n is number => n !== undefined);
+      return { attendant, average: media(proprias) };
+    })
+    .filter((x): x is { attendant: Pick<Attendant, "id" | "name">; average: number } => x.average !== undefined && x.average < settings.minScore)
+    .sort((a, b) => a.average - b.average);
+  const comAuditoria = new Set(doPeriodo.map((a) => a.attendantId));
+  return {
+    totalAudits: doPeriodo.length,
+    average: media(notas),
+    belowMin,
+    withoutAudit: attendants.filter((a) => !comAuditoria.has(a.id)).length,
+    eliminated: doPeriodo.filter((a) => a.eliminated).length,
+  };
+}
