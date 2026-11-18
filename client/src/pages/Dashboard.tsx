@@ -27,7 +27,6 @@ import {
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import ExportModal from "@/components/ExportModal";
-import ManagementReportButton from "@/components/ManagementReportButton";
 import DetailedAnalysisSummary from "@/components/DetailedAnalysisSummary";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
@@ -326,7 +325,6 @@ export default function Dashboard() {
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start">
           <AtualizarAgoraButton />
-          <ManagementReportButton variant="outline" className="gap-2 bg-card" />
           <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2 bg-card">
             <Download className="h-4 w-4" />
             Exportar Dados
