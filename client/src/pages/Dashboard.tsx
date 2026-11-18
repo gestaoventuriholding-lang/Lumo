@@ -18,8 +18,6 @@ import AnimatedNumber from "@/components/AnimatedNumber";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import {
   Users,
-  Target,
-  AlertCircle,
   Download,
   ArrowRight,
   Trophy,
@@ -270,54 +268,36 @@ export default function Dashboard() {
   const formatCount = (value: number) => value.toLocaleString("pt-BR");
 
   const attendanceSpark = toSparkData(attendancesTrend.map((p) => p.attendances));
-  const productivitySpark = toSparkData(productivityTrend.map((p) => p.productivity));
 
-  const mainCards = [
+  const colaboradoresCard = {
+    title: "Total de Colaboradores",
+    value: String(dashboardStats.totalAttendants),
+    comparison:
+      confirmacao.attendants.length > 0
+        ? `${todosColaboradores.length} cadastrados · ${confirmacao.attendants.length} de confirmação de agenda`
+        : `${todosColaboradores.length} cadastrados no sistema`,
+    trend: "neutral" as const,
+    icon: Users,
+    iconBg: "bg-primary-soft",
+    iconColor: "text-primary",
+    sparkColor: chartColors.primary,
+    sparkData: attendanceSpark,
+  };
+
+  // Subcartões (menores que os 4 grandes: Colaboradores, Atendimentos, TMA e TME)
+  const subcartoesIniciais = [
     {
-      title: "Total de Colaboradores",
-      value: String(dashboardStats.totalAttendants),
-      comparison:
-        confirmacao.attendants.length > 0
-          ? `${todosColaboradores.length} cadastrados · ${confirmacao.attendants.length} de confirmação de agenda`
-          : `${todosColaboradores.length} cadastrados no sistema`,
-      trend: "neutral" as const,
-      icon: Users,
-      iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
-      sparkColor: chartColors.primary,
-      sparkData: attendanceSpark,
-    },
-    {
+      testId: "cartao-meta",
       title: periodMetaLabel(period),
-      value:
-        dashboardStats.averagePercentage > 0
-          ? `${dashboardStats.averagePercentage.toFixed(0)}%`
-          : "—",
-      comparison: "média de atingimento da equipe",
-      delta: describeChange(
-        dashboardStats.averagePercentage,
-        previous.stats.averagePercentage,
-        previous.name,
-        { unit: "points" }
-      ),
-      trend: dashboardStats.averagePercentage >= 85 ? ("up" as const) : ("down" as const),
-      icon: Target,
-      iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
-      sparkColor: chartColors.primary,
-      sparkData: productivitySpark,
-      progress: dashboardStats.averagePercentage,
+      value: dashboardStats.averagePercentage > 0 ? `${dashboardStats.averagePercentage.toFixed(0)}%` : "—",
+      detail: "média de atingimento da equipe",
+      delta: describeChange(dashboardStats.averagePercentage, previous.stats.averagePercentage, previous.name, { unit: "points" as const }),
     },
     {
+      testId: "cartao-ausencias",
       title: "Dias de Ausência",
       value: totalAbsenceDays > 0 ? String(totalAbsenceDays) : "—",
-      comparison: "total no período selecionado",
-      trend: totalAbsenceDays > 0 ? ("down" as const) : ("neutral" as const),
-      icon: AlertCircle,
-      iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
-      sparkColor: chartColors.primary,
-      sparkData: [],
+      detail: "total no período selecionado",
     },
   ];
 
@@ -362,22 +342,16 @@ export default function Dashboard() {
 
       <PeriodTotalsNotice range={dateRange} />
 
-      <motion.div
-        variants={staggerContainerVariants}
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
-      >
-        {mainCards.map((card) => (
-          <DashboardKpiCard key={card.title} {...card} />
-        ))}
-      </motion.div>
-
       <motion.div variants={pageItemVariants}>
         <FilasDashboard
           range={dateRange}
+          colaboradores={<DashboardKpiCard {...colaboradoresCard} />}
+          subcartoesIniciais={subcartoesIniciais}
           tmaMinutos={dashboardStats.averageTime}
           tmaAnteriorMinutos={previous.stats.averageTime}
           atendimentos={channelTotals}
           atendimentosAnterior={previous.stats.totalAttendances}
+          atendimentosSpark={attendanceSpark}
         />
       </motion.div>
 
