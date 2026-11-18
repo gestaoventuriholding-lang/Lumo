@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import { LayoutDashboard, Users, BarChart3, Calendar, CalendarDays, ClipboardCheck, ClipboardList, ScrollText, LayoutGrid, Settings as SettingsIcon, Moon, Sun, Upload, LogOut, UserCog } from "lucide-react";
+import { LayoutDashboard, Users, BarChart3, Calendar, CalendarDays, ClipboardCheck, ClipboardList, ScrollText, BookOpen, LayoutGrid, Settings as SettingsIcon, Moon, Sun, Upload, LogOut, UserCog } from "lucide-react";
 import {
   CSSProperties,
   memo,
@@ -48,6 +48,7 @@ const mainMenuItems = [
   { icon: ClipboardCheck, label: "Auditoria", path: "/audits" },
   { icon: ClipboardList, label: "Ocorrências", path: "/incidents" },
   { icon: ScrollText, label: "Regras", path: "/rules" },
+  { icon: BookOpen, label: "Base de conhecimento", path: "/knowledge" },
   { icon: LayoutGrid, label: "Estruturas", path: "/structure" },
   { icon: CalendarDays, label: "Calendário", path: "/calendar" },
   { icon: Upload, label: "Importar Relatório", path: "/import" },
