@@ -20,7 +20,7 @@ import type { DateRange } from "@/lib/dateRangeFilter";
 const formatCount = (v: number) => v.toLocaleString("pt-BR");
 const tempo = (segundos?: number) => (segundos !== undefined && segundos > 0 ? formatAverageTime(segundos / 60) : "—");
 
-function MetricCard({ title, value, detail, delta, testId }: { title: string; value: string; detail?: string; delta?: Change; testId: string }) {
+function MetricCard({ title, value, detail, legenda, delta, testId }: { title: string; value: string; detail?: string; legenda?: string; delta?: Change; testId: string }) {
   return (
     <motion.div variants={cardItemVariants} className="ellos-panel-sm p-5" data-testid={testId}>
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -28,6 +28,7 @@ function MetricCard({ title, value, detail, delta, testId }: { title: string; va
         <AnimatedText text={value} />
       </p>
       {detail ? <p className="mt-1 text-xs text-muted-foreground">{detail}</p> : null}
+      {legenda ? <p className="mt-0.5 text-xs text-muted-foreground">{legenda}</p> : null}
       {delta ? <ChangeBadge change={delta} className="mt-1" /> : null}
     </motion.div>
   );
@@ -74,6 +75,7 @@ export default function FilasDashboard({
         <MetricCard
           testId="cartao-atendimentos"
           title="Atendimentos"
+          legenda="equipe do call center"
           value={atendimentos.total > 0 ? formatCount(atendimentos.total) : "—"}
           detail={atendimentos.total > 0 ? `Ligação ${formatCount(atendimentos.ligacao)} · WhatsApp ${formatCount(atendimentos.whatsapp)}` : undefined}
           delta={comparar(atendimentos.total, atendimentosAnterior)}
@@ -93,6 +95,7 @@ export default function FilasDashboard({
         />
         <MetricCard
           testId="cartao-analises"
+          legenda="todas as ligações da fila"
           title="Exames laboratoriais"
           value={atual.analises > 0 ? formatCount(atual.analises) : "—"}
           detail="ligações atendidas"
@@ -100,6 +103,7 @@ export default function FilasDashboard({
         />
         <MetricCard
           testId="cartao-imagem"
+          legenda="todas as ligações da fila"
           title="Exames por imagem"
           value={atual.imagem > 0 ? formatCount(atual.imagem) : "—"}
           detail="ligações atendidas"
@@ -107,6 +111,7 @@ export default function FilasDashboard({
         />
         <MetricCard
           testId="cartao-cardiologicos"
+          legenda="todas as ligações da fila"
           title="Exames cardiológicos"
           value={atual.cardiologicos > 0 ? formatCount(atual.cardiologicos) : "—"}
           detail="ligações atendidas"
@@ -114,6 +119,7 @@ export default function FilasDashboard({
         />
         <MetricCard
           testId="cartao-outras"
+          legenda="todas as ligações da fila"
           title="Outras"
           value={atual.outras > 0 ? formatCount(atual.outras) : "—"}
           detail="ligações atendidas"
@@ -121,6 +127,7 @@ export default function FilasDashboard({
         />
         <MetricCard
           testId="cartao-abandono"
+          legenda="todas as ligações da fila"
           title="Abandono"
           value={atual.abandonoPct !== undefined ? `${atual.abandonoPct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "—"}
           detail={atual.ligacoesAbandonadas > 0 ? `${formatCount(atual.ligacoesAbandonadas)} ligações abandonadas` : "ligações"}

@@ -18,7 +18,6 @@ import AnimatedNumber from "@/components/AnimatedNumber";
 import { mergePeriodTotals } from "@/lib/periodTotals";
 import {
   Users,
-  TrendingUp,
   Target,
   AlertCircle,
   Download,
@@ -48,7 +47,6 @@ import {
 import { useEllosData } from "@/contexts/EllosDataContext";
 import { totalAbsenceDaysInRange } from "@/lib/absenceMetrics";
 import {
-  periodAttendancesLabel,
   periodMetaLabel,
   periodScopePhrase,
 } from "@/lib/dateRangeFilter";
@@ -67,7 +65,6 @@ import {
   trendChartKind,
 } from "@/lib/chartTheme";
 import ChartAreaGradient from "@/components/ChartAreaGradient";
-import { ChannelIcon } from "@/components/ChannelBadge";
 import { useSyncStatus } from "@/contexts/SyncStatusContext";
 import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
 import { cn } from "@/lib/utils";
@@ -289,35 +286,6 @@ export default function Dashboard() {
       iconColor: "text-primary",
       sparkColor: chartColors.primary,
       sparkData: attendanceSpark,
-    },
-    {
-      title: periodAttendancesLabel(period),
-      value: channelTotals.total > 0 ? formatCount(channelTotals.total) : "—",
-      comparison:
-        channelTotals.total > 0 ? (
-          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="inline-flex items-center gap-1">
-              <ChannelIcon channel="Ligação" className="h-3.5 w-3.5" />
-              {formatCount(channelTotals.ligacao)} Ligação
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <ChannelIcon channel="WhatsApp" className="h-3.5 w-3.5" />
-              {formatCount(channelTotals.whatsapp)} WhatsApp
-            </span>
-          </span>
-        ) : (
-          "Sem registros no período"
-        ),
-      footnote: `${dashboardStats.attendantsWithRecords} colaboradores com registros`,
-      delta: describeChange(channelTotals.total, previous.stats.totalAttendances, previous.name),
-      // a linha acima é só a divisão por canal (sem bom/ruim); quem diz melhorou ou piorou é a variação abaixo, com seta
-      trend: "neutral" as const,
-      icon: TrendingUp,
-      iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
-      sparkColor: chartColors.primary,
-      sparkData: attendanceSpark,
-      variant: "dark" as const,
     },
     {
       title: periodMetaLabel(period),
