@@ -29,6 +29,7 @@ export function dadosDemonstracao(): { colaboradores: Attendant[]; resposta: Res
     colaborador(-5, "Elisa Demonstração"),
     colaborador(-6, "Fábio Demonstração", 900),
     colaborador(-7, "Gabi Demonstração"),
+    colaborador(-8, "Helena Demonstração", 950),
   ];
 
   const sobras: SobraEscallo[] = [
@@ -56,7 +57,9 @@ export function dadosDemonstracao(): { colaboradores: Attendant[]; resposta: Res
       dia: "2026-01-01",
       migracaoPendente: false,
       escallo: { registros: sobras.length },
-      resumo: { vinculados: 0, semVinculo: 6, paraRevisar: 2, comSugestaoPorNome: 5 },
+      resumo: { vinculados: 1, semVinculo: 6, paraRevisar: 2, comSugestaoPorNome: 5 },
+      // Já ligada pela função (a Helena tem o código 950): aparece em "Já vinculadas"
+      vinculados: [{ attendantId: -8, escalloCodigo: 950 }],
       sobras,
     },
   };

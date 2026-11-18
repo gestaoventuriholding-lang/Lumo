@@ -18,6 +18,8 @@ export interface RespostaEscallo {
   escallo: { registros: number };
   resumo: { vinculados: number; semVinculo: number; paraRevisar: number; comSugestaoPorNome: number };
   sobras: SobraEscallo[];
+  /** Quem a função já ligou a um colaborador neste dia (só os campos que a tela usa). Pode faltar em respostas antigas. */
+  vinculados?: { attendantId: number; escalloCodigo: number }[];
 }
 
 export interface LinhaVinculo {
@@ -30,6 +32,15 @@ export interface LinhaVinculo {
   detalhe: string;
 }
 
+/** Agente da Escallo que já está ligado a um colaborador do Ellos (aparece na lista "Já vinculadas"). */
+export interface LinhaVinculada {
+  codigo: number;
+  colaboradorId: number;
+  colaboradorNome: string;
+  /** Nome que veio da Escallo; só existe quando o agente veio nas sobras (a função não devolve o nome dos já ligados). */
+  nomeEscallo: string | null;
+}
+
 export interface ListasVinculo {
   /** Têm colaborador sugerido pelo nome. */
   sugestoes: LinhaVinculo[];
@@ -39,6 +50,8 @@ export interface ListasVinculo {
   semCodigo: { nome: string }[];
   /** Quantos registros do dia já estão vinculados a um colaborador. */
   jaVinculados: number;
+  /** Os agentes já vinculados, um a um (colaboradora do Ellos + código da Escallo), por ordem de nome. */
+  vinculadas: LinhaVinculada[];
   /** Colaboradores que ainda não têm código. */
   colaboradoresSemCodigo: Attendant[];
 }
@@ -47,13 +60,24 @@ export interface ListasVinculo {
  * Separa as sobras da Escallo em listas, olhando os vínculos que existem AGORA no cadastro.
  * `vinculadosNaResposta`: registros que a função já devolveu como ligados (eles não vêm nas sobras) e contam como já vinculados.
  */
-export function prepararVinculos(sobras: SobraEscallo[], attendants: Attendant[], vinculadosNaResposta = 0): ListasVinculo {
+export function prepararVinculos(
+  sobras: SobraEscallo[],
+  attendants: Attendant[],
+  vinculadosNaResposta = 0,
+  vinculados: { attendantId: number; escalloCodigo: number }[] = []
+): ListasVinculo {
   const usados = new Set(attendants.filter((a) => typeof a.escalloCodigo === "number").map((a) => a.escalloCodigo as number));
   const ids = new Set(attendants.map((a) => a.id));
   const sugestoes: LinhaVinculo[] = [];
   const semSugestao: LinhaVinculo[] = [];
   const semCodigo: { nome: string }[] = [];
   let jaVinculados = Math.max(0, Math.floor(vinculadosNaResposta));
+  const nomeDe = new Map(attendants.map((a) => [a.id, a.name]));
+  const vinculadas = new Map<number, LinhaVinculada>(); // por código da Escallo (sem repetir)
+  for (const v of vinculados) {
+    const nome = nomeDe.get(v.attendantId);
+    if (nome !== undefined) vinculadas.set(v.escalloCodigo, { codigo: v.escalloCodigo, colaboradorId: v.attendantId, colaboradorNome: nome, nomeEscallo: null });
+  }
 
   for (const s of sobras) {
     if (s.codigo === null) {
@@ -62,6 +86,8 @@ export function prepararVinculos(sobras: SobraEscallo[], attendants: Attendant[]
     }
     if (usados.has(s.codigo)) {
       jaVinculados += 1;
+      const dono = attendants.find((a) => a.escalloCodigo === s.codigo);
+      if (dono) vinculadas.set(s.codigo, { codigo: s.codigo, colaboradorId: dono.id, colaboradorNome: dono.name, nomeEscallo: s.nome || null });
       continue;
     }
     const sugestaoId = s.sugestao && ids.has(s.sugestao.id) ? s.sugestao.id : null;
@@ -79,6 +105,7 @@ export function prepararVinculos(sobras: SobraEscallo[], attendants: Attendant[]
     semSugestao,
     semCodigo,
     jaVinculados,
+    vinculadas: [...vinculadas.values()].sort((a, b) => a.colaboradorNome.localeCompare(b.colaboradorNome, "pt-BR")),
     colaboradoresSemCodigo: attendants.filter((a) => typeof a.escalloCodigo !== "number"),
   };
 }

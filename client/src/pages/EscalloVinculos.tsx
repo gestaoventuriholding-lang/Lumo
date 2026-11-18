@@ -63,7 +63,7 @@ export default function EscalloVinculos() {
   const [confirmarTodas, setConfirmarTodas] = useState(false);
 
   const ordenados = useMemo(() => [...attendants].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")), [attendants]);
-  const listas = useMemo(() => (resposta ? prepararVinculos(resposta.sobras, attendants, resposta.resumo.vinculados) : null),
+  const listas = useMemo(() => (resposta ? prepararVinculos(resposta.sobras, attendants, resposta.resumo.vinculados, resposta.vinculados) : null),
     [resposta, attendants]
   );
 
@@ -319,6 +319,38 @@ export default function EscalloVinculos() {
                   <p className="border-t border-border/60 py-3 text-sm text-muted-foreground">
                     {listas.semCodigo.length} registro(s) vieram sem código da Escallo e não podem ser vinculados.
                   </p>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="space-y-2" aria-labelledby="titulo-vinculadas">
+            <div>
+              <h2 id="titulo-vinculadas" className="text-lg font-semibold text-foreground">Já vinculadas ({listas.vinculadas.length})</h2>
+              <p className="text-sm text-muted-foreground">
+                Estas colaboradoras já estão ligadas ao Ellos pelo código da Escallo. A sincronização usa esse código para trazer os atendimentos de cada uma.
+              </p>
+            </div>
+            <Card>
+              <CardContent className="pt-2" data-testid="lista-vinculadas">
+                {listas.vinculadas.length === 0 ? (
+                  <p className="py-4 text-sm text-muted-foreground">Nenhuma ainda.</p>
+                ) : (
+                  listas.vinculadas.map((v) => (
+                    <div key={v.codigo} className="flex items-center justify-between gap-3 border-b border-border/60 py-3 last:border-b-0" data-testid="linha-vinculada">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">{v.colaboradorNome}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          Escallo · código {v.codigo}
+                          {v.nomeEscallo && v.nomeEscallo !== v.colaboradorNome ? ` · na Escallo: ${v.nomeEscallo}` : ""}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0 gap-1">
+                        <CheckCheck className="h-3.5 w-3.5" aria-hidden />
+                        Vinculada
+                      </Badge>
+                    </div>
+                  ))
                 )}
               </CardContent>
             </Card>

@@ -186,3 +186,38 @@ describe("vínculo com a Escallo: contador de já vinculados", () => {
     expect(prepararVinculos([], equipe, 2.9).jaVinculados).toBe(2);
   });
 });
+
+describe("vínculo com a Escallo: lista dos já vinculados", () => {
+  it("mostra quem a função já ligou, com o nome da colaboradora do Ellos, em ordem de nome", () => {
+    const l = prepararVinculos([], equipe, 2, [
+      { attendantId: 3, escalloCodigo: 300 },
+      { attendantId: 1, escalloCodigo: 100 },
+    ]);
+    expect(l.vinculadas.map((v) => [v.colaboradorNome, v.codigo, v.nomeEscallo])).toEqual([
+      ["Ana Teste", 100, null],
+      ["Carla Teste", 300, null],
+    ]);
+    expect(l.jaVinculados).toBe(2);
+  });
+
+  it("agente das sobras que já tem dono entra na lista com o nome que veio da Escallo; sem repetir", () => {
+    const l = prepararVinculos([sobra({ codigo: 300, nome: "Carla Escallo" })], equipe, 0, [{ attendantId: 3, escalloCodigo: 300 }]);
+    expect(l.vinculadas).toHaveLength(1);
+    expect(l.vinculadas[0]).toMatchObject({ colaboradorNome: "Carla Teste", codigo: 300, nomeEscallo: "Carla Escallo" });
+  });
+
+  it("ignora vínculo de colaborador que não existe mais, e resposta antiga sem a lista", () => {
+    expect(prepararVinculos([], equipe, 1, [{ attendantId: 99, escalloCodigo: 900 }]).vinculadas).toEqual([]);
+    expect(prepararVinculos([], equipe, 5).vinculadas).toEqual([]);
+  });
+
+  it("depois de confirmar um vínculo, a pessoa sai das pendentes e entra nas já vinculadas", () => {
+    const pendente = [sobra({ codigo: 200, nome: "Ana na Escallo" })];
+    const antes = prepararVinculos(pendente, equipe);
+    expect(antes.semSugestao).toHaveLength(1);
+    expect(antes.vinculadas).toHaveLength(0);
+    const depois = prepararVinculos(pendente, [colab(1, "Ana Teste", 200), ...equipe.slice(1)]);
+    expect(depois.semSugestao).toHaveLength(0);
+    expect(depois.vinculadas.map((v) => v.colaboradorNome)).toEqual(["Ana Teste"]);
+  });
+});
