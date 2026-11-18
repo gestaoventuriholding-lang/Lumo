@@ -8,7 +8,7 @@ select d::date, 'Ligação', a.area,
        (a.base + (extract(day from d)::int * a.passo) % a.faixa) * a.pct_aband / 100 as abandoned,
        (a.base + (extract(day from d)::int * a.passo) % a.faixa) * (a.espera + (extract(day from d)::int % 4) * 6) as wait_seconds_total
 from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d,
-     (values ('analises', 40, 7, 12, 8, 22), ('imagem', 110, 5, 30, 12, 31), ('outros', 60, 3, 18, 15, 38)) as a(area, base, passo, faixa, pct_aband, espera)
+     (values ('analises', 40, 7, 12, 8, 22), ('imagem', 110, 5, 30, 12, 31), ('cardiologicos', 12, 3, 8, 10, 28), ('outros', 60, 3, 18, 15, 38)) as a(area, base, passo, faixa, pct_aband, espera)
 where extract(dow from d) <> 0;
 
 insert into public.queue_daily (date, channel, area, answered, abandoned, wait_seconds_total)

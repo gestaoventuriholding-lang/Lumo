@@ -4,7 +4,7 @@
 export interface FilaDia {
   date: string;
   channel: "Ligação" | "WhatsApp";
-  area: "analises" | "imagem" | "outros" | "total";
+  area: "analises" | "imagem" | "cardiologicos" | "outros" | "total";
   answered: number;
   abandoned: number;
   waitSecondsTotal: number;
@@ -17,8 +17,11 @@ export interface ResumoFilas {
   tmeLigacao?: number;
   tmeWhatsapp?: number;
   tmeGeral?: number;
+  /** Ligações atendidas por grupo da URA: exames laboratoriais (analises), por imagem, cardiológicos e outras */
   analises: number;
   imagem: number;
+  cardiologicos: number;
+  outras: number;
   /** Chamadas atendidas e abandonadas (só Ligação: o WhatsApp não tem abandono nos relatórios) */
   ligacoesAtendidas: number;
   ligacoesAbandonadas: number;
@@ -47,6 +50,8 @@ export function resumoFilas(rows: FilaDia[], range: Periodo): ResumoFilas {
     tmeGeral: media(ligEspera + waEspera, ligAt + waAt),
     analises: soma(lig.filter((x) => x.area === "analises"), (x) => x.answered),
     imagem: soma(lig.filter((x) => x.area === "imagem"), (x) => x.answered),
+    cardiologicos: soma(lig.filter((x) => x.area === "cardiologicos"), (x) => x.answered),
+    outras: soma(lig.filter((x) => x.area === "outros"), (x) => x.answered),
     ligacoesAtendidas: ligAt,
     ligacoesAbandonadas: ligAb,
     abandonoPct: ligAt + ligAb > 0 ? (ligAb / (ligAt + ligAb)) * 100 : undefined,
@@ -58,15 +63,16 @@ export interface PontoAreas {
   label: string;
   analises: number;
   imagem: number;
+  cardiologicos: number;
 }
 
-/** Ligações atendidas de Análises e de Imagem, um ponto por dia com movimento (do mais antigo ao mais novo) */
-export function serieAnalisesImagem(rows: FilaDia[], range: Periodo): PontoAreas[] {
+/** Ligações atendidas dos 3 exames (laboratoriais, imagem, cardiológicos), um ponto por dia com movimento (do mais antigo ao mais novo) */
+export function serieExames(rows: FilaDia[], range: Periodo): PontoAreas[] {
   const dias = new Map<string, PontoAreas>();
   for (const x of noPeriodo(rows, range)) {
-    if (x.channel !== "Ligação" || (x.area !== "analises" && x.area !== "imagem")) continue;
+    if (x.channel !== "Ligação" || (x.area !== "analises" && x.area !== "imagem" && x.area !== "cardiologicos")) continue;
     const [, mes, dia] = x.date.split("-");
-    const p = dias.get(x.date) ?? { date: x.date, label: `${dia}/${mes}`, analises: 0, imagem: 0 };
+    const p = dias.get(x.date) ?? { date: x.date, label: `${dia}/${mes}`, analises: 0, imagem: 0, cardiologicos: 0 };
     p[x.area] += x.answered;
     dias.set(x.date, p);
   }

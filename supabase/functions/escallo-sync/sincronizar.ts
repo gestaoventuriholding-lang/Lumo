@@ -4,6 +4,14 @@ import { hojeSaoPaulo, type RegistroEscallo } from "./mapeamento.ts";
 import type { LinhaFila } from "./filas.ts";
 import { montarPlanoDia, type AvisoSync, type ColaboradorSync, type PlanoDia } from "./plano.ts";
 
+/** Fila da Escallo que não está em nenhum grupo conhecido: foi contada em "Outras" (vai para sync_runs.warnings) */
+export interface AvisoFila {
+  tipo: "fila_nova";
+  fila: string;
+  dia: string;
+  mensagem: string;
+}
+
 /** Modos que ficam registrados em sync_runs */
 export type Modo = "hoje" | "fechamento" | "manual" | "simulacao";
 /** O que se pode pedir à função. "agora" é o botão "Atualizar agora" (qualquer pessoa da equipe): sincroniza hoje e fica registrado como "manual". */
@@ -35,7 +43,7 @@ export interface Deps {
   lerLimiteLogin(): Promise<number | null>;
   aplicarDia(plano: PlanoDia): Promise<ResultadoGravacao>;
   /** Opcional: totais por fila (Ligação) e espera do WhatsApp do dia. Se falhar, o dia principal continua valendo. */
-  buscarFilas?(dia: string): Promise<LinhaFila[]>;
+  buscarFilas?(dia: string): Promise<{ linhas: LinhaFila[]; avisos?: AvisoFila[] }>;
   gravarFilas?(linhas: LinhaFila[]): Promise<void>;
   esperar(ms: number): Promise<void>;
 }
@@ -54,9 +62,9 @@ export interface ResultadoSync {
     ignoradosDesligados: number;
   };
   /** Avisos de todos os dias (ex.: atendimento de desligado, ignorado) */
-  avisos: AvisoSync[];
+  avisos: (AvisoSync | AvisoFila)[];
   /** Linhas de fila gravadas e, se algum dia falhou, o motivo (não derruba a sincronização) */
-  filas: { linhas: number; erros: string[] };
+  filas: { linhas: number; erros: string[]; avisos: AvisoFila[] };
 }
 
 const dataValida = (s: unknown): s is string => {
@@ -141,7 +149,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
 
   const planos: PlanoDia[] = [];
   const gravacao = { ...VAZIA };
-  const filas = { linhas: 0, erros: [] as string[] };
+  const filas = { linhas: 0, erros: [] as string[], avisos: [] as AvisoFila[] };
   for (let i = 0; i < dias.length; i++) {
     const dia = dias[i];
     const rel025 = await deps.buscarRelatorio("rel025", dia);
@@ -156,7 +164,8 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       gravacao.alertas_novos += r.alertas_novos;
       if (deps.buscarFilas && deps.gravarFilas) {
         try {
-          const linhas = await deps.buscarFilas(dia);
+          const { linhas, avisos } = await deps.buscarFilas(dia);
+          for (const a of avisos ?? []) if (!filas.avisos.some((x) => x.fila === a.fila && x.dia === a.dia)) filas.avisos.push(a);
           if (linhas.length > 0) await deps.gravarFilas(linhas);
           filas.linhas += linhas.length;
         } catch (e) {
@@ -180,7 +189,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       semVinculoComAtendimento: soma((p) => p.resumo.semVinculoComAtendimento),
       ignoradosDesligados: soma((p) => p.resumo.ignoradosDesligados),
     },
-    avisos: planos.flatMap((p) => p.avisos),
+    avisos: [...planos.flatMap((p) => p.avisos), ...filas.avisos],
     filas,
   };
 }

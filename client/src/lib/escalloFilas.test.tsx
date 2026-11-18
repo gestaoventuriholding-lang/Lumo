@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaDaFila, paraTabela, resumirLigacoes, resumirWhatsapp } from "../../../supabase/functions/escallo-sync/filas";
+import { areaDaFila, classificarFila, filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "../../../supabase/functions/escallo-sync/filas";
 import { sincronizar, type Deps } from "../../../supabase/functions/escallo-sync/sincronizar";
 import type { RegistroEscallo } from "../../../supabase/functions/escallo-sync/mapeamento";
 
@@ -11,20 +11,50 @@ const chamada = (fila: string, status: "Atendida" | "Abandonada pelo chamador", 
   "filaAtendimentoLigacao.tempoEspera": espera,
 });
 
-describe("filas: área de cada fila", () => {
-  it("Imagem, Análises e o resto, como combinado", () => {
-    for (const f of ["USG", "RM", "TC", "MMG / DEO / RX", "Resultados DI", "Entrega de Laudos", "Exames Cardiologicos"]) expect(areaDaFila(f)).toBe("imagem");
-    for (const f of ["Preparo AC", "Resultados AC", "Coleta Domiciliar"]) expect(areaDaFila(f)).toBe("analises");
-    for (const f of ["Orçamento", "Falar com Atendente", "Fila Nova", "", null]) expect(areaDaFila(f)).toBe("outros");
+describe("filas: grupo de cada fila (3 opções da URA + Outras)", () => {
+  it("laboratoriais, imagem, cardiológicos e outras, como aprovado", () => {
+    for (const f of ["Preparo AC", "Resultados AC", "Coleta Domiciliar", "Transbordo Coleta domiciliar"]) expect(areaDaFila(f)).toBe("analises");
+    for (const f of ["USG", "RM", "TC", "MMG / DEO / RX", "Resultados DI"]) expect(areaDaFila(f)).toBe("imagem");
+    expect(areaDaFila("Exames Cardiologicos")).toBe("cardiologicos");
+    expect(areaDaFila("Exames Cardiológicos")).toBe("cardiologicos");
+    for (const f of ["Orçamento", "Falar com Atendente", "Entrega de Laudos", "Clínicas parceiras"]) expect(areaDaFila(f)).toBe("outros");
   });
 
-  it("'Recuperação Automática - X' segue a área de X; filas novas terminadas em AC ou DI entram na área certa", () => {
+  it("'Recuperação Automática - X' segue o grupo de X", () => {
     expect(areaDaFila("Recuperação Automática - RM")).toBe("imagem");
     expect(areaDaFila("Recuperação Automática - Preparo AC")).toBe("analises");
+    expect(areaDaFila("Recuperação Automática - Coleta Domiciliar")).toBe("analises");
     expect(areaDaFila("Recuperação Automática - Orçamento")).toBe("outros");
-    expect(areaDaFila("Agendamento DI")).toBe("imagem");
-    expect(areaDaFila("Agendamento AC")).toBe("analises");
     expect(areaDaFila("  usg ")).toBe("imagem");
+  });
+
+  it("fila nova (mesmo terminada em AC ou DI) vai para Outras e não conta como reconhecida", () => {
+    for (const f of ["Fila Nova", "Agendamento DI", "Agendamento AC", "", null]) {
+      expect(classificarFila(f)).toEqual({ area: "outros", reconhecida: false });
+    }
+    expect(classificarFila("Orçamento")).toEqual({ area: "outros", reconhecida: true });
+  });
+
+  it("filasNaoReconhecidas lista cada nome uma vez e ignora filas conhecidas e chamadas sem situação", () => {
+    const lista = filasNaoReconhecidas([
+      chamada("Fila Nova", "Atendida", 5), chamada("Fila Nova", "Abandonada pelo chamador", 5), chamada("USG", "Atendida", 5),
+      chamada("Entrega de Laudos", "Atendida", 5), chamada("Outra Nova", "Atendida", 1),
+      { "telefoniaFilaAtendimento.nome": "Sem Situacao", "filaAtendimentoLigacao.statusFormatado": "Outra coisa" },
+    ]);
+    expect(lista.sort()).toEqual(["Fila Nova", "Outra Nova"]);
+  });
+
+  it("a soma dos 4 grupos fecha com o total de atendidas e de abandonadas", () => {
+    const regs = [
+      chamada("Preparo AC", "Atendida", 1), chamada("USG", "Atendida", 1), chamada("USG", "Abandonada pelo chamador", 1),
+      chamada("Exames Cardiologicos", "Atendida", 1), chamada("Orçamento", "Atendida", 1), chamada("Entrega de Laudos", "Abandonada pelo chamador", 1),
+      chamada("Fila Nova", "Atendida", 1), chamada("Recuperação Automática - TC", "Atendida", 1),
+    ];
+    const linhas = resumirLigacoes("2026-11-16", regs);
+    expect(linhas.reduce((n, l) => n + l.atendidas, 0)).toBe(6);
+    expect(linhas.reduce((n, l) => n + l.abandonadas, 0)).toBe(2);
+    expect(linhas.find((l) => l.area === "cardiologicos")?.atendidas).toBe(1);
+    expect(linhas.find((l) => l.area === "outros")).toMatchObject({ atendidas: 2, abandonadas: 1 });
   });
 });
 
@@ -88,7 +118,7 @@ describe("filas: dentro da sincronização", () => {
       async lerLimiteLogin() { return 43_200; },
       async aplicarDia(plano) { return { inseridas: plano.linhas.length, atualizadas: 0, puladas_manuais: 0, alertas_novos: 0 }; },
       async esperar() {},
-      async buscarFilas(dia) { return [{ dia, canal: "WhatsApp", area: "total", atendidas: 1, abandonadas: 0, espera_total_segundos: 5 }]; },
+      async buscarFilas(dia) { return { linhas: [{ dia, canal: "WhatsApp", area: "total", atendidas: 1, abandonadas: 0, espera_total_segundos: 5 }] }; },
       async gravarFilas(l) { gravadas.push(l.length); },
       ...extra,
     };
@@ -99,7 +129,7 @@ describe("filas: dentro da sincronização", () => {
     const a = deps();
     const r = await sincronizar(a.d, { modo: "hoje" }, "2026-11-05");
     expect(a.gravadas).toEqual([1]);
-    expect(r.filas).toEqual({ linhas: 1, erros: [] });
+    expect(r.filas).toEqual({ linhas: 1, erros: [], avisos: [] });
     const b = deps();
     await sincronizar(b.d, { modo: "simulacao", dias: ["2026-11-03"] }, "2026-11-05");
     expect(b.gravadas).toEqual([]);
@@ -113,9 +143,16 @@ describe("filas: dentro da sincronização", () => {
     expect(r.filas.erros[0]).toContain("rel001 fora do ar");
   });
 
+  it("fila nova sem grupo: o aviso vai para a lista de avisos da corrida, sem repetir", async () => {
+    const { d } = deps({ async buscarFilas(dia) { return { linhas: [], avisos: [{ tipo: "fila_nova", fila: "Fila Nova", dia, mensagem: "x" }, { tipo: "fila_nova", fila: "Fila Nova", dia, mensagem: "x" }] }; } });
+    const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");
+    expect(r.filas.avisos).toEqual([{ tipo: "fila_nova", fila: "Fila Nova", dia: "2026-11-05", mensagem: "x" }]);
+    expect(r.avisos).toContainEqual({ tipo: "fila_nova", fila: "Fila Nova", dia: "2026-11-05", mensagem: "x" });
+  });
+
   it("sem as funções de fila (como antes) tudo funciona igual", async () => {
     const { d } = deps({ buscarFilas: undefined, gravarFilas: undefined });
     const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");
-    expect(r.filas).toEqual({ linhas: 0, erros: [] });
+    expect(r.filas).toEqual({ linhas: 0, erros: [], avisos: [] });
   });
 });

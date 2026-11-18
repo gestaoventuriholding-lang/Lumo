@@ -5,7 +5,7 @@ import ChangeBadge from "@/components/ChangeBadge";
 import { motion, cardItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { useFilasDiarias } from "@/hooks/useFilasDiarias";
 import { describeChange, previousRange, type Change } from "@/lib/periodComparison";
-import { janelaDeBusca, resumoFilas, serieAnalisesImagem } from "@/lib/filasMetrics";
+import { janelaDeBusca, resumoFilas, serieExames } from "@/lib/filasMetrics";
 import { formatAverageTime } from "@/lib/performanceStorage";
 import {
   chartAxisProps,
@@ -34,7 +34,7 @@ function MetricCard({ title, value, detail, delta, testId }: { title: string; va
 }
 
 /**
- * Cartões de TMA, TME, Análises Clínicas, Diagnóstico por Imagem e Abandono, e o gráfico Análises × Imagem.
+ * Cartões de TMA, TME, os 3 exames da URA (laboratoriais, imagem, cardiológicos), Outras e Abandono, e o gráfico dos 3 exames.
  * O TMA vem dos mesmos dados de atendimento do resto do Dashboard (recebido pronto); o resto vem das filas da Escallo.
  */
 export default function FilasDashboard({
@@ -52,7 +52,7 @@ export default function FilasDashboard({
 
   const atual = useMemo(() => resumoFilas(rows, range), [rows, range]);
   const antes = useMemo(() => resumoFilas(rows, anterior), [rows, anterior]);
-  const serie = useMemo(() => serieAnalisesImagem(rows, range), [rows, range]);
+  const serie = useMemo(() => serieExames(rows, range), [rows, range]);
 
   const comparar = (a?: number, b?: number, lowerIsBetter = false, unit?: "points") =>
     describeChange(a ?? 0, b ?? 0, anterior.name, { lowerIsBetter, unit });
@@ -65,7 +65,7 @@ export default function FilasDashboard({
 
   return (
     <div className="space-y-4" data-testid="filas-dashboard">
-      <motion.div variants={staggerContainerVariants} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <motion.div variants={staggerContainerVariants} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           testId="cartao-tma"
           title="TMA"
@@ -81,17 +81,31 @@ export default function FilasDashboard({
         />
         <MetricCard
           testId="cartao-analises"
-          title="Análises Clínicas"
+          title="Exames laboratoriais"
           value={atual.analises > 0 ? formatCount(atual.analises) : "—"}
           detail="ligações atendidas"
           delta={comparar(atual.analises, antes.analises)}
         />
         <MetricCard
           testId="cartao-imagem"
-          title="Diagnóstico por Imagem"
+          title="Exames por imagem"
           value={atual.imagem > 0 ? formatCount(atual.imagem) : "—"}
           detail="ligações atendidas"
           delta={comparar(atual.imagem, antes.imagem)}
+        />
+        <MetricCard
+          testId="cartao-cardiologicos"
+          title="Exames cardiológicos"
+          value={atual.cardiologicos > 0 ? formatCount(atual.cardiologicos) : "—"}
+          detail="ligações atendidas"
+          delta={comparar(atual.cardiologicos, antes.cardiologicos)}
+        />
+        <MetricCard
+          testId="cartao-outras"
+          title="Outras"
+          value={atual.outras > 0 ? formatCount(atual.outras) : "—"}
+          detail="ligações atendidas"
+          delta={comparar(atual.outras, antes.outras)}
         />
         <MetricCard
           testId="cartao-abandono"
@@ -104,8 +118,8 @@ export default function FilasDashboard({
 
       <div className="ellos-panel-sm p-5">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-semibold text-foreground">Análises × Imagem</h2>
-          <p className="text-xs text-muted-foreground">Ligações atendidas por fila. O WhatsApp não tem fila de Análises, então não entra aqui.</p>
+          <h2 className="text-base font-semibold text-foreground">Exames por área</h2>
+          <p className="text-xs text-muted-foreground">Ligações atendidas por fila da URA. “Outras” (Orçamento, Falar com Atendente…) ficam só no cartão. O WhatsApp não tem fila por exame, então não entra aqui.</p>
         </div>
         {serie.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground" data-testid="filas-vazio">
@@ -116,11 +130,15 @@ export default function FilasDashboard({
             <div className="mb-2 flex flex-wrap gap-4 text-xs text-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: chartColors.series[0] }} />
-                Análises Clínicas
+                Exames laboratoriais
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: chartColors.series[1] }} />
-                Diagnóstico por Imagem
+                Exames por imagem
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: chartColors.series[2] }} />
+                Exames cardiológicos
               </span>
             </div>
             <div className="h-64 w-full">
@@ -130,8 +148,9 @@ export default function FilasDashboard({
                   <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
                   <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
                   <Tooltip cursor={chartCursor} contentStyle={chartTooltipContentStyle} formatter={(v: number, nome: string) => [formatCount(v), nome]} />
-                  <Bar dataKey="analises" name="Análises Clínicas" fill={chartColors.series[0]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
-                  <Bar dataKey="imagem" name="Diagnóstico por Imagem" fill={chartColors.series[1]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                  <Bar dataKey="analises" name="Exames laboratoriais" fill={chartColors.series[0]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                  <Bar dataKey="imagem" name="Exames por imagem" fill={chartColors.series[1]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                  <Bar dataKey="cardiologicos" name="Exames cardiológicos" fill={chartColors.series[2]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

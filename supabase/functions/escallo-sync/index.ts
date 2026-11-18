@@ -11,7 +11,7 @@
 //  - o token da Escallo (ESCALLO_TOKEN) fica só no secret e é tirado de qualquer mensagem, registro ou log;
 //  - os logs têm só contagens; nenhum dado de pessoa.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
+import { filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import {
   MODOS_DO_AGENDADOR,
@@ -178,7 +178,8 @@ Deno.serve(async (req: Request) => {
     },
     async buscarFilas(dia) {
       const [r001, r091] = await Promise.all([buscarEscallo(tokenEscallo, "rel001", dia), buscarEscallo(tokenEscallo, "rel091", dia)]);
-      return [...resumirLigacoes(dia, r001), ...resumirWhatsapp(dia, r091)];
+      const avisos = filasNaoReconhecidas(r001).map((nome) => ({ tipo: "fila_nova" as const, fila: nome, dia, mensagem: `Fila nova "${nome}" sem grupo: foi contada em Outras. Diga a qual das 3 opções (laboratoriais, imagem, cardiológicos) ela pertence.` }));
+      return { linhas: [...resumirLigacoes(dia, r001), ...resumirWhatsapp(dia, r091)], avisos };
     },
     async gravarFilas(linhas) {
       const { error } = await servico.from("queue_daily").upsert(paraTabela(linhas), { onConflict: "date,channel,area" });
