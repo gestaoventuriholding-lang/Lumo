@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { janelaDeBusca, resumoFilas, serieExames, type FilaDia } from "./filasMetrics";
+import { janelaDeBusca, resumoAuto, resumoFilas, serieExames, type AutoDia, type FilaDia } from "./filasMetrics";
 
 // Dados inventados.
 const f = (date: string, channel: FilaDia["channel"], area: FilaDia["area"], answered: number, abandoned: number, waitSecondsTotal: number): FilaDia => ({
@@ -67,5 +67,22 @@ describe("filas: gráfico dos 3 exames", () => {
 describe("filas: janela de busca", () => {
   it("cobre o período e o anterior numa consulta só", () => {
     expect(janelaDeBusca({ start: "2026-11-01", end: "2026-11-30" }, { start: "2026-10-01", end: "2026-10-31" })).toEqual({ start: "2026-10-01", end: "2026-11-30" });
+  });
+});
+
+describe("filas: auto-atendimento do robô", () => {
+  const a = (date: string, contatos: number, autoAtendidos: number): AutoDia => ({ date, contatos, autoAtendidos, atendidos: 0, semExito: 0, comErro: 0 });
+  const dias = [a("2026-11-02", 100, 30), a("2026-11-03", 200, 90), a("2026-10-30", 50, 50)];
+
+  it("soma só o período e calcula a % de contatos resolvidos pelo robô", () => {
+    const r = resumoAuto(dias, { start: "2026-11-01", end: "2026-11-30" });
+    expect(r).toMatchObject({ temDados: true, contatos: 300, autoAtendidos: 120 });
+    expect(r.pct).toBeCloseTo(40, 5);
+  });
+
+  it("período sem dados não inventa número", () => {
+    const r = resumoAuto(dias, { start: "2026-12-01", end: "2026-12-31" });
+    expect(r).toMatchObject({ temDados: false, contatos: 0, autoAtendidos: 0 });
+    expect(r.pct).toBeUndefined();
   });
 });

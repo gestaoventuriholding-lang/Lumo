@@ -7,7 +7,8 @@ import DashboardKpiCard from "@/components/DashboardKpiCard";
 import { motion, cardItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { useFilasDiarias } from "@/hooks/useFilasDiarias";
 import { describeChange, previousRange, type Change } from "@/lib/periodComparison";
-import { janelaDeBusca, resumoFilas, serieExames } from "@/lib/filasMetrics";
+import { janelaDeBusca, resumoAuto, resumoFilas, serieExames } from "@/lib/filasMetrics";
+import { useAutoAtendimento } from "@/hooks/useAutoAtendimento";
 import { formatAverageTime } from "@/lib/performanceStorage";
 import {
   chartAxisProps,
@@ -79,6 +80,10 @@ export default function FilasDashboard({
   const janela = janelaDeBusca(range, anterior);
   const { rows, carregado } = useFilasDiarias(janela.start, janela.end);
 
+  const autoRows = useAutoAtendimento(janela.start, janela.end);
+  const autoAtual = useMemo(() => resumoAuto(autoRows, range), [autoRows, range]);
+  const autoAntes = useMemo(() => resumoAuto(autoRows, anterior), [autoRows, anterior]);
+
   const atual = useMemo(() => resumoFilas(rows, range), [rows, range]);
   const antes = useMemo(() => resumoFilas(rows, anterior), [rows, anterior]);
   const serie = useMemo(() => serieExames(rows, range), [rows, range]);
@@ -114,6 +119,17 @@ export default function FilasDashboard({
       detail: atual.ligacoesAbandonadas > 0 ? `${formatCount(atual.ligacoesAbandonadas)} ligações abandonadas` : "ligações",
       legenda: LEGENDA_FILA,
       delta: comparar(atual.abandonoPct, antes.abandonoPct, true, "points"),
+    },
+    {
+      testId: "cartao-consumo-ia",
+      title: "Consumo de IA",
+      value: autoAtual.autoAtendidos > 0 ? formatCount(autoAtual.autoAtendidos) : "—",
+      detail:
+        autoAtual.pct !== undefined
+          ? `${autoAtual.pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% dos ${formatCount(autoAtual.contatos)} contatos do WhatsApp`
+          : "contatos do WhatsApp",
+      legenda: "resolvidos pelo robô, sem atendente",
+      delta: comparar(autoAtual.autoAtendidos, autoAntes.autoAtendidos),
     },
   ];
 

@@ -18,3 +18,9 @@ select d::date, 'WhatsApp', 'total',
        (230 + (extract(day from d)::int * 11) % 70) * (1500 + (extract(day from d)::int % 5) * 240) as wait_seconds_total
 from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d
 where extract(dow from d) <> 0;
+
+-- Auto-atendimento do robô (rel097), inventado: contatos, resolvidos pelo robô, atendidos, sem êxito e com erro (as 4 faixas fecham com os contatos).
+delete from public.auto_atendimento_diario;
+insert into public.auto_atendimento_diario (date, contacts, self_served, served, no_success, errors)
+select d::date, c, round(c * 0.3)::int, round(c * 0.2)::int, c - round(c * 0.3)::int - round(c * 0.2)::int - round(c * 0.02)::int, round(c * 0.02)::int
+from (select d, 1500 + (extract(day from d)::int * 37) % 700 as c from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d where extract(dow from d) <> 0) t;

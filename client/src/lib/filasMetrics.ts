@@ -83,3 +83,29 @@ export function serieExames(rows: FilaDia[], range: Periodo): PontoAreas[] {
 export function janelaDeBusca(atual: Periodo, anterior: Periodo): Periodo {
   return { start: atual.start < anterior.start ? atual.start : anterior.start, end: atual.end > anterior.end ? atual.end : anterior.end };
 }
+
+/** Auto-atendimento do robô (WhatsApp, rel097), um registro por dia */
+export interface AutoDia {
+  date: string;
+  contatos: number;
+  /** Resolvidos pelo robô, sem atendente */
+  autoAtendidos: number;
+  atendidos: number;
+  semExito: number;
+  comErro: number;
+}
+
+export interface ResumoAuto {
+  temDados: boolean;
+  contatos: number;
+  autoAtendidos: number;
+  /** % dos contatos resolvidos pelo robô; undefined se não há contatos */
+  pct?: number;
+}
+
+export function resumoAuto(rows: AutoDia[], range: Periodo): ResumoAuto {
+  const lista = rows.filter((x) => x.date >= range.start && x.date <= range.end);
+  const contatos = lista.reduce((s, x) => s + x.contatos, 0);
+  const autoAtendidos = lista.reduce((s, x) => s + x.autoAtendidos, 0);
+  return { temDados: lista.length > 0, contatos, autoAtendidos, pct: contatos > 0 ? (autoAtendidos / contatos) * 100 : undefined };
+}

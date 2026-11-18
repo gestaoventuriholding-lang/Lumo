@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { areaDaFila, classificarFila, filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "../../../supabase/functions/escallo-sync/filas";
+import { autoParaTabela, resumirAutoAtendimento } from "../../../supabase/functions/escallo-sync/auto";
 import { sincronizar, type Deps } from "../../../supabase/functions/escallo-sync/sincronizar";
 import type { RegistroEscallo } from "../../../supabase/functions/escallo-sync/mapeamento";
 
@@ -154,5 +155,69 @@ describe("filas: dentro da sincronização", () => {
     const { d } = deps({ buscarFilas: undefined, gravarFilas: undefined });
     const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");
     expect(r.filas).toEqual({ linhas: 0, erros: [], avisos: [] });
+  });
+});
+
+describe("auto-atendimento do robô (rel097)", () => {
+  // Dados inventados.
+  const canal = (contatos: number, autoAtendidos: number, atendidos: number, semExito: number, erro: number): RegistroEscallo => ({
+    midiaSocialDescricaoTipo: "WhatsApp", contatos, autoAtendidos, atendidos, finalizadosSemExito: semExito, finalizadosComErro: erro,
+  });
+
+  it("soma os canais do dia; as faixas fecham com os contatos", () => {
+    const a = resumirAutoAtendimento("2026-11-16", [canal(100, 30, 20, 45, 5), canal(10, 4, 2, 3, 1)]);
+    expect(a).toEqual({ dia: "2026-11-16", contatos: 110, auto_atendidos: 34, atendidos: 22, sem_exito: 48, com_erro: 6 });
+    expect(a!.auto_atendidos + a!.atendidos + a!.sem_exito + a!.com_erro).toBe(a!.contatos);
+  });
+
+  it("aceita número em texto com vírgula; dia sem contatos não gera linha", () => {
+    expect(resumirAutoAtendimento("2026-11-16", [{ contatos: "10", autoAtendidos: "3,0" }])).toMatchObject({ contatos: 10, auto_atendidos: 3 });
+    expect(resumirAutoAtendimento("2026-11-16", [])).toBeNull();
+    expect(resumirAutoAtendimento("2026-11-16", [canal(0, 0, 0, 0, 0)])).toBeNull();
+  });
+
+  it("formato da tabela, sem telefone nem protocolo", () => {
+    expect(autoParaTabela({ dia: "2026-11-16", contatos: 110, auto_atendidos: 34, atendidos: 22, sem_exito: 48, com_erro: 6 })).toEqual({
+      date: "2026-11-16", contacts: 110, self_served: 34, served: 22, no_success: 48, errors: 6,
+    });
+  });
+
+  function deps(extra: Partial<Deps> = {}) {
+    const gravados: string[] = [];
+    const d: Deps = {
+      async buscarRelatorio() { return []; },
+      async lerColaboradores() { return []; },
+      async lerLimiteLogin() { return 43_200; },
+      async aplicarDia(plano) { return { inseridas: plano.linhas.length, atualizadas: 0, puladas_manuais: 0, alertas_novos: 0 }; },
+      async esperar() {},
+      async buscarAuto(dia) { return { dia, contatos: 10, auto_atendidos: 4, atendidos: 3, sem_exito: 2, com_erro: 1 }; },
+      async gravarAuto(a) { gravados.push(a.dia); },
+      ...extra,
+    };
+    return { d, gravados };
+  }
+
+  it("grava junto com o dia; na simulação não grava", async () => {
+    const a = deps();
+    const r = await sincronizar(a.d, { modo: "hoje" }, "2026-11-05");
+    expect(a.gravados).toEqual(["2026-11-05"]);
+    expect(r.auto).toEqual({ dias: 1, erros: [] });
+    const b = deps();
+    await sincronizar(b.d, { modo: "simulacao", dias: ["2026-11-03"] }, "2026-11-05");
+    expect(b.gravados).toEqual([]);
+  });
+
+  it("se o auto-atendimento falhar, o dia principal continua gravado e o erro fica anotado", async () => {
+    const { d } = deps({ async buscarAuto() { throw new Error("rel097 fora do ar"); } });
+    const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");
+    expect(r.gravou).toBe(true);
+    expect(r.auto.dias).toBe(0);
+    expect(r.auto.erros[0]).toContain("rel097 fora do ar");
+  });
+
+  it("sem as funções de auto-atendimento (como antes) tudo funciona igual", async () => {
+    const { d } = deps({ buscarAuto: undefined, gravarAuto: undefined });
+    const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");
+    expect(r.auto).toEqual({ dias: 0, erros: [] });
   });
 });

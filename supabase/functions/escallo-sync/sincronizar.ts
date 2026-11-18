@@ -2,6 +2,7 @@
 // mundo de fora entra por `deps`, então a mesma lógica roda no servidor, nos testes e na simulação local.
 import { hojeSaoPaulo, type RegistroEscallo } from "./mapeamento.ts";
 import type { LinhaFila } from "./filas.ts";
+import type { AutoDia } from "./auto.ts";
 import { montarPlanoDia, type AvisoSync, type ColaboradorSync, type PlanoDia } from "./plano.ts";
 
 /** Fila da Escallo que não está em nenhum grupo conhecido: foi contada em "Outras" (vai para sync_runs.warnings) */
@@ -45,6 +46,9 @@ export interface Deps {
   /** Opcional: totais por fila (Ligação) e espera do WhatsApp do dia. Se falhar, o dia principal continua valendo. */
   buscarFilas?(dia: string): Promise<{ linhas: LinhaFila[]; avisos?: AvisoFila[] }>;
   gravarFilas?(linhas: LinhaFila[]): Promise<void>;
+  /** Opcional: auto-atendimento do robô do dia (rel097). Se falhar, o dia principal continua valendo. */
+  buscarAuto?(dia: string): Promise<AutoDia | null>;
+  gravarAuto?(auto: AutoDia): Promise<void>;
   esperar(ms: number): Promise<void>;
 }
 
@@ -65,6 +69,8 @@ export interface ResultadoSync {
   avisos: (AvisoSync | AvisoFila)[];
   /** Linhas de fila gravadas e, se algum dia falhou, o motivo (não derruba a sincronização) */
   filas: { linhas: number; erros: string[]; avisos: AvisoFila[] };
+  /** Dias de auto-atendimento gravados e, se algum falhou, o motivo (não derruba a sincronização) */
+  auto: { dias: number; erros: string[] };
 }
 
 const dataValida = (s: unknown): s is string => {
@@ -150,6 +156,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
   const planos: PlanoDia[] = [];
   const gravacao = { ...VAZIA };
   const filas = { linhas: 0, erros: [] as string[], avisos: [] as AvisoFila[] };
+  const auto = { dias: 0, erros: [] as string[] };
   for (let i = 0; i < dias.length; i++) {
     const dia = dias[i];
     const rel025 = await deps.buscarRelatorio("rel025", dia);
@@ -172,6 +179,17 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
           filas.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
         }
       }
+      if (deps.buscarAuto && deps.gravarAuto) {
+        try {
+          const a = await deps.buscarAuto(dia);
+          if (a) {
+            await deps.gravarAuto(a);
+            auto.dias += 1;
+          }
+        } catch (e) {
+          auto.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+        }
+      }
     }
     if (i < dias.length - 1) await deps.esperar(1500);
   }
@@ -191,5 +209,6 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
     },
     avisos: [...planos.flatMap((p) => p.avisos), ...filas.avisos],
     filas,
+    auto,
   };
 }
