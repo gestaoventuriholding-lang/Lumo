@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, ClipboardCheck, Plus, ShieldAlert, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardCheck, Pencil, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import AuditDialog from "@/components/AuditDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,34 @@ export default function Audits() {
   const [fMes, setFMes] = useState(TODOS);
   const [fAbaixo, setFAbaixo] = useState(false);
   const [busca, setBusca] = useState("");
+  // auditoria que acabou de ser salva: a lista abre nela e a linha fica destacada por alguns segundos
+  const [destaque, setDestaque] = useState<number | null>(null);
+  useEffect(() => {
+    if (destaque === null) return;
+    const t = setTimeout(() => setDestaque(null), 6000);
+    return () => clearTimeout(t);
+  }, [destaque]);
+
+  /** Depois de salvar, mostra a auditoria na lista (sem filtros que a escondam) */
+  const aoSalvar = (a: Audit) => {
+    setFColab(TODOS);
+    setFCanal(TODOS);
+    setFMes(TODOS);
+    setFAbaixo(false);
+    setBusca("");
+    setAba("lista");
+    setDestaque(a.id);
+  };
+
+  /** Atalho do Painel: abre a lista só com as auditorias daquele colaborador no mês escolhido */
+  const verDoColaborador = (attendantId: number) => {
+    setFColab(String(attendantId));
+    setFCanal(TODOS);
+    setFMes(mes);
+    setFAbaixo(false);
+    setBusca("");
+    setAba("lista");
+  };
 
   const painel = useMemo(() => buildAuditPanel(audits, attendants, auditSettings, mes), [audits, attendants, auditSettings, mes]);
   const nomeDe = (id: number) => attendants.find((a) => a.id === id)?.name ?? "Colaborador removido";
@@ -195,9 +223,16 @@ export default function Audits() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" onClick={() => setDialogo({ attendantId: r.attendant.id })}>
-                              Auditar
-                            </Button>
+                            <div className="flex justify-end gap-1">
+                              {r.count > 0 && (
+                                <Button variant="ghost" size="sm" onClick={() => verDoColaborador(r.attendant.id)} data-testid="ver-auditorias">
+                                  Ver ({r.count})
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" onClick={() => setDialogo({ attendantId: r.attendant.id })}>
+                                Auditar
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -310,14 +345,14 @@ export default function Audits() {
                         <TableHead className="text-right">Nota</TableHead>
                         <TableHead>Feedback</TableHead>
                         <TableHead>Auditor</TableHead>
-                        <TableHead className="w-24" />
+                        <TableHead className="w-40" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {lista.map((a) => {
                         const abaixo = a.score !== undefined && a.score < auditSettings.minScore;
                         return (
-                          <TableRow key={a.id} className="cursor-pointer" onClick={() => setDialogo({ audit: a })} data-testid="linha-auditoria">
+                          <TableRow key={a.id} className={cn("cursor-pointer", destaque === a.id && "bg-primary-soft")} onClick={() => setDialogo({ audit: a })} data-testid="linha-auditoria">
                             <TableCell className="tabular-nums">{formatDate(a.attendedOn)}</TableCell>
                             <TableCell className="font-medium">{nomeDe(a.attendantId)}</TableCell>
                             <TableCell>{a.channel}</TableCell>
@@ -331,19 +366,34 @@ export default function Audits() {
                             </TableCell>
                             <TableCell className="max-w-[10rem] truncate text-xs text-muted-foreground">{a.auditorEmail}</TableCell>
                             <TableCell className="text-right">
-                              {isAdmin && (
+                              <div className="flex justify-end gap-1">
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  aria-label="Excluir auditoria"
+                                  size="sm"
+                                  className="gap-1"
+                                  aria-label="Editar auditoria"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setExcluir(a);
+                                    setDialogo({ audit: a });
                                   }}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Pencil className="h-4 w-4" />
+                                  Editar
                                 </Button>
-                              )}
+                                {isAdmin && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Excluir auditoria"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExcluir(a);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -357,7 +407,7 @@ export default function Audits() {
         </Tabs>
       </motion.div>
 
-      {dialogo && <AuditDialog audit={dialogo.audit} initialAttendantId={dialogo.attendantId} onClose={() => setDialogo(null)} />}
+      {dialogo && <AuditDialog audit={dialogo.audit} initialAttendantId={dialogo.attendantId} onSaved={aoSalvar} onClose={() => setDialogo(null)} />}
 
       <Dialog open={excluir !== null} onOpenChange={(o) => !o && setExcluir(null)}>
         <DialogContent className="max-w-md">

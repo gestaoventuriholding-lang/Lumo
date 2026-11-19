@@ -285,6 +285,50 @@ describe("auditoria: telas", () => {
     expect(JSON.stringify(window.localStorage)).not.toContain("hemograma");
   });
 
+  it("depois de salvar, a auditoria aparece na lista e dá para editar (e continua registrada)", async () => {
+    const user = userEvent.setup();
+    render(
+      <EllosDataProvider>
+        <Audits />
+      </EllosDataProvider>
+    );
+    await user.click(screen.getByTestId("nova-auditoria"));
+    let dialogo = await screen.findByTestId("auditoria-dialogo");
+    await user.click(within(dialogo).getByTestId("aud-colaborador"));
+    await user.click(await screen.findByRole("option", { name: "Ana Teste" }));
+    await user.click(within(dialogo).getByTestId("aud-canal"));
+    await user.click(await screen.findByRole("option", { name: "WhatsApp" }));
+    await user.type(within(dialogo).getByLabelText(/Protocolo da Escallo/), "202611100555");
+    for (let n = 1; n <= 10; n++) await user.click(within(within(dialogo).getByTestId(`aud-item-${n}`)).getByRole("radio", { name: "Atende" }));
+    await user.type(within(dialogo).getByLabelText(/Feedback para o agente/), "Primeiro texto.");
+    await user.click(within(dialogo).getByTestId("salvar-auditoria"));
+    await waitFor(() => expect(screen.queryByTestId("auditoria-dialogo")).toBeNull());
+
+    // ao salvar, a tela passa para a lista e mostra a auditoria nova
+    const linhas = await screen.findAllByTestId("linha-auditoria");
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0].textContent).toContain("202611100555");
+    expect(linhas[0].textContent).toContain("Ana Teste");
+
+    // editar pelo botão da linha: abre com o que foi salvo
+    await user.click(within(linhas[0]).getByRole("button", { name: "Editar auditoria" }));
+    dialogo = await screen.findByTestId("auditoria-dialogo");
+    expect(within(dialogo).getByText("Auditoria de atendimento")).toBeTruthy();
+    const campo = within(dialogo).getByLabelText(/Feedback para o agente/) as HTMLTextAreaElement;
+    expect(campo.value).toBe("Primeiro texto.");
+    await user.clear(campo);
+    await user.type(campo, "Texto corrigido.");
+    await user.click(within(dialogo).getByTestId("salvar-auditoria"));
+    await waitFor(() => expect(screen.queryByTestId("auditoria-dialogo")).toBeNull());
+
+    // continua uma só auditoria, agora com o texto novo
+    const salvo = JSON.parse(window.localStorage.getItem("ellos-audits") ?? "[]") as Audit[];
+    expect(salvo).toHaveLength(1);
+    expect(salvo[0].feedback).toBe("Texto corrigido.");
+    expect(salvo[0].protocol).toBe("202611100555");
+    expect(await screen.findAllByTestId("linha-auditoria")).toHaveLength(1);
+  });
+
   it("ligação: acha a gravação e carrega o player (áudio inventado no teste)", async () => {
     const user = userEvent.setup();
     URL.createObjectURL = vi.fn(() => "blob:audio-inventado");

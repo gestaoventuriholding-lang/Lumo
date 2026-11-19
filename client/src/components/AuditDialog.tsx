@@ -46,6 +46,8 @@ interface Props {
   audit?: Audit;
   onClose: () => void;
   initialAttendantId?: number;
+  /** Chamado depois de salvar (nova ou edição), com a auditoria como ficou gravada */
+  onSaved?: (audit: Audit) => void;
 }
 
 const TOM_RESULTADO: Record<AuditResult, string> = {
@@ -55,7 +57,7 @@ const TOM_RESULTADO: Record<AuditResult, string> = {
   nao_aplica: "border-border bg-muted text-foreground",
 };
 
-export default function AuditDialog({ audit, onClose, initialAttendantId }: Props) {
+export default function AuditDialog({ audit, onClose, initialAttendantId, onSaved }: Props) {
   const { user } = useAuth();
   const { attendants, auditChecklists, auditItems, audits, auditSettings, setAudits } = useEllosData();
   const hoje = getLocalDateString();
@@ -132,7 +134,8 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
     if (givenOn && givenOn !== audit?.feedbackGivenOn) salva = registerFeedback(salva, givenOn);
     if (!givenOn && audit?.feedbackGivenOn) salva = clearFeedbackRegistration(salva);
     setAudits((prev) => (audit ? prev.map((a) => (a.id === salva.id ? salva : a)) : [...prev, salva]));
-    toast.success(editando ? "Auditoria atualizada." : "Auditoria salva.");
+    toast.success(editando ? "Auditoria atualizada." : "Auditoria salva. Ela fica na lista e dá para editar quando quiser.");
+    onSaved?.(salva);
     onClose();
   };
 
