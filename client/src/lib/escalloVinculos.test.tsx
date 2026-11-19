@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lerCodigoDigitado, prepararVinculos, validarVinculo, type SobraEscallo } from "./escalloVinculos";
+import { lerCodigoDigitado, prepararVinculos, validarNovaColaboradora, validarVinculo, type NovaColaboradora, type SobraEscallo } from "./escalloVinculos";
 import type { Attendant } from "@/types/attendant";
 
 // Dados inventados.
@@ -219,5 +219,31 @@ describe("vínculo com a Escallo: lista dos já vinculados", () => {
     const depois = prepararVinculos(pendente, [colab(1, "Ana Teste", 200), ...equipe.slice(1)]);
     expect(depois.semSugestao).toHaveLength(0);
     expect(depois.vinculadas.map((v) => v.colaboradorNome)).toEqual(["Ana Teste"]);
+  });
+});
+
+describe("vínculo com a Escallo: cadastrar e vincular quem só existe na Escallo", () => {
+  const dados: NovaColaboradora = { name: "Nova Teste", role: "Atendente", serviceChannel: "Ligação", workingHours: "6h20", jornadaStart: "08:00", jornadaEnd: "14:20" };
+
+  it("aceita quando está tudo preenchido e o código e o nome estão livres", () => {
+    expect(validarNovaColaboradora(500, dados, equipe)).toBeNull();
+  });
+
+  it("pede o que falta, dizendo o que fazer", () => {
+    expect(validarNovaColaboradora(500, { ...dados, name: "  " }, equipe)).toContain("nome");
+    expect(validarNovaColaboradora(500, { ...dados, serviceChannel: "" }, equipe)).toContain("canal");
+    expect(validarNovaColaboradora(500, { ...dados, workingHours: "" }, equipe)).toContain("carga horária");
+    expect(validarNovaColaboradora(500, { ...dados, jornadaStart: "" }, equipe)).toContain("jornada");
+    expect(validarNovaColaboradora(500, { ...dados, jornadaStart: "15:00", jornadaEnd: "14:00" }, equipe)).toContain("jornada");
+  });
+
+  it("recusa código que já tem dona e nome que já existe (sem diferenciar maiúscula)", () => {
+    expect(validarNovaColaboradora(300, dados, equipe)).toContain("já pertence a Carla Teste");
+    expect(validarNovaColaboradora(500, { ...dados, name: "ana teste" }, equipe)).toContain("Já existe Ana Teste");
+  });
+
+  it("código inválido é recusado", () => {
+    expect(validarNovaColaboradora(-1, dados, equipe)).toContain("número inteiro");
+    expect(validarNovaColaboradora(1.5, dados, equipe)).toContain("número inteiro");
   });
 });

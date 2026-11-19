@@ -1,6 +1,7 @@
 // Ellos: regras da tela de vínculo entre os agentes da Escallo e os colaboradores. Sem rede e sem tela.
 // Ninguém é vinculado aqui: estas funções só organizam a lista e validam o que a pessoa vai confirmar.
-import type { Attendant } from "@/types/attendant";
+import type { Attendant, AttendantServiceChannel } from "@/types/attendant";
+import { isValidJornada } from "@/lib/attendantSchedule";
 import { getSupabase } from "@/lib/supabase";
 
 /** Registro que a função escallo-rel025 devolve em `sobras` (só os campos que a tela usa). */
@@ -181,4 +182,33 @@ export async function buscarVinculosNaEscallo(dia: string): Promise<RespostaEsca
   const r = data as RespostaEscallo | null;
   if (!r || !Array.isArray(r.sobras)) throw new Error("A resposta da busca veio em um formato inesperado.");
   return r;
+}
+
+/** Dados para cadastrar no Ellos uma pessoa que só existe na Escallo, já ligada ao código dela. */
+export interface NovaColaboradora {
+  name: string;
+  role: string;
+  serviceChannel: AttendantServiceChannel | "";
+  workingHours: string;
+  jornadaStart: string;
+  jornadaEnd: string;
+}
+
+/**
+ * Confere se dá para cadastrar e vincular. Devolve a mensagem de erro (diz o que houve e como resolver), ou null se estiver tudo certo.
+ * Nunca cadastra sozinha: quem chama só grava depois que a pessoa confirmar na janela.
+ */
+export function validarNovaColaboradora(codigo: number, dados: NovaColaboradora, attendants: Attendant[]): string | null {
+  if (!Number.isInteger(codigo) || codigo < 0) return "O código da Escallo precisa ser um número inteiro.";
+  const nome = dados.name.trim();
+  if (!nome) return "Escreva o nome da colaboradora.";
+  if (!dados.role) return "Escolha a função.";
+  if (!dados.serviceChannel) return "Escolha o canal de atendimento.";
+  if (!dados.workingHours) return "Escolha a carga horária.";
+  if (!isValidJornada(dados.jornadaStart, dados.jornadaEnd)) return "Informe início e fim da jornada (o horário final deve ser após o inicial).";
+  const dono = attendants.find((a) => a.escalloCodigo === codigo);
+  if (dono) return `O código ${codigo} já pertence a ${dono.name}.`;
+  const mesmoNome = attendants.find((a) => a.name.trim().toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"));
+  if (mesmoNome) return `Já existe ${mesmoNome.name} no Ellos. Em vez de cadastrar de novo, escolha ela na lista e confirme o vínculo.`;
+  return null;
 }

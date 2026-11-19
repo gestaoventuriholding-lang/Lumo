@@ -15,18 +15,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import {
   buscarVinculosNaEscallo,
   prepararVinculos,
+  validarNovaColaboradora,
   validarVinculo,
   type LinhaVinculo,
+  type NovaColaboradora,
   type RespostaEscallo,
 } from "@/lib/escalloVinculos";
 import { dadosDemonstracao, demoPermitida } from "@/lib/escalloDemo";
-import type { Attendant } from "@/types/attendant";
+import { FUNCAO_ATENDIMENTO, FUNCOES } from "@/lib/attendantRole";
+import { CANAL_LIGACAO_E_WHATSAPP, type Attendant } from "@/types/attendant";
 
 /** Ontem, no horário de São Paulo (a Escallo só fecha o relatório do dia depois que ele acaba). */
 function ontem(): string {
@@ -47,7 +52,7 @@ function comoEntrada(a: Attendant, escalloCodigo: number) {
 }
 
 export default function EscalloVinculos() {
-  const { attendants: reais, updateAttendant } = useEllosData();
+  const { attendants: reais, updateAttendant, addAttendant, workingHoursOptions } = useEllosData();
   // Demonstração: dados inventados e nada é salvo. Abre também com ?demo=1 no endereço.
   // Só existe na pré-visualização: no Ellos oficial o botão some e ?demo=1 é ignorado.
   const demoDisponivel = typeof window !== "undefined" && demoPermitida(window.location.hostname);
@@ -61,6 +66,8 @@ export default function EscalloVinculos() {
   // Escolha de colaborador em cada linha (código da Escallo -> id). Começa na sugestão, e a pessoa pode trocar.
   const [escolhas, setEscolhas] = useState<Record<number, number | null>>({});
   const [confirmarTodas, setConfirmarTodas] = useState(false);
+  // Cadastrar no Ellos uma pessoa que só existe na Escallo (ex.: colaboradora nova que ainda não foi cadastrada) e já ligar ao código dela
+  const [cadastro, setCadastro] = useState<{ linha: LinhaVinculo; dados: NovaColaboradora } | null>(null);
 
   const ordenados = useMemo(() => [...attendants].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")), [attendants]);
   const listas = useMemo(() => (resposta ? prepararVinculos(resposta.sobras, attendants, resposta.resumo.vinculados, resposta.vinculados) : null),
@@ -131,6 +138,43 @@ export default function EscalloVinculos() {
     return true;
   }
 
+  function abrirCadastro(l: LinhaVinculo) {
+    setCadastro({
+      linha: l,
+      dados: { name: l.nome, role: FUNCAO_ATENDIMENTO, serviceChannel: "", workingHours: "", jornadaStart: "", jornadaEnd: "" },
+    });
+  }
+
+  /** Cadastra a pessoa no Ellos já com o código da Escallo. Só roda no clique de "Cadastrar e vincular" da janela. */
+  function cadastrarEVincular() {
+    if (!cadastro) return;
+    const { linha: l, dados } = cadastro;
+    const problema = validarNovaColaboradora(l.codigo, dados, attendants);
+    if (problema) {
+      toast.error(problema);
+      return;
+    }
+    const entrada = {
+      name: dados.name.trim(),
+      role: dados.role,
+      serviceChannel: dados.serviceChannel as Exclude<NovaColaboradora["serviceChannel"], "">,
+      workingHours: dados.workingHours,
+      jornadaStart: dados.jornadaStart,
+      jornadaEnd: dados.jornadaEnd,
+      observation: "Cadastrada pela tela de vínculos com a Escallo",
+      escalloCodigo: l.codigo,
+      terminatedOn: null,
+    };
+    if (demo) {
+      // Demonstração: só a cópia local muda. Nada vai para o banco.
+      setColaboradoresDemo((prev) => [...prev, { ...entrada, id: -(prev.length + 100), registrationDate: ontem() }]);
+    } else {
+      addAttendant(entrada);
+    }
+    setCadastro(null);
+    toast.success(demo ? "Cadastrada e vinculada na demonstração (nada foi salvo)." : `${entrada.name} foi cadastrada no Ellos e vinculada ao código ${l.codigo}.`);
+  }
+
   function confirmarUma(l: LinhaVinculo) {
     if (confirmar(l)) toast.success(demo ? "Vínculo confirmado na demonstração (nada foi salvo)." : "Vínculo confirmado.");
   }
@@ -185,9 +229,14 @@ export default function EscalloVinculos() {
           {ehSugestao && !sugerido && id !== null && <p className="text-xs text-muted-foreground">Você trocou a sugestão.</p>}
           {repetido && <p className="text-xs text-danger">Este colaborador está escolhido em outra linha também.</p>}
         </div>
-        <Button size="sm" onClick={() => confirmarUma(l)} disabled={id === null || id === undefined || repetido}>
-          Confirmar vínculo
-        </Button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => abrirCadastro(l)} data-testid="cadastrar-e-vincular">
+            Cadastrar e vincular
+          </Button>
+          <Button size="sm" onClick={() => confirmarUma(l)} disabled={id === null || id === undefined || repetido}>
+            Confirmar vínculo
+          </Button>
+        </div>
       </div>
     );
   }
@@ -305,7 +354,7 @@ export default function EscalloVinculos() {
               <h2 id="titulo-sem-sugestao" className="text-lg font-semibold text-foreground">Sem sugestão ({listas.semSugestao.length})</h2>
               <p className="text-sm text-muted-foreground">
                 Vieram da Escallo e nenhum colaborador tem esse nome. Provavelmente são supervisores ou usuários de sistema.
-                Eles ficam de fora e <strong>ninguém é criado</strong>. Se algum for mesmo um colaborador, escolha quem é e confirme.
+                Se algum for mesmo da central, escolha quem é e confirme o vínculo. Se ele ainda não está cadastrado no Ellos, use <strong>Cadastrar e vincular</strong>. Nada é criado sem você confirmar.
               </p>
             </div>
             <Card>
@@ -369,6 +418,78 @@ export default function EscalloVinculos() {
           )}
         </>
       )}
+
+      <Dialog open={cadastro !== null} onOpenChange={(aberto) => !aberto && setCadastro(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Cadastrar e vincular{demo ? " (demonstração)" : ""}</DialogTitle>
+            <DialogDescription>
+              Vai cadastrar uma nova colaboradora no Ellos e ligá-la ao código {cadastro?.linha.codigo} da Escallo. Confira os dados: a partir daí a sincronização traz os atendimentos dela.
+            </DialogDescription>
+          </DialogHeader>
+          {cadastro && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="cad-nome">Nome</Label>
+                <Input id="cad-nome" value={cadastro.dados.name} onChange={(e) => setCadastro({ ...cadastro, dados: { ...cadastro.dados, name: e.target.value } })} />
+                <p className="text-xs text-muted-foreground">Veio da Escallo: "{cadastro.linha.nome}". Pode corrigir o nome.</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Função</Label>
+                  <Select value={cadastro.dados.role} onValueChange={(v) => setCadastro({ ...cadastro, dados: { ...cadastro.dados, role: v } })}>
+                    <SelectTrigger aria-label="Função"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {FUNCOES.map((f) => (
+                        <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Canal</Label>
+                  <Select value={cadastro.dados.serviceChannel || undefined} onValueChange={(v) => setCadastro({ ...cadastro, dados: { ...cadastro.dados, serviceChannel: v as NovaColaboradora["serviceChannel"] } })}>
+                    <SelectTrigger aria-label="Canal"><SelectValue placeholder="Escolha o canal" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ligação">Ligação</SelectItem>
+                      <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                      <SelectItem value={CANAL_LIGACAO_E_WHATSAPP}>{CANAL_LIGACAO_E_WHATSAPP}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Carga horária</Label>
+                <Select value={cadastro.dados.workingHours || undefined} onValueChange={(v) => setCadastro({ ...cadastro, dados: { ...cadastro.dados, workingHours: v } })}>
+                  <SelectTrigger aria-label="Carga horária"><SelectValue placeholder="Escolha a carga horária" /></SelectTrigger>
+                  <SelectContent>
+                    {workingHoursOptions.map((o) => (
+                      <SelectItem key={o.id} value={o.label}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {workingHoursOptions.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Nenhuma carga horária cadastrada. Cadastre em Configurações.</p>
+                )}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cad-inicio">Jornada: início</Label>
+                  <Input id="cad-inicio" type="time" value={cadastro.dados.jornadaStart} onChange={(e) => setCadastro({ ...cadastro, dados: { ...cadastro.dados, jornadaStart: e.target.value } })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cad-fim">Jornada: fim</Label>
+                  <Input id="cad-fim" type="time" value={cadastro.dados.jornadaEnd} onChange={(e) => setCadastro({ ...cadastro, dados: { ...cadastro.dados, jornadaEnd: e.target.value } })} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCadastro(null)}>Cancelar</Button>
+            <Button onClick={cadastrarEVincular} data-testid="confirmar-cadastro">Cadastrar e vincular</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmarTodas} onOpenChange={setConfirmarTodas}>
         <AlertDialogContent>
