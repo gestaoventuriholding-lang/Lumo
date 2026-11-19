@@ -84,7 +84,7 @@ export default function AtendimentoViewer({ canal, protocolo, dia }: Props) {
           {canal === "Ligação" ? "Buscar gravação" : "Buscar conversa"}
         </Button>
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5" /> Não é salvo no Ellos: vem da Escallo na hora e some ao fechar.
+          <ShieldCheck className="h-3.5 w-3.5" /> Vem da Escallo na hora e não é salvo.
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export default function AtendimentoViewer({ canal, protocolo, dia }: Props) {
 
       {!resultado && !erro && !carregando && (
         <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-          Informe o canal, a data e o protocolo e clique em buscar para ver a conversa ou ouvir a gravação.
+          Preencha canal, data e protocolo e clique em buscar.
         </p>
       )}
 

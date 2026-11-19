@@ -72,6 +72,8 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
   const [feedback, setFeedback] = useState(audit?.feedback ?? "");
   const [givenOn, setGivenOn] = useState(audit?.feedbackGivenOn ?? "");
   const [erro, setErro] = useState<string | null>(null);
+  // critérios cuja observação foi aberta (o campo só aparece quando pedido ou quando já tem texto)
+  const [obsAbertas, setObsAbertas] = useState<Set<number>>(new Set());
 
   const colaboradores = useMemo(() => {
     const lista = attendantsActiveOn(attendants, attendedOn);
@@ -138,22 +140,20 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="grid max-h-[94vh] max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden" data-testid="auditoria-dialogo">
+      <DialogContent className="grid max-h-[92vh] grid-rows-[auto_minmax(0,1fr)_auto] gap-4 overflow-hidden sm:max-w-6xl" data-testid="auditoria-dialogo">
         <DialogHeader>
           <DialogTitle>{editando ? "Auditoria de atendimento" : "Nova auditoria de atendimento"}</DialogTitle>
-          <DialogDescription>
-            Escolha o atendimento pelo protocolo, avalie cada critério e registre o feedback. A conversa e a gravação não são salvas.
-          </DialogDescription>
+          <DialogDescription>Escolha o atendimento, avalie cada critério e registre o feedback.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid min-h-0 gap-4 overflow-y-auto lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:overflow-hidden">
-          {/* Lado esquerdo: atendimento */}
-          <div className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
+        <div className="grid min-h-0 gap-6 overflow-y-auto lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:overflow-hidden">
+          {/* Esquerda: quem e qual atendimento */}
+          <section className="flex min-h-0 flex-col gap-4 lg:overflow-hidden" aria-label="Atendimento">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="aud-colab">Colaborador</Label>
                 <Select value={attendantId !== undefined ? String(attendantId) : ""} onValueChange={(v) => setAttendantId(Number(v))} disabled={editando}>
-                  <SelectTrigger id="aud-colab" data-testid="aud-colaborador">
+                  <SelectTrigger id="aud-colab" className="w-full" data-testid="aud-colaborador">
                     <SelectValue placeholder="Escolha quem foi auditado" />
                   </SelectTrigger>
                   <SelectContent>
@@ -168,8 +168,8 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
               <div className="space-y-1.5">
                 <Label htmlFor="aud-canal">Canal</Label>
                 <Select value={channel} onValueChange={(v) => setChannel(v as AuditChannel)}>
-                  <SelectTrigger id="aud-canal" data-testid="aud-canal">
-                    <SelectValue placeholder="Canal" />
+                  <SelectTrigger id="aud-canal" className="w-full" data-testid="aud-canal">
+                    <SelectValue placeholder="Escolha o canal" />
                   </SelectTrigger>
                   <SelectContent>
                     {CANAIS_AUDITORIA.map((c) => (
@@ -187,140 +187,161 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="aud-protocolo">Protocolo da Escallo</Label>
                 <Input id="aud-protocolo" value={protocol} maxLength={60} onChange={(e) => setProtocol(e.target.value)} placeholder="Ex.: 202611100001" />
-                <p className="text-xs text-muted-foreground">Use só o protocolo. Não digite nome, CPF nem dados do paciente (LGPD).</p>
+                <p className="text-xs text-muted-foreground">Só o protocolo, sem nome, CPF ou dados do paciente.</p>
               </div>
             </div>
             <div className="min-h-0 flex-1 lg:overflow-hidden">
               <AtendimentoViewer canal={channel} protocolo={protocol} dia={attendedOn} />
             </div>
-          </div>
+          </section>
 
-          {/* Lado direito: checklist */}
-          <div className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1" data-testid="checklist-auditoria">
+          {/* Direita: nota, critérios e feedback */}
+          <section className="flex min-h-0 flex-col gap-5 lg:overflow-y-auto lg:border-l lg:pl-6 lg:pr-1" data-testid="checklist-auditoria">
             {!checklist ? (
               <p className="rounded-lg border border-dashed p-4 text-sm">
                 Não há checklist ativo. Peça a um administrador para cadastrar os critérios em Configurações → Critérios de auditoria.
               </p>
             ) : (
               <>
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 p-3" data-testid="nota-ao-vivo">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {checklist.name} · versão {checklist.version}
-                    </p>
-                    <p className="font-display text-3xl font-bold tabular-nums">{score !== undefined ? score.toLocaleString("pt-BR") : "—"}</p>
+                {/* Nota ao vivo: fica visível enquanto se rola a lista */}
+                <div className="sticky top-0 z-10 -mt-1 space-y-2 border-b bg-card pb-3 pt-1" data-testid="nota-ao-vivo">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {checklist.name} · versão {checklist.version}
+                      </p>
+                      <p className="font-display text-3xl font-bold leading-none tabular-nums">{score !== undefined ? score.toLocaleString("pt-BR") : "—"}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {eliminated && (
+                        <Badge className="gap-1 border border-danger/40 bg-danger/10 text-danger" data-testid="selo-eliminatorio">
+                          <ShieldAlert className="h-3.5 w-3.5" /> Critério eliminatório: nota zerada
+                        </Badge>
+                      )}
+                      {!eliminated && abaixo && (
+                        <Badge className="gap-1 border border-danger/40 bg-danger/10 text-danger" data-testid="selo-abaixo">
+                          <AlertTriangle className="h-3.5 w-3.5" /> Abaixo da nota mínima ({auditSettings.minScore})
+                        </Badge>
+                      )}
+                      {!eliminated && score !== undefined && !abaixo && (
+                        <Badge className="gap-1 border border-success/30 bg-success/10 text-success">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Na meta (mínimo {auditSettings.minScore})
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 text-xs">
-                    {eliminated && (
-                      <Badge className="gap-1 border border-danger/40 bg-danger/10 text-danger" data-testid="selo-eliminatorio">
-                        <ShieldAlert className="h-3.5 w-3.5" /> Critério eliminatório: nota zerada
-                      </Badge>
-                    )}
-                    {!eliminated && abaixo && (
-                      <Badge className="gap-1 border border-danger/40 bg-danger/10 text-danger" data-testid="selo-abaixo">
-                        <AlertTriangle className="h-3.5 w-3.5" /> Abaixo da nota mínima ({auditSettings.minScore})
-                      </Badge>
-                    )}
-                    {!eliminated && score !== undefined && !abaixo && (
-                      <Badge className="gap-1 border border-success/30 bg-success/10 text-success">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Na meta (mínimo {auditSettings.minScore})
-                      </Badge>
-                    )}
-                    <span className="text-muted-foreground">{faltam > 0 ? `Faltam ${faltam} de ${itens.length} critérios` : "Todos os critérios avaliados"}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${itens.length ? (listaRespostas.length / itens.length) * 100 : 0}%` }} />
+                    </div>
+                    <span className="text-xs tabular-nums text-muted-foreground">{faltam > 0 ? `Faltam ${faltam} de ${itens.length}` : "Todos avaliados"}</span>
                   </div>
                 </div>
 
-                <ul className="space-y-3">
+                <ul className="divide-y">
                   {itens.map((item) => {
                     const r = respostas[item.id];
+                    const comObs = obsAbertas.has(item.id) || Boolean(r?.note);
                     return (
-                      <li key={item.id} className="rounded-lg border p-3" data-testid={`aud-item-${item.position}`}>
-                        <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-                          <div>
+                      <li key={item.id} className="space-y-2 py-3 first:pt-0" data-testid={`aud-item-${item.position}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
                             <p className="text-sm font-medium">
                               {item.title}
-                              {!item.active && <span className="ml-2 text-xs text-muted-foreground">(critério desativado depois)</span>}
+                              {!item.active && <span className="ml-2 text-xs font-normal text-muted-foreground">(desativado depois)</span>}
                             </p>
                             {item.hint && <p className="text-xs text-muted-foreground">{item.hint}</p>}
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span className="tabular-nums">Peso {item.weight}</span>
+                          <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
                             {item.eliminatory && (
                               <Badge variant="outline" className="gap-1 border-danger/40 text-danger">
                                 <ShieldAlert className="h-3 w-3" /> Eliminatório
                               </Badge>
                             )}
+                            <span className="tabular-nums">Peso {item.weight}</span>
                           </div>
                         </div>
-                        <div role="radiogroup" aria-label={item.title} className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                        <div role="radiogroup" aria-label={item.title} className="grid grid-cols-4 gap-1.5">
                           {RESULTADOS.map((opcao) => (
                             <button
                               key={opcao.value}
                               type="button"
                               role="radio"
                               aria-checked={r?.result === opcao.value}
+                              aria-label={opcao.label}
+                              title={opcao.label}
                               onClick={() => definir(item.id, opcao.value)}
                               className={cn(
                                 "rounded-md border px-2 py-1.5 text-xs font-medium transition-colors hover:bg-muted",
                                 r?.result === opcao.value && TOM_RESULTADO[opcao.value]
                               )}
                             >
-                              {opcao.label}
+                              {opcao.short}
                             </button>
                           ))}
                         </div>
-                        {r && (
-                          <Input
-                            className="mt-2 h-8 text-xs"
-                            placeholder="Observação sobre este critério (opcional)"
-                            aria-label={`Observação: ${item.title}`}
-                            maxLength={AUDIT_NOTE_MAX}
-                            value={r.note}
-                            onChange={(e) => anotar(item.id, e.target.value)}
-                          />
-                        )}
+                        {r &&
+                          (comObs ? (
+                            <Input
+                              className="h-8 text-xs"
+                              placeholder="Observação sobre este critério"
+                              aria-label={`Observação: ${item.title}`}
+                              maxLength={AUDIT_NOTE_MAX}
+                              value={r.note}
+                              autoFocus={obsAbertas.has(item.id) && !r.note}
+                              onChange={(e) => anotar(item.id, e.target.value)}
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-primary hover:underline"
+                              onClick={() => setObsAbertas((p) => new Set(p).add(item.id))}
+                            >
+                              + Observação
+                            </button>
+                          ))}
                       </li>
                     );
                   })}
                 </ul>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="aud-obs">Observação geral</Label>
-                  <Textarea id="aud-obs" rows={2} value={generalNote} maxLength={AUDIT_GENERAL_NOTE_MAX} onChange={(e) => setGeneralNote(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="aud-feedback">Feedback para o agente</Label>
-                  <Textarea
-                    id="aud-feedback"
-                    rows={4}
-                    className="max-h-48 overflow-y-auto"
-                    value={feedback}
-                    maxLength={AUDIT_FEEDBACK_MAX}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Pontos fortes, o que melhorar e combinados."
-                  />
-                  <p className="text-right text-xs tabular-nums text-muted-foreground">
-                    {feedback.length}/{AUDIT_FEEDBACK_MAX}
-                  </p>
-                </div>
-                <div className="space-y-1.5 rounded-lg border p-3">
-                  <Label htmlFor="aud-dado">Feedback dado em</Label>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Input id="aud-dado" type="date" min={attendedOn} max={hoje} className="w-44" value={givenOn} onChange={(e) => setGivenOn(e.target.value)} />
-                    <Button type="button" variant="outline" size="sm" onClick={() => setGivenOn(hoje)}>
-                      Foi hoje
-                    </Button>
-                    {givenOn && (
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setGivenOn("")}>
-                        Limpar
-                      </Button>
-                    )}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="aud-feedback">Feedback para o agente</Label>
+                    <Textarea
+                      id="aud-feedback"
+                      rows={3}
+                      className="max-h-40 overflow-y-auto"
+                      value={feedback}
+                      maxLength={AUDIT_FEEDBACK_MAX}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      placeholder="Pontos fortes, o que melhorar e combinados."
+                    />
+                    <p className="text-right text-xs tabular-nums text-muted-foreground">
+                      {feedback.length}/{AUDIT_FEEDBACK_MAX}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {audit?.ackAt && audit.ackMode === "supervisora"
-                      ? "Registrado pela supervisão. A confirmação pelo próprio agente (com login) vem numa próxima etapa."
-                      : "Preencha quando o feedback for conversado com o agente. A confirmação pelo próprio agente (com login) vem numa próxima etapa."}
-                  </p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="aud-obs">Observação geral (opcional)</Label>
+                    <Textarea id="aud-obs" rows={2} value={generalNote} maxLength={AUDIT_GENERAL_NOTE_MAX} onChange={(e) => setGeneralNote(e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="aud-dado">Feedback dado em</Label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Input id="aud-dado" type="date" min={attendedOn} max={hoje} className="w-44" value={givenOn} onChange={(e) => setGivenOn(e.target.value)} />
+                      <Button type="button" variant="outline" size="sm" onClick={() => setGivenOn(hoje)}>
+                        Foi hoje
+                      </Button>
+                      {givenOn && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setGivenOn("")}>
+                          Limpar
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {audit?.ackAt && audit.ackMode === "supervisora" ? "Registrado pela supervisão." : "Preencha quando o feedback for conversado com o agente."}
+                    </p>
+                  </div>
                 </div>
                 {alertaPessoal && (
                   <p className="flex items-start gap-2 rounded-lg bg-warning/10 p-2 text-xs text-warning" role="note">
@@ -330,7 +351,7 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
                 )}
               </>
             )}
-          </div>
+          </section>
         </div>
 
         <DialogFooter className="items-center sm:justify-between">
