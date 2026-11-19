@@ -352,10 +352,6 @@ export default function EscalloVinculos() {
           <section className="space-y-2" aria-labelledby="titulo-sem-sugestao">
             <div>
               <h2 id="titulo-sem-sugestao" className="text-lg font-semibold text-foreground">Sem sugestão ({listas.semSugestao.length})</h2>
-              <p className="text-sm text-muted-foreground">
-                Vieram da Escallo e nenhum colaborador tem esse nome. Provavelmente são supervisores ou usuários de sistema.
-                Se algum for mesmo da central, escolha quem é e confirme o vínculo. Se ele ainda não está cadastrado no Ellos, use <strong>Cadastrar e vincular</strong>. Nada é criado sem você confirmar.
-              </p>
             </div>
             <Card>
               <CardContent className="pt-2">
