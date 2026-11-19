@@ -196,15 +196,15 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
           </section>
 
           {/* Direita: nota, critérios e feedback */}
-          <section className="flex min-h-0 flex-col gap-5 lg:overflow-y-auto lg:border-l lg:pl-6 lg:pr-1" data-testid="checklist-auditoria">
+          <section className="flex min-h-0 flex-col gap-4 lg:overflow-hidden lg:border-l lg:pl-6" data-testid="checklist-auditoria">
             {!checklist ? (
               <p className="rounded-lg border border-dashed p-4 text-sm">
                 Não há checklist ativo. Peça a um administrador para cadastrar os critérios em Configurações → Critérios de auditoria.
               </p>
             ) : (
               <>
-                {/* Nota ao vivo: fica visível enquanto se rola a lista */}
-                <div className="sticky top-0 z-10 -mt-1 space-y-2 border-b bg-card pb-3 pt-1" data-testid="nota-ao-vivo">
+                {/* Nota ao vivo: fica parada no topo; só a lista abaixo rola */}
+                <div className="shrink-0 space-y-2 border-b pb-3" data-testid="nota-ao-vivo">
                   <div className="flex items-end justify-between gap-3">
                     <div>
                       <p className="text-xs text-muted-foreground">
@@ -238,6 +238,7 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
                   </div>
                 </div>
 
+                <div className="min-h-0 flex-1 space-y-5 lg:overflow-y-auto lg:pr-1">
                 <ul className="divide-y">
                   {itens.map((item) => {
                     const r = respostas[item.id];
@@ -349,6 +350,7 @@ export default function AuditDialog({ audit, onClose, initialAttendantId }: Prop
                     Parece haver CPF ou e-mail no texto. Não registre dados do paciente: use só o protocolo.
                   </p>
                 )}
+                </div>
               </>
             )}
           </section>
