@@ -1,5 +1,6 @@
-// Ellos: ver a conversa do WhatsApp ou ouvir a gravação da ligação de um atendimento, para auditar.
+// Ellos: ver a conversa do WhatsApp (por protocolo) ou ouvir a gravação de uma ligação (escolhida na lista do agente no dia), para auditar.
 // Nada é guardado: a conversa e o áudio vêm da Escallo na hora (função escallo-atendimento) e somem ao fechar a tela.
+// Da ligação só fica registrado, na auditoria, o identificador (uniqueid): sem áudio, sem telefone, sem nome.
 // No ambiente de teste não há Escallo: usa uma conversa e um áudio inventados.
 import { ambiente, getSupabase } from "@/lib/supabase";
 import { traduzirErroDaFuncao } from "@/lib/escalloVinculos";
@@ -30,17 +31,19 @@ export interface ConversaWhatsapp {
   mensagens: MensagemConversa[];
 }
 
-export interface LigacaoEncontrada {
-  tipo: "ligacao";
-  protocolo: string;
-  dia: string;
+/** Uma ligação recebida e atendida pelo agente no dia (sem telefone nem nome do paciente) */
+export interface LigacaoDaLista {
+  /** identificador da gravação na Escallo; é o que fica salvo na auditoria */
   uniqueid: string;
+  /** "AAAA-MM-DD HH:MM:SS" */
   inicio: string;
-  segundosConversa: number;
-  agente: string;
+  fila: string;
+  segundos: number;
 }
 
-export type AtendimentoBuscado = ConversaWhatsapp | LigacaoEncontrada;
+/** Identificador de ligação da Escallo, ex.: 1763560000.12345 */
+export const ID_LIGACAO = /^\d{6,15}\.\d{1,8}$/;
+export const pareceIdLigacao = (v: string) => ID_LIGACAO.test(v.trim());
 
 const CONVERSA_INVENTADA: Omit<MensagemConversa, "id" | "dataHora">[] = [
   { direcao: "Automático", tipo: "Texto", conteudo: "Olá! Você falou com o Laboratório Exemplo. Digite 1 para agendamentos ou 2 para resultados.", etapa: "automatico" },
@@ -67,17 +70,31 @@ function conversaInventada(protocolo: string, dia: string): ConversaWhatsapp {
   return { tipo: "conversa", protocolo, dia, agentes: ["Paula (inventada)"], mensagens };
 }
 
-/** Busca o atendimento. WhatsApp devolve a conversa; Ligação devolve o identificador da gravação. */
-export async function buscarAtendimento(canal: AuditChannel, protocolo: string, dia: string): Promise<AtendimentoBuscado> {
-  if (atendimentoInventado()) {
-    if (canal === "WhatsApp") return conversaInventada(protocolo, dia);
-    return { tipo: "ligacao", protocolo, dia, uniqueid: "1700000000.0", inicio: `${dia} 09:10:00`, segundosConversa: 4, agente: "Paula (inventada)" };
-  }
-  const { data, error } = await getSupabase().functions.invoke("escallo-atendimento", { body: { canal, protocolo, dia } });
+/** Busca a conversa do WhatsApp pelo protocolo (a Escallo informa o protocolo só no WhatsApp). */
+export async function buscarConversa(protocolo: string, dia: string): Promise<ConversaWhatsapp> {
+  if (atendimentoInventado()) return conversaInventada(protocolo, dia);
+  const { data, error } = await getSupabase().functions.invoke("escallo-atendimento", { body: { canal: "WhatsApp", protocolo, dia } });
   if (error) throw new Error(await traduzirErroAtendimento(error));
-  const r = data as AtendimentoBuscado | null;
-  if (!r || (r.tipo !== "conversa" && r.tipo !== "ligacao")) throw new Error("A resposta da Escallo veio em um formato inesperado.");
+  const r = data as ConversaWhatsapp | null;
+  if (!r || r.tipo !== "conversa") throw new Error("A resposta da Escallo veio em um formato inesperado.");
   return r;
+}
+
+/** Ligações recebidas e atendidas por esse agente (código da Escallo) no dia */
+export async function listarLigacoes(dia: string, codigoAgente: number): Promise<LigacaoDaLista[]> {
+  if (atendimentoInventado()) {
+    const base: [string, string, number][] = [
+      ["09:10:00", "USG", 187],
+      ["10:32:00", "Preparo AC", 64],
+      ["14:05:00", "Resultados AC", 312],
+    ];
+    return base.map(([hora, fila, segundos], i) => ({ uniqueid: `170000000${i}.0000${i + 1}`, inicio: `${dia} ${hora}`, fila, segundos }));
+  }
+  const { data, error } = await getSupabase().functions.invoke("escallo-atendimento", { body: { canal: "Ligação", acao: "listar", dia, codigoAgente } });
+  if (error) throw new Error(await traduzirErroAtendimento(error));
+  const r = data as { tipo?: string; ligacoes?: LigacaoDaLista[] } | null;
+  if (!r || r.tipo !== "lista" || !Array.isArray(r.ligacoes)) throw new Error("A resposta da Escallo veio em um formato inesperado.");
+  return r.ligacoes;
 }
 
 /** Um tom curto gerado na hora, só para testar o player no ambiente de teste */

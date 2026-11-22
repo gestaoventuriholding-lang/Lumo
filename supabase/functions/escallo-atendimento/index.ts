@@ -11,13 +11,17 @@
 //
 // Pedidos (POST, JSON):
 //  { canal: "WhatsApp", protocolo, dia }                       -> { tipo: "conversa", ... }
-//  { canal: "Ligação",  protocolo, dia }                       -> { tipo: "ligacao", uniqueid, ... } (acha a ligação no rel002)
+//  { canal: "Ligação",  acao: "listar", dia, codigoAgente }    -> { tipo: "lista", ligacoes: [{ uniqueid, inicio, fila, segundos }] }
+//                                                                 (a Escallo não liga protocolo a ligação recebida: escolhe-se a ligação do agente no dia)
 //  { canal: "Ligação",  acao: "audio", uniqueid }              -> o som (application/octet-stream)
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "./ligacoes.ts";
 
 const HOST_ESCALLO = "https://checkuplaboratoriodeanalisesclinicasltda-6b2800.escallo.com.br";
 const URL_HISTORICO = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/historicoMensagens/?registros=25&pagina=0`;
-const URL_REL002 = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/rel002/?registros=5000&pagina=0`;
+const URL_REL001 = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/rel001/?registros=5000&pagina=0`;
+const URL_REL002 = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/rel002/?registros=100&pagina=`; // pagina de 100 em 100
+const MAX_PAGINAS_REL002 = 80;
 const URL_AUDIO = `${HOST_ESCALLO}/escallo/api/Ligacao/FindAudio/`;
 const LIMITE_AUDIO_BYTES = 40 * 1024 * 1024;
 
@@ -42,7 +46,7 @@ function cabecalhos(origem: string | null, tipo = "application/json"): Record<st
 
 const PROTOCOLO_OK = /^[A-Za-z0-9._-]{1,60}$/;
 const DIA_OK = /^\d{4}-\d{2}-\d{2}$/;
-const UNIQUEID_OK = /^\d{6,15}\.\d{1,3}$/;
+const UNIQUEID_OK = UNIQUEID_LIGACAO; // ex.: 1763560000.12345 (5 casas decimais na Escallo)
 
 type Mensagem = { id?: unknown; dataHora?: unknown; tipo?: unknown; conteudo?: unknown; direcao?: unknown };
 
@@ -123,6 +127,42 @@ Deno.serve(async (req: Request) => {
     return new Response(resposta.body, { status: 200, headers: cabecalhos(origem, "application/octet-stream") });
   }
 
+  // ---- Ligações do agente no dia: junta rel001 (hora, fila, gravação) com rel002 (quem atendeu) ----
+  if (corpo.acao === "listar") {
+    if (canal !== "Ligação") return json({ error: "A lista de ligações é só do canal Ligação." }, 400);
+    const diaLista = String(corpo.dia ?? "");
+    const codigo = String(corpo.codigoAgente ?? "").trim();
+    if (!DIA_OK.test(diaLista) || Number.isNaN(new Date(`${diaLista}T12:00:00Z`).getTime())) return json({ error: "Informe a data do atendimento." }, 400);
+    if (!/^\d{1,8}$/.test(codigo)) return json({ error: "Este colaborador não tem código da Escallo. Vincule em Atendentes → Vínculos com a Escallo." }, 400);
+    const cab = { "Content-Type": "application/json", Authorization: `Partner ${token}` };
+    const per = { dataInicial: diaLista, dataFinal: diaLista, horarioInicial: "00:00:01", horarioFinal: "23:59:59" };
+    const ler = async (url: string): Promise<Record<string, unknown>[] | null> => {
+      const r = await chamarEscallo(url, { method: "POST", headers: cab, body: JSON.stringify(per) });
+      if (!r) return null;
+      const d = await r.json().catch(() => null) as { code?: unknown; data?: { registros?: unknown } } | null;
+      if (!r.ok || !d || (d.code !== undefined && Number(d.code) !== 200)) {
+        console.log(`escallo-atendimento: lista HTTP ${r.status}`);
+        return null;
+      }
+      return Array.isArray(d.data?.registros) ? (d.data!.registros as Record<string, unknown>[]) : [];
+    };
+    const fila = await ler(URL_REL001);
+    if (!fila) return json({ error: "Não consegui ler as ligações da Escallo agora. Tente de novo em instantes." }, 502);
+    const ligacoes: Record<string, unknown>[] = [];
+    let primeiroAnterior = "";
+    for (let p = 0; p < MAX_PAGINAS_REL002; p++) {
+      const pagina = await ler(`${URL_REL002}${p}`);
+      if (pagina === null) return json({ error: "Não consegui ler as ligações da Escallo agora. Tente de novo em instantes." }, 502);
+      if (pagina.length === 0) break;
+      const primeiro = String(pagina[0]["ligacao.id"] ?? "");
+      if (primeiro && primeiro === primeiroAnterior) break; // a Escallo repetiu a página: acabou
+      primeiroAnterior = primeiro;
+      ligacoes.push(...pagina);
+      if (pagina.length < 100) break;
+    }
+    return json({ tipo: "lista", dia: diaLista, ligacoes: listarLigacoesDoAgente(fila, ligacoes, codigo) });
+  }
+
   const protocolo = String(corpo.protocolo ?? "").trim();
   const dia = String(corpo.dia ?? "");
   if (!PROTOCOLO_OK.test(protocolo)) return json({ error: "Protocolo inválido. Use só letras, números, ponto, hífen ou sublinhado." }, 400);
@@ -160,29 +200,6 @@ Deno.serve(async (req: Request) => {
     return json({ tipo: "conversa", protocolo, dia, agentes: [...agentes], mensagens });
   }
 
-  // ---- Ligação: acha a ligação de entrada pelo protocolo ----
-  const resposta = await chamarEscallo(URL_REL002, { method: "POST", headers: cabecalhoEscallo, body: JSON.stringify(periodo) });
-  if (!resposta) return json({ error: "Não consegui falar com a Escallo (sem resposta em 30 segundos). Tente de novo em instantes." }, 502);
-  const dados = await resposta.json().catch(() => null) as { code?: unknown; message?: unknown; data?: { registros?: unknown } } | null;
-  if (!resposta.ok || !dados || (dados.code !== undefined && Number(dados.code) !== 200)) {
-    console.log(`escallo-atendimento: rel002 HTTP ${resposta.status}`);
-    const motivo = esconder(dados?.message).slice(0, 160);
-    return json({ error: `A Escallo recusou o pedido (HTTP ${resposta.status}${motivo ? `: ${motivo}` : ""}).` }, 502);
-  }
-  const ligacoes = Array.isArray(dados.data?.registros) ? (dados.data!.registros as Record<string, unknown>[]) : [];
-  const achada = ligacoes.find((l) => String(l["protocolo.numero"] ?? "").trim() === protocolo);
-  if (!achada) {
-    return json({ error: "Não encontrei essa ligação entre as ligações de entrada desse dia. Confira o protocolo e a data (ligações feitas pelo agente ainda não aparecem aqui)." }, 404);
-  }
-  const uniqueid = String(achada["ligacao.uniqueid"] ?? "");
-  if (!UNIQUEID_OK.test(uniqueid)) return json({ error: "A Escallo não informou o identificador da gravação dessa ligação." }, 404);
-  return json({
-    tipo: "ligacao",
-    protocolo,
-    dia,
-    uniqueid,
-    inicio: String(achada["ligacao.dataHoraInicial"] ?? ""),
-    segundosConversa: Number(achada["ligacao.tempoConversa"] ?? 0) || 0,
-    agente: String(achada["ligacao.nomeAgenteDestino"] ?? achada["ligacao.nomeAgenteOrigem"] ?? ""),
-  });
+  // Ligação não se busca por protocolo (a Escallo não o informa nas ligações recebidas): use acao "listar".
+  return json({ error: "Para ligação, escolha a ligação do agente na lista do dia." }, 400);
 });

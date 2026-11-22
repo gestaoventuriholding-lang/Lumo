@@ -329,10 +329,11 @@ describe("auditoria: telas", () => {
     expect(await screen.findAllByTestId("linha-auditoria")).toHaveLength(1);
   });
 
-  it("ligação: acha a gravação e carrega o player (áudio inventado no teste)", async () => {
+  it("ligação: lista as ligações do agente no dia, toca a gravação e salva só o identificador (nunca o áudio)", async () => {
     const user = userEvent.setup();
     URL.createObjectURL = vi.fn(() => "blob:audio-inventado");
     URL.revokeObjectURL = vi.fn();
+    saveAttendants([pessoa(1, "Ana Teste", { escalloCodigo: 1010 }), bia, caio]);
     render(
       <EllosDataProvider>
         <Audits />
@@ -340,13 +341,57 @@ describe("auditoria: telas", () => {
     );
     await user.click(screen.getByTestId("nova-auditoria"));
     const dialogo = await screen.findByTestId("auditoria-dialogo");
+    await user.click(within(dialogo).getByTestId("aud-colaborador"));
+    await user.click(await screen.findByRole("option", { name: "Ana Teste" }));
     await user.click(within(dialogo).getByTestId("aud-canal"));
     await user.click(await screen.findByRole("option", { name: "Ligação" }));
-    await user.type(within(dialogo).getByLabelText(/Protocolo da Escallo/), "202611100077");
+
+    // no lugar do protocolo, a ligação é escolhida na lista (campo só de leitura)
+    const campo = within(dialogo).getByLabelText("Ligação escolhida") as HTMLInputElement;
+    expect(campo.readOnly).toBe(true);
+    expect(campo.value).toBe("");
     await user.click(within(dialogo).getByTestId("buscar-atendimento"));
-    expect(await within(dialogo).findByTestId("ligacao")).toBeTruthy();
-    await user.click(within(dialogo).getByTestId("carregar-audio"));
+    const itens = await within(dialogo).findAllByTestId("ligacao-item");
+    expect(itens).toHaveLength(3);
+    await user.click(within(itens[0]).getByTestId("ouvir-ligacao"));
     expect(await within(dialogo).findByTestId("player-audio")).toBeTruthy();
+    expect(campo.value).toMatch(/^\d+\.\d+$/);
+    const escolhida = campo.value;
+
+    // avalia e salva
+    for (let n = 1; n <= 10; n++) await user.click(within(within(dialogo).getByTestId(`aud-item-${n}`)).getByRole("radio", { name: "Atende" }));
+    await user.type(within(dialogo).getByLabelText(/Feedback para o agente/), "Bom atendimento.");
+    await user.click(within(dialogo).getByTestId("salvar-auditoria"));
+    await waitFor(() => expect(screen.queryByTestId("auditoria-dialogo")).toBeNull());
+    const salvo = JSON.parse(window.localStorage.getItem("ellos-audits") ?? "[]") as Audit[];
+    expect(salvo).toHaveLength(1);
+    expect(salvo[0]).toMatchObject({ attendantId: 1, channel: "Ligação", protocol: escolhida });
+    expect(JSON.stringify(window.localStorage)).not.toContain("blob:");
+
+    // ao editar, a ligação registrada abre e a gravação carrega sem listar de novo
+    const linhas = await screen.findAllByTestId("linha-auditoria");
+    await user.click(within(linhas[0]).getByRole("button", { name: "Editar auditoria" }));
+    const edicao = await screen.findByTestId("auditoria-dialogo");
+    expect(await within(edicao).findByTestId("ligacao-registrada")).toBeTruthy();
+    await user.click(within(edicao).getByTestId("carregar-audio"));
+    expect(await within(edicao).findByTestId("player-audio")).toBeTruthy();
+  });
+
+  it("ligação: sem código da Escallo no cadastro, avisa e não deixa buscar", async () => {
+    const user = userEvent.setup();
+    render(
+      <EllosDataProvider>
+        <Audits />
+      </EllosDataProvider>
+    );
+    await user.click(screen.getByTestId("nova-auditoria"));
+    const dialogo = await screen.findByTestId("auditoria-dialogo");
+    await user.click(within(dialogo).getByTestId("aud-colaborador"));
+    await user.click(await screen.findByRole("option", { name: "Ana Teste" }));
+    await user.click(within(dialogo).getByTestId("aud-canal"));
+    await user.click(await screen.findByRole("option", { name: "Ligação" }));
+    expect(within(dialogo).getByTestId("sem-codigo")).toBeTruthy();
+    expect((within(dialogo).getByTestId("buscar-atendimento") as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("não deixa auditar o mesmo atendimento duas vezes", async () => {
