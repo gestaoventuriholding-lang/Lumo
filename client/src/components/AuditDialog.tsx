@@ -212,7 +212,7 @@ export default function AuditDialog({ audit, onClose, initialAttendantId, onSave
                 )}
               </div>
             </div>
-            <div className="min-h-0 flex-1 lg:overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col lg:overflow-hidden">
               <AtendimentoViewer canal={channel} protocolo={protocol} dia={attendedOn} codigoAgente={colaborador?.escalloCodigo ?? null} onEscolherLigacao={setProtocol} />
             </div>
           </section>

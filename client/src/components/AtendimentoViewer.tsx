@@ -111,7 +111,7 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
   };
 
   return (
-    <div className="flex min-h-0 flex-col gap-3" data-testid="atendimento-viewer">
+    <div className="flex min-h-0 flex-1 flex-col gap-3" data-testid="atendimento-viewer">
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={buscar} disabled={!podeBuscar || carregando} data-testid="buscar-atendimento">
           {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
