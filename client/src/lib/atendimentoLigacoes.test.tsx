@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "../../../supabase/functions/escallo-atendimento/ligacoes";
+import { listarConversasDoAgente, listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "../../../supabase/functions/escallo-atendimento/ligacoes";
 import { pareceIdLigacao } from "./atendimentoEscallo";
 
 // Dados inventados no formato dos relatórios da Escallo (rel001 = chamadas de fila, rel002 = ligações com o agente)
@@ -58,5 +58,41 @@ describe("lista de ligações do agente (rel001 + rel002)", () => {
     expect(r).toHaveLength(1);
     expect(Object.keys(r[0]).sort()).toEqual(["fila", "inicio", "segundos", "uniqueid"]);
     expect(JSON.stringify(r)).not.toContain("11999990000");
+  });
+});
+
+// historicoMensagens: cada registro traz atendimentos[] com o agente, o protocolo e as mensagens
+const atend = (codigo: number, protocolo: string, hora: string, mensagens: number, extra: Record<string, unknown> = {}) => ({
+  agente: { id: 1, codigo, nome: "Agente Inventado" },
+  protocolo,
+  dataHoraInicial: `2026-11-19 ${hora}`,
+  tempoAtendimento: 300,
+  mensagens: Array.from({ length: mensagens }, (_, i) => ({ id: i, conteudo: "texto sigiloso do paciente" })),
+  ...extra,
+});
+
+describe("lista de conversas do agente (WhatsApp)", () => {
+  it("lista só as conversas do agente, sem repetir protocolo, da mais antiga para a mais nova", () => {
+    const registros = [
+      { id: 1, atendimentos: [atend(1031, "20261119000002", "10:30:00", 8)] },
+      { id: 2, atendimentos: [atend(1031, "20261119000001", "09:15:00", 5), atend(1038, "20261119000003", "09:20:00", 4)] },
+      { id: 3, atendimentos: [atend(1031, "20261119000001", "09:15:00", 5)] }, // mesmo protocolo de novo
+      { id: 4, atendimentos: [] }, // só o robô
+    ];
+    const r = listarConversasDoAgente(registros, "1031");
+    expect(r.map((c) => c.protocolo)).toEqual(["20261119000001", "20261119000002"]);
+    expect(r[0]).toEqual({ protocolo: "20261119000001", inicio: "2026-11-19 09:15:00", segundos: 300, mensagens: 5 });
+    expect(listarConversasDoAgente(registros, "1038").map((c) => c.protocolo)).toEqual(["20261119000003"]);
+    expect(listarConversasDoAgente(registros, "9999")).toEqual([]);
+  });
+
+  it("ignora atendimento sem mensagem ou com protocolo inválido e nunca devolve o texto das mensagens", () => {
+    const registros = [
+      { id: 1, atendimentos: [atend(1031, "20261119000001", "09:00:00", 0), atend(1031, "../hack", "09:10:00", 3), atend(1031, "20261119000009", "09:20:00", 2)] },
+    ];
+    const r = listarConversasDoAgente(registros, "1031");
+    expect(r.map((c) => c.protocolo)).toEqual(["20261119000009"]);
+    expect(Object.keys(r[0]).sort()).toEqual(["inicio", "mensagens", "protocolo", "segundos"]);
+    expect(JSON.stringify(r)).not.toContain("sigiloso");
   });
 });

@@ -52,3 +52,39 @@ export function listarLigacoesDoAgente(rel001: Linha[], rel002: Linha[], codigo:
   achadas.sort((a, b) => a.inicio.localeCompare(b.inicio));
   return achadas.slice(0, LIMITE_LIGACOES);
 }
+
+// ---- WhatsApp: conversas atendidas por um agente no dia (historicoMensagens) ----
+// A Escallo não filtra por agente nesse relatório (o campo "agente" é aceito, mas ignorado): a função lê o dia inteiro,
+// em páginas de 100, e aqui separamos os atendimentos do agente (código do agente = o mesmo do cadastro no Ellos).
+export const PROTOCOLO_WHATSAPP = /^[A-Za-z0-9._-]{1,60}$/;
+
+export interface ConversaDaLista {
+  protocolo: string;
+  /** "AAAA-MM-DD HH:MM:SS" */
+  inicio: string;
+  segundos: number;
+  mensagens: number;
+}
+
+/** Conversas (uma por protocolo) em que o agente `codigo` atendeu, da mais antiga para a mais nova. Sem texto de mensagem. */
+export function listarConversasDoAgente(registros: Linha[], codigo: string): ConversaDaLista[] {
+  const achadas = new Map<string, ConversaDaLista>();
+  for (const r of registros) {
+    const atendimentos = Array.isArray(r.atendimentos) ? (r.atendimentos as Linha[]) : [];
+    for (const a of atendimentos) {
+      const ag = a.agente as { codigo?: unknown } | undefined;
+      if (texto(ag?.codigo) !== codigo) continue;
+      const protocolo = texto(a.protocolo);
+      if (!PROTOCOLO_WHATSAPP.test(protocolo) || achadas.has(protocolo)) continue;
+      const mensagens = Array.isArray(a.mensagens) ? a.mensagens.length : 0;
+      if (mensagens === 0) continue; // atendimento sem nenhuma mensagem (ex.: transferido na hora): não há o que auditar
+      achadas.set(protocolo, {
+        protocolo,
+        inicio: texto(a.dataHoraInicial),
+        segundos: Number(a.tempoAtendimento) || 0,
+        mensagens,
+      });
+    }
+  }
+  return [...achadas.values()].sort((x, y) => x.inicio.localeCompare(y.inicio)).slice(0, LIMITE_LIGACOES);
+}

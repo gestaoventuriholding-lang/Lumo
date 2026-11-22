@@ -43,14 +43,17 @@ const dia = (delta: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+// protocolos das conversas inventadas que o ambiente de teste lista (14 dígitos, como os da Escallo)
+const protocoloInventado = (n: number) => `${hoje.replaceAll("-", "")}00000${n}`;
+
 function pessoa(id: number, name: string, extra: Partial<Attendant> = {}): Attendant {
   return {
     id, name, role: "Atendente", serviceChannel: "Ligação", workingHours: "6h20", jornadaStart: "08:00", jornadaEnd: "14:00",
     observation: "", registrationDate: "2026-01-01", ...extra,
   };
 }
-const ana = pessoa(1, "Ana Teste");
-const bia = pessoa(2, "Bia Teste");
+const ana = pessoa(1, "Ana Teste", { escalloCodigo: 1010 });
+const bia = pessoa(2, "Bia Teste", { escalloCodigo: 1015 });
 const caio = pessoa(3, "Caio Teste");
 const saiu = pessoa(5, "Davi Saiu", { active: false, terminatedOn: dia(-40) } as Partial<Attendant>);
 
@@ -133,7 +136,7 @@ describe("auditoria: validação", () => {
     expect(validateAuditInput(base, itens, [], hoje)).toBeNull();
     expect(validateAuditInput({ ...base, attendantId: undefined }, itens, [], hoje)).toMatch(/colaborador/);
     expect(validateAuditInput({ ...base, channel: "" }, itens, [], hoje)).toMatch(/canal/);
-    expect(validateAuditInput({ ...base, protocol: "  " }, itens, [], hoje)).toMatch(/protocolo/);
+    expect(validateAuditInput({ ...base, protocol: "  " }, itens, [], hoje)).toMatch(/Escolha o atendimento auditado/);
     expect(validateAuditInput({ ...base, attendedOn: dia(1) }, itens, [], hoje)).toMatch(/futuro/);
     expect(validateAuditInput({ ...base, answers: [resp(1, "atende")] }, itens, [], hoje)).toBe("Faltam avaliar 2 critérios.");
     expect(validateAuditInput({ ...base, answers: [resp(1, "atende"), resp(2, "atende")] }, itens, [], hoje)).toBe("Falta avaliar 1 critério.");
@@ -248,11 +251,14 @@ describe("auditoria: telas", () => {
     await user.click(await screen.findByRole("option", { name: "Ana Teste" }));
     await user.click(within(dialogo).getByTestId("aud-canal"));
     await user.click(await screen.findByRole("option", { name: "WhatsApp" }));
-    await user.type(within(dialogo).getByLabelText(/Protocolo da Escallo/), "202611100001");
 
-    // o ambiente de teste mostra uma conversa inventada, com aviso
+    // lista as conversas do agente no dia (inventadas no teste) e abre uma, sem digitar protocolo
     await user.click(within(dialogo).getByTestId("buscar-atendimento"));
+    const conversasDoDia = await within(dialogo).findAllByTestId("conversa-item");
+    expect(conversasDoDia).toHaveLength(3);
+    await user.click(within(conversasDoDia[0]).getByTestId("abrir-conversa"));
     expect(await within(dialogo).findByTestId("conversa")).toBeTruthy();
+    expect((within(dialogo).getByLabelText(/Conversa escolhida/) as HTMLInputElement).value).toBe(protocoloInventado(1));
     expect(within(dialogo).getByTestId("aviso-inventado").textContent).toMatch(/inventada/);
 
     // salvar sem avaliar tudo é recusado
@@ -279,7 +285,7 @@ describe("auditoria: telas", () => {
     await waitFor(() => expect(screen.queryByTestId("auditoria-dialogo")).toBeNull());
     const salvo = JSON.parse(window.localStorage.getItem("ellos-audits") ?? "[]") as Audit[];
     expect(salvo).toHaveLength(1);
-    expect(salvo[0]).toMatchObject({ attendantId: 1, channel: "WhatsApp", protocol: "202611100001", score: 90, feedback: "Ótimo atendimento." });
+    expect(salvo[0]).toMatchObject({ attendantId: 1, channel: "WhatsApp", protocol: protocoloInventado(1), score: 90, feedback: "Ótimo atendimento." });
     // LGPD: nada da conversa foi guardado
     expect(JSON.stringify(salvo)).not.toContain("Maria Exemplo");
     expect(JSON.stringify(window.localStorage)).not.toContain("hemograma");
@@ -298,7 +304,9 @@ describe("auditoria: telas", () => {
     await user.click(await screen.findByRole("option", { name: "Ana Teste" }));
     await user.click(within(dialogo).getByTestId("aud-canal"));
     await user.click(await screen.findByRole("option", { name: "WhatsApp" }));
-    await user.type(within(dialogo).getByLabelText(/Protocolo da Escallo/), "202611100555");
+    await user.click(within(dialogo).getByTestId("buscar-atendimento"));
+    await user.click(within((await within(dialogo).findAllByTestId("conversa-item"))[0]).getByTestId("abrir-conversa"));
+    await within(dialogo).findByTestId("conversa");
     for (let n = 1; n <= 10; n++) await user.click(within(within(dialogo).getByTestId(`aud-item-${n}`)).getByRole("radio", { name: "Atende" }));
     await user.type(within(dialogo).getByLabelText(/Feedback para o agente/), "Primeiro texto.");
     await user.click(within(dialogo).getByTestId("salvar-auditoria"));
@@ -307,13 +315,15 @@ describe("auditoria: telas", () => {
     // ao salvar, a tela passa para a lista e mostra a auditoria nova
     const linhas = await screen.findAllByTestId("linha-auditoria");
     expect(linhas).toHaveLength(1);
-    expect(linhas[0].textContent).toContain("202611100555");
+    expect(linhas[0].textContent).toContain(protocoloInventado(1));
     expect(linhas[0].textContent).toContain("Ana Teste");
 
     // editar pelo botão da linha: abre com o que foi salvo
     await user.click(within(linhas[0]).getByRole("button", { name: "Editar auditoria" }));
     dialogo = await screen.findByTestId("auditoria-dialogo");
     expect(within(dialogo).getByText("Auditoria de atendimento")).toBeTruthy();
+    // a conversa registrada abre de novo (buscada na Escallo na hora, nunca guardada)
+    expect(await within(dialogo).findByTestId("conversa-registrada")).toBeTruthy();
     const campo = within(dialogo).getByLabelText(/Feedback para o agente/) as HTMLTextAreaElement;
     expect(campo.value).toBe("Primeiro texto.");
     await user.clear(campo);
@@ -325,7 +335,7 @@ describe("auditoria: telas", () => {
     const salvo = JSON.parse(window.localStorage.getItem("ellos-audits") ?? "[]") as Audit[];
     expect(salvo).toHaveLength(1);
     expect(salvo[0].feedback).toBe("Texto corrigido.");
-    expect(salvo[0].protocol).toBe("202611100555");
+    expect(salvo[0].protocol).toBe(protocoloInventado(1));
     expect(await screen.findAllByTestId("linha-auditoria")).toHaveLength(1);
   });
 
@@ -377,7 +387,7 @@ describe("auditoria: telas", () => {
     expect(await within(edicao).findByTestId("player-audio")).toBeTruthy();
   });
 
-  it("ligação: sem código da Escallo no cadastro, avisa e não deixa buscar", async () => {
+  it("sem código da Escallo no cadastro, avisa e não deixa buscar (ligação e WhatsApp)", async () => {
     const user = userEvent.setup();
     render(
       <EllosDataProvider>
@@ -387,9 +397,13 @@ describe("auditoria: telas", () => {
     await user.click(screen.getByTestId("nova-auditoria"));
     const dialogo = await screen.findByTestId("auditoria-dialogo");
     await user.click(within(dialogo).getByTestId("aud-colaborador"));
-    await user.click(await screen.findByRole("option", { name: "Ana Teste" }));
+    await user.click(await screen.findByRole("option", { name: "Caio Teste" }));
     await user.click(within(dialogo).getByTestId("aud-canal"));
     await user.click(await screen.findByRole("option", { name: "Ligação" }));
+    expect(within(dialogo).getByTestId("sem-codigo")).toBeTruthy();
+    expect((within(dialogo).getByTestId("buscar-atendimento") as HTMLButtonElement).disabled).toBe(true);
+    await user.click(within(dialogo).getByTestId("aud-canal"));
+    await user.click(await screen.findByRole("option", { name: "WhatsApp" }));
     expect(within(dialogo).getByTestId("sem-codigo")).toBeTruthy();
     expect((within(dialogo).getByTestId("buscar-atendimento") as HTMLButtonElement).disabled).toBe(true);
   });
@@ -398,7 +412,7 @@ describe("auditoria: telas", () => {
     const { checklist, items } = createDefaultChecklist();
     saveAuditChecklists([checklist]);
     saveAuditItems(items);
-    saveAudits([auditoria(50, 1, 90, dia(-1), { checklistId: checklist.id, protocol: "REPETIDO", answers: items.map((i) => resp(i.id, "atende")) })]);
+    saveAudits([auditoria(50, 1, 90, dia(-1), { checklistId: checklist.id, protocol: protocoloInventado(1), answers: items.map((i) => resp(i.id, "atende")) })]);
     const user = userEvent.setup();
     render(
       <EllosDataProvider>
@@ -411,7 +425,9 @@ describe("auditoria: telas", () => {
     await user.click(await screen.findByRole("option", { name: "Bia Teste" }));
     await user.click(within(dialogo).getByTestId("aud-canal"));
     await user.click(await screen.findByRole("option", { name: "WhatsApp" }));
-    await user.type(within(dialogo).getByLabelText(/Protocolo da Escallo/), "repetido");
+    await user.click(within(dialogo).getByTestId("buscar-atendimento"));
+    await user.click(within((await within(dialogo).findAllByTestId("conversa-item"))[0]).getByTestId("abrir-conversa"));
+    await within(dialogo).findByTestId("conversa");
     for (let n = 1; n <= 10; n++) await user.click(within(within(dialogo).getByTestId(`aud-item-${n}`)).getByRole("radio", { name: "Atende" }));
     await user.click(within(dialogo).getByTestId("salvar-auditoria"));
     expect(within(dialogo).getByRole("alert").textContent).toMatch(/já foi auditado/);

@@ -209,7 +209,7 @@ export function validateAuditInput(
   if (input.attendantId === undefined) return "Escolha o colaborador auditado.";
   if (!input.channel) return "Escolha o canal do atendimento.";
   const protocol = input.protocol.trim();
-  if (!protocol) return input.channel === "Ligação" ? "Escolha a ligação auditada na lista do dia." : "Informe o protocolo do atendimento.";
+  if (!protocol) return "Escolha o atendimento auditado na lista do dia.";
   if (protocol.length > 60) return "O protocolo pode ter até 60 caracteres.";
   if (!input.attendedOn || !dataValida(input.attendedOn)) return "Informe a data do atendimento.";
   if (input.attendedOn > today) return "A data do atendimento não pode ser no futuro.";

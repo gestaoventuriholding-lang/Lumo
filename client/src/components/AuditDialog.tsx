@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEllosData } from "@/contexts/EllosDataContext";
-import { pareceIdLigacao } from "@/lib/atendimentoEscallo";
 import { attendantsActiveOn } from "@/lib/attendantStatus";
 import {
   activeChecklist,
@@ -89,12 +88,11 @@ export default function AuditDialog({ audit, onClose, initialAttendantId, onSave
 
   const colaborador = attendants.find((a) => a.id === attendantId);
 
-  // o campo "protocolo" guarda coisas diferentes por canal (protocolo no WhatsApp, identificador da ligação na Ligação):
-  // ao trocar de canal, limpa o que não serve mais
+  // o campo "protocolo" guarda o atendimento escolhido na lista (protocolo no WhatsApp, identificador da ligação na Ligação):
+  // ao trocar de canal, o que estava escolhido não vale mais
   const trocarCanal = (novo: AuditChannel) => {
+    if (novo !== channel) setProtocol("");
     setChannel(novo);
-    if (novo === "Ligação" && !pareceIdLigacao(protocol)) setProtocol("");
-    if (novo !== "Ligação" && pareceIdLigacao(protocol)) setProtocol("");
   };
 
   // auditoria salva fica com o checklist em que foi feita; nova usa o checklist ativo da função da pessoa
@@ -197,23 +195,15 @@ export default function AuditDialog({ audit, onClose, initialAttendantId, onSave
                 <Input id="aud-data" type="date" max={hoje} value={attendedOn} onChange={(e) => setAttendedOn(e.target.value)} />
               </div>
               <div className="space-y-1.5 sm:col-span-2">
-                {channel === "Ligação" ? (
-                  <>
-                    <Label htmlFor="aud-protocolo">Ligação escolhida</Label>
-                    <Input id="aud-protocolo" value={protocol} readOnly placeholder="Nenhuma ligação escolhida" className="bg-muted/40" />
-                    <p className="text-xs text-muted-foreground">Busque as ligações do dia abaixo e clique em Ouvir na ligação auditada. Fica salvo só o identificador, nunca o áudio.</p>
-                  </>
-                ) : (
-                  <>
-                    <Label htmlFor="aud-protocolo">Protocolo da Escallo</Label>
-                    <Input id="aud-protocolo" value={protocol} maxLength={60} onChange={(e) => setProtocol(e.target.value)} placeholder="Ex.: 202611100001" />
-                    <p className="text-xs text-muted-foreground">Só o protocolo, sem nome, CPF ou dados do paciente.</p>
-                  </>
-                )}
+                <Label htmlFor="aud-protocolo">{channel === "Ligação" ? "Ligação escolhida" : channel === "WhatsApp" ? "Conversa escolhida (protocolo)" : "Atendimento escolhido"}</Label>
+                <Input id="aud-protocolo" value={protocol} readOnly placeholder="Nenhum atendimento escolhido" className="bg-muted/40" />
+                <p className="text-xs text-muted-foreground">
+                  Busque os atendimentos do dia abaixo e escolha o auditado. Fica salvo só o {channel === "Ligação" ? "identificador da ligação" : "protocolo"}, nunca o {channel === "Ligação" ? "áudio" : "texto da conversa"}.
+                </p>
               </div>
             </div>
             <div className="flex min-h-0 flex-1 flex-col lg:overflow-hidden">
-              <AtendimentoViewer canal={channel} protocolo={protocol} dia={attendedOn} codigoAgente={colaborador?.escalloCodigo ?? null} onEscolherLigacao={setProtocol} />
+              <AtendimentoViewer canal={channel} protocolo={protocol} dia={attendedOn} codigoAgente={colaborador?.escalloCodigo ?? null} onEscolher={setProtocol} />
             </div>
           </section>
 

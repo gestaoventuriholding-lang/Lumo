@@ -1,6 +1,7 @@
-// Ellos: ver a conversa do WhatsApp (por protocolo) ou ouvir a gravação de uma ligação (escolhida na lista do agente no dia), para auditar.
+// Ellos: ver a conversa do WhatsApp ou ouvir a gravação da ligação de um atendimento, para auditar.
+// Em os dois canais a pessoa escolhe colaborador + dia + canal e o Ellos lista os atendimentos dele na Escallo; ela escolhe um.
 // Nada é guardado: a conversa e o áudio vêm da Escallo na hora (função escallo-atendimento) e somem ao fechar a tela.
-// Da ligação só fica registrado, na auditoria, o identificador (uniqueid): sem áudio, sem telefone, sem nome.
+// Na auditoria só fica registrado o identificador: o protocolo (WhatsApp) ou o uniqueid (ligação). Sem texto, sem áudio, sem telefone, sem nome.
 // No ambiente de teste não há Escallo: usa uma conversa e um áudio inventados.
 import { ambiente, getSupabase } from "@/lib/supabase";
 import { traduzirErroDaFuncao } from "@/lib/escalloVinculos";
@@ -41,6 +42,15 @@ export interface LigacaoDaLista {
   segundos: number;
 }
 
+/** Uma conversa de WhatsApp atendida pelo agente no dia (sem o texto das mensagens) */
+export interface ConversaDaLista {
+  protocolo: string;
+  /** "AAAA-MM-DD HH:MM:SS" */
+  inicio: string;
+  segundos: number;
+  mensagens: number;
+}
+
 /** Identificador de ligação da Escallo, ex.: 1763560000.12345 */
 export const ID_LIGACAO = /^\d{6,15}\.\d{1,8}$/;
 export const pareceIdLigacao = (v: string) => ID_LIGACAO.test(v.trim());
@@ -78,6 +88,23 @@ export async function buscarConversa(protocolo: string, dia: string): Promise<Co
   const r = data as ConversaWhatsapp | null;
   if (!r || r.tipo !== "conversa") throw new Error("A resposta da Escallo veio em um formato inesperado.");
   return r;
+}
+
+/** Conversas de WhatsApp atendidas por esse agente (código da Escallo) no dia */
+export async function listarConversas(dia: string, codigoAgente: number): Promise<ConversaDaLista[]> {
+  if (atendimentoInventado()) {
+    const base: [string, number, number][] = [
+      ["09:12:00", 187, 13],
+      ["10:40:00", 96, 8],
+      ["15:02:00", 412, 21],
+    ];
+    return base.map(([hora, segundos, mensagens], i) => ({ protocolo: `${dia.replaceAll("-", "")}00000${i + 1}`, inicio: `${dia} ${hora}`, segundos, mensagens }));
+  }
+  const { data, error } = await getSupabase().functions.invoke("escallo-atendimento", { body: { canal: "WhatsApp", acao: "listar", dia, codigoAgente } });
+  if (error) throw new Error(await traduzirErroAtendimento(error));
+  const r = data as { tipo?: string; conversas?: ConversaDaLista[] } | null;
+  if (!r || r.tipo !== "lista_conversas" || !Array.isArray(r.conversas)) throw new Error("A resposta da Escallo veio em um formato inesperado.");
+  return r.conversas;
 }
 
 /** Ligações recebidas e atendidas por esse agente (código da Escallo) no dia */

@@ -11,17 +11,22 @@
 //
 // Pedidos (POST, JSON):
 //  { canal: "WhatsApp", protocolo, dia }                       -> { tipo: "conversa", ... }
+//  { canal: "WhatsApp", acao: "listar", dia, codigoAgente }    -> { tipo: "lista_conversas", conversas: [{ protocolo, inicio, segundos, mensagens }] }
+//                                                                 (sem texto de mensagem; a conversa é aberta depois, pelo protocolo escolhido)
 //  { canal: "Ligação",  acao: "listar", dia, codigoAgente }    -> { tipo: "lista", ligacoes: [{ uniqueid, inicio, fila, segundos }] }
 //                                                                 (a Escallo não liga protocolo a ligação recebida: escolhe-se a ligação do agente no dia)
 //  { canal: "Ligação",  acao: "audio", uniqueid }              -> o som (application/octet-stream)
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "./ligacoes.ts";
+import { listarConversasDoAgente, listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "./ligacoes.ts";
 
 const HOST_ESCALLO = "https://checkuplaboratoriodeanalisesclinicasltda-6b2800.escallo.com.br";
 const URL_HISTORICO = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/historicoMensagens/?registros=25&pagina=0`;
 const URL_REL001 = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/rel001/?registros=5000&pagina=0`;
 const URL_REL002 = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/rel002/?registros=100&pagina=`; // pagina de 100 em 100
 const MAX_PAGINAS_REL002 = 80;
+const URL_HISTORICO_PAGINA = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/historicoMensagens/?registros=100&pagina=`; // máximo da Escallo: 100 por página
+const MAX_PAGINAS_HISTORICO = 80;
+const PAGINAS_EM_PARALELO = 4;
 const URL_AUDIO = `${HOST_ESCALLO}/escallo/api/Ligacao/FindAudio/`;
 const LIMITE_AUDIO_BYTES = 40 * 1024 * 1024;
 
@@ -129,7 +134,6 @@ Deno.serve(async (req: Request) => {
 
   // ---- Ligações do agente no dia: junta rel001 (hora, fila, gravação) com rel002 (quem atendeu) ----
   if (corpo.acao === "listar") {
-    if (canal !== "Ligação") return json({ error: "A lista de ligações é só do canal Ligação." }, 400);
     const diaLista = String(corpo.dia ?? "");
     const codigo = String(corpo.codigoAgente ?? "").trim();
     if (!DIA_OK.test(diaLista) || Number.isNaN(new Date(`${diaLista}T12:00:00Z`).getTime())) return json({ error: "Informe a data do atendimento." }, 400);
@@ -146,6 +150,20 @@ Deno.serve(async (req: Request) => {
       }
       return Array.isArray(d.data?.registros) ? (d.data!.registros as Record<string, unknown>[]) : [];
     };
+    if (canal === "WhatsApp") {
+      // a Escallo ignora o filtro por agente: lê o dia inteiro (em lotes de páginas) e separa as conversas do agente
+      const registros: Record<string, unknown>[] = [];
+      let acabou = false;
+      for (let p = 0; p < MAX_PAGINAS_HISTORICO && !acabou; p += PAGINAS_EM_PARALELO) {
+        const lote = await Promise.all(Array.from({ length: PAGINAS_EM_PARALELO }, (_, i) => ler(`${URL_HISTORICO_PAGINA}${p + i}`)));
+        for (const pagina of lote) {
+          if (pagina === null) return json({ error: "Não consegui ler as conversas da Escallo agora. Tente de novo em instantes." }, 502);
+          registros.push(...pagina);
+          if (pagina.length < 100) acabou = true;
+        }
+      }
+      return json({ tipo: "lista_conversas", dia: diaLista, conversas: listarConversasDoAgente(registros, codigo) });
+    }
     const fila = await ler(URL_REL001);
     if (!fila) return json({ error: "Não consegui ler as ligações da Escallo agora. Tente de novo em instantes." }, 502);
     const ligacoes: Record<string, unknown>[] = [];
