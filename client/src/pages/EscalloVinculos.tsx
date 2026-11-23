@@ -312,14 +312,7 @@ export default function EscalloVinculos() {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 text-sm">
-            <Badge variant="secondary">{resposta.escallo.registros} agentes na Escallo</Badge>
-            <Badge variant="secondary">{listas.jaVinculados} {listas.jaVinculados === 1 ? "já vinculado" : "já vinculados"}</Badge>
-            <Badge variant="secondary">{nSugestoes} com sugestão</Badge>
-            <Badge variant="secondary">{listas.semSugestao.length} sem sugestão</Badge>
-            <Badge variant="secondary">{listas.colaboradoresSemCodigo.length} {listas.colaboradoresSemCodigo.length === 1 ? "colaborador sem código" : "colaboradores sem código"}</Badge>
-          </div>
-
+          {nSugestoes > 0 && (
           <section className="space-y-2" aria-labelledby="titulo-sugestoes">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -340,14 +333,11 @@ export default function EscalloVinculos() {
             </div>
             <Card>
               <CardContent className="pt-2">
-                {nSugestoes === 0 ? (
-                  <p className="py-4 text-sm text-muted-foreground">Nenhuma sugestão pendente neste dia.</p>
-                ) : (
-                  listas.sugestoes.map((l) => linha(l, true))
-                )}
+                {listas.sugestoes.map((l) => linha(l, true))}
               </CardContent>
             </Card>
           </section>
+          )}
 
           <section className="space-y-2" aria-labelledby="titulo-sem-sugestao">
             <div>
