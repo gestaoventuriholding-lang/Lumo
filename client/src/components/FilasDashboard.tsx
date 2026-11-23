@@ -28,21 +28,21 @@ const tempo = (segundos?: number) => (segundos !== undefined && segundos > 0 ? f
 
 type CanalTma = "todos" | "whatsapp" | "ligacao";
 
-/** Escolhe o canal do TMA: o WhatsApp e a Ligação têm tempos bem diferentes, então dá para ver cada um separado */
-function SeletorCanalTma({ valor, onChange }: { valor: CanalTma; onChange: (v: CanalTma) => void }) {
+/** Escolhe o canal (TMA ou TME): o WhatsApp e a Ligação têm tempos bem diferentes, então dá para ver cada um separado */
+function SeletorCanalTma({ valor, onChange, nome = "tma" }: { valor: CanalTma; onChange: (v: CanalTma) => void; nome?: "tma" | "tme" }) {
   const opcoes: { v: CanalTma; rotulo: string }[] = [
     { v: "todos", rotulo: "Todos" },
     { v: "whatsapp", rotulo: "WhatsApp" },
     { v: "ligacao", rotulo: "Ligação" },
   ];
   return (
-    <div role="group" aria-label="Canal do TMA" className="inline-flex rounded-md border border-border p-0.5" data-testid="canal-tma">
+    <div role="group" aria-label={`Canal do ${nome.toUpperCase()}`} className="inline-flex rounded-md border border-border p-0.5" data-testid={`canal-${nome}`}>
       {opcoes.map((o) => (
         <button
           key={o.v}
           type="button"
           aria-pressed={valor === o.v}
-          data-testid={`canal-tma-${o.v}`}
+          data-testid={`canal-${nome}-${o.v}`}
           onClick={() => onChange(o.v)}
           className={cn(
             "rounded px-2.5 py-1 text-xs font-medium transition-colors",
@@ -112,6 +112,7 @@ export default function FilasDashboard({
 }) {
   const anterior = useMemo(() => previousRange(range), [range]);
   const [canalTma, setCanalTma] = useState<CanalTma>("todos");
+  const [canalTme, setCanalTme] = useState<CanalTma>("todos");
   const tmaMinutos = tma[canalTma === "todos" ? "total" : canalTma];
   const tmaAnteriorMinutos = tmaAnterior[canalTma === "todos" ? "total" : canalTma];
   const janela = janelaDeBusca(range, anterior);
@@ -131,6 +132,8 @@ export default function FilasDashboard({
   const comparar = (a?: number, b?: number, lowerIsBetter = false, unit?: "points") =>
     describeChange(a ?? 0, b ?? 0, anterior.name, { lowerIsBetter, unit });
 
+  const tmeEscolhido = (r: { tmeGeral?: number; tmeLigacao?: number; tmeWhatsapp?: number }) =>
+    canalTme === "todos" ? r.tmeGeral : canalTme === "whatsapp" ? r.tmeWhatsapp : r.tmeLigacao;
   const detalheTme =
     atual.tmeLigacao !== undefined || atual.tmeWhatsapp !== undefined
       ? `Ligação ${tempo(atual.tmeLigacao)} · WhatsApp ${tempo(atual.tmeWhatsapp)}`
@@ -203,10 +206,11 @@ export default function FilasDashboard({
         />
         <DashboardKpiCard
           title="TME (tempo médio de espera)"
-          value={tempo(atual.tmeGeral)}
-          comparison={detalheTme}
+          value={tempo(tmeEscolhido(atual))}
+          comparison={canalTme === "todos" ? detalheTme : canalTme === "whatsapp" ? "Só WhatsApp" : "Só Ligação"}
+          controles={<SeletorCanalTma nome="tme" valor={canalTme} onChange={setCanalTme} />}
           footnote={LEGENDA_FILA}
-          delta={comparar(atual.tmeGeral, antes.tmeGeral, true)}
+          delta={comparar(tmeEscolhido(atual), tmeEscolhido(antes), true)}
           icon={Hourglass}
           sparkData={[]}
           {...ic}
