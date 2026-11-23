@@ -75,6 +75,10 @@ export function prepararVinculos(
   let jaVinculados = Math.max(0, Math.floor(vinculadosNaResposta));
   const nomeDe = new Map(attendants.map((a) => [a.id, a.name]));
   const vinculadas = new Map<number, LinhaVinculada>(); // por código da Escallo (sem repetir)
+  // Todo colaborador com código aparece em "Já vinculadas", mesmo que o agente não tenha trabalhado no dia consultado
+  for (const at of attendants) {
+    if (typeof at.escalloCodigo === "number") vinculadas.set(at.escalloCodigo, { codigo: at.escalloCodigo, colaboradorId: at.id, colaboradorNome: at.name, nomeEscallo: null });
+  }
   for (const v of vinculados) {
     const nome = nomeDe.get(v.attendantId);
     if (nome !== undefined) vinculadas.set(v.escalloCodigo, { codigo: v.escalloCodigo, colaboradorId: v.attendantId, colaboradorNome: nome, nomeEscallo: null });

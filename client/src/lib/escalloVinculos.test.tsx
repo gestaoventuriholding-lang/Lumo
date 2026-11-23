@@ -206,19 +206,25 @@ describe("vínculo com a Escallo: lista dos já vinculados", () => {
     expect(l.vinculadas[0]).toMatchObject({ colaboradorNome: "Carla Teste", codigo: 300, nomeEscallo: "Carla Escallo" });
   });
 
-  it("ignora vínculo de colaborador que não existe mais, e resposta antiga sem a lista", () => {
-    expect(prepararVinculos([], equipe, 1, [{ attendantId: 99, escalloCodigo: 900 }]).vinculadas).toEqual([]);
-    expect(prepararVinculos([], equipe, 5).vinculadas).toEqual([]);
+  it("ignora vínculo de colaborador que não existe mais; sem agentes no dia, a lista traz todos os colaboradores com código", () => {
+    expect(prepararVinculos([], equipe, 1, [{ attendantId: 99, escalloCodigo: 900 }]).vinculadas.map((v) => v.codigo)).toEqual([300]);
+    expect(prepararVinculos([], equipe, 5).vinculadas.map((v) => v.colaboradorNome)).toEqual(["Carla Teste"]);
+  });
+
+  it("quem tem código aparece em Já vinculadas mesmo sem ter trabalhado no dia consultado", () => {
+    const comCodigo = [colab(1, "Ana Teste", 100), colab(2, "Bia Teste", 200), colab(3, "Carla Teste", 300)];
+    const l = prepararVinculos([sobra({ codigo: 100, nome: "Ana na Escallo" })], comCodigo);
+    expect(l.vinculadas.map((v) => v.colaboradorNome)).toEqual(["Ana Teste", "Bia Teste", "Carla Teste"]);
   });
 
   it("depois de confirmar um vínculo, a pessoa sai das pendentes e entra nas já vinculadas", () => {
     const pendente = [sobra({ codigo: 200, nome: "Ana na Escallo" })];
     const antes = prepararVinculos(pendente, equipe);
     expect(antes.semSugestao).toHaveLength(1);
-    expect(antes.vinculadas).toHaveLength(0);
+    expect(antes.vinculadas.map((v) => v.colaboradorNome)).not.toContain("Ana Teste");
     const depois = prepararVinculos(pendente, [colab(1, "Ana Teste", 200), ...equipe.slice(1)]);
     expect(depois.semSugestao).toHaveLength(0);
-    expect(depois.vinculadas.map((v) => v.colaboradorNome)).toEqual(["Ana Teste"]);
+    expect(depois.vinculadas.map((v) => v.colaboradorNome)).toContain("Ana Teste");
   });
 });
 
