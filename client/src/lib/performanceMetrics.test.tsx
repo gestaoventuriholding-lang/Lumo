@@ -5,6 +5,7 @@ import {
   buildAttendantSummaries,
   buildAttendancesTrend,
   buildChannelAttendanceTotals,
+  buildAverageTimeByChannel,
   buildChannelDistribution,
   type AttendantPerformanceSummary,
 } from "./performanceMetrics";
@@ -289,5 +290,20 @@ describe("channel attendance breakdown", () => {
 
     const trend = buildAttendancesTrend(withSummary, range);
     expect(trend[0]?.whatsapp).toBe(1337);
+  });
+});
+
+describe("TMA por canal", () => {
+  const reg = (id: number, canal: "Ligação" | "WhatsApp", atend: number, tma: number) =>
+    ({ id, attendantId: id, attendantName: `Pessoa ${id}`, date: "2026-11-03", channel: canal, attendancesCount: atend, averageTimeMinutes: tma, createdAt: "", updatedAt: "" }) as never;
+  const range = { start: "2026-11-01", end: "2026-11-30" } as never;
+  it("pondera pelos atendimentos e separa Ligação de WhatsApp", () => {
+    const r = buildAverageTimeByChannel([reg(1, "Ligação", 100, 4), reg(2, "Ligação", 100, 6), reg(3, "WhatsApp", 300, 3), reg(4, "WhatsApp", 100, 11)], range);
+    expect(r.ligacao).toBeCloseTo(5, 5);
+    expect(r.whatsapp).toBeCloseTo(5, 5); // (300*3 + 100*11) / 400
+    expect(r.total).toBeCloseTo((100 * 4 + 100 * 6 + 300 * 3 + 100 * 11) / 600, 5);
+  });
+  it("sem registros dá zero em tudo", () => {
+    expect(buildAverageTimeByChannel([], range)).toEqual({ total: 0, ligacao: 0, whatsapp: 0 });
   });
 });

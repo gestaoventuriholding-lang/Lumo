@@ -33,6 +33,7 @@ import {
   buildAttendantSummaries,
   buildAttendancesTrend,
   buildChannelAttendanceTotals,
+  buildAverageTimeByChannel,
   buildChannelDistribution,
   buildDashboardStats,
   buildProductivityTrend,
@@ -198,6 +199,8 @@ export default function Dashboard() {
     [attendants, performanceRecords, productionGoals, dateRange]
   );
 
+  const tmaPorCanal = useMemo(() => buildAverageTimeByChannel(performanceRecords, dateRange), [performanceRecords, dateRange]);
+
   const channelTotals = useMemo(
     () => buildChannelAttendanceTotals(performanceRecords, dateRange),
     [performanceRecords, dateRange]
@@ -229,6 +232,7 @@ export default function Dashboard() {
     return {
       name: range.name,
       stats: buildDashboardStats(attendants, records, productionGoals, { ...range }),
+      tma: buildAverageTimeByChannel(records, { ...range }),
     };
   }, [dailyRecords, productivityRecords, attendants, productionGoals, dateRange]);
 
@@ -312,8 +316,8 @@ export default function Dashboard() {
           range={dateRange}
           colaboradores={<DashboardKpiCard {...colaboradoresCard} />}
           subcartoesIniciais={subcartoesIniciais}
-          tmaMinutos={dashboardStats.averageTime}
-          tmaAnteriorMinutos={previous.stats.averageTime}
+          tma={tmaPorCanal}
+          tmaAnterior={previous.tma}
           atendimentos={channelTotals}
           atendimentosAnterior={previous.stats.totalAttendances}
           atendimentosSpark={attendanceSpark}

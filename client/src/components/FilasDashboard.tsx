@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Hourglass, Timer, TrendingUp } from "lucide-react";
 import { AnimatedText } from "@/components/AnimatedNumber";
@@ -10,6 +10,8 @@ import { describeChange, previousRange, type Change } from "@/lib/periodComparis
 import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoFilas, resumoIA, serieExames } from "@/lib/filasMetrics";
 import { useConsumoIA } from "@/hooks/useConsumoIA";
 import { formatAverageTime } from "@/lib/performanceStorage";
+import type { AverageTimeByChannel } from "@/lib/performanceMetrics";
+import { cn } from "@/lib/utils";
 import {
   chartAxisProps,
   chartBarRadius,
@@ -23,6 +25,36 @@ import type { DateRange } from "@/lib/dateRangeFilter";
 const formatCount = (v: number) => v.toLocaleString("pt-BR");
 const formatDecimal = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const tempo = (segundos?: number) => (segundos !== undefined && segundos > 0 ? formatAverageTime(segundos / 60) : "—");
+
+type CanalTma = "todos" | "whatsapp" | "ligacao";
+
+/** Escolhe o canal do TMA: o WhatsApp e a Ligação têm tempos bem diferentes, então dá para ver cada um separado */
+function SeletorCanalTma({ valor, onChange }: { valor: CanalTma; onChange: (v: CanalTma) => void }) {
+  const opcoes: { v: CanalTma; rotulo: string }[] = [
+    { v: "todos", rotulo: "Todos" },
+    { v: "whatsapp", rotulo: "WhatsApp" },
+    { v: "ligacao", rotulo: "Ligação" },
+  ];
+  return (
+    <div role="group" aria-label="Canal do TMA" className="inline-flex rounded-md border border-border p-0.5" data-testid="canal-tma">
+      {opcoes.map((o) => (
+        <button
+          key={o.v}
+          type="button"
+          aria-pressed={valor === o.v}
+          data-testid={`canal-tma-${o.v}`}
+          onClick={() => onChange(o.v)}
+          className={cn(
+            "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+            valor === o.v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {o.rotulo}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export interface SubCartao {
   testId: string;
@@ -59,8 +91,8 @@ export default function FilasDashboard({
   range,
   colaboradores,
   subcartoesIniciais,
-  tmaMinutos,
-  tmaAnteriorMinutos,
+  tma,
+  tmaAnterior,
   atendimentos,
   atendimentosAnterior,
   atendimentosSpark,
@@ -70,14 +102,18 @@ export default function FilasDashboard({
   colaboradores: ReactNode;
   /** Subcartões que já existiam (Meta, Ausências): vêm antes dos de fila */
   subcartoesIniciais: SubCartao[];
-  tmaMinutos: number;
-  tmaAnteriorMinutos: number;
+  /** TMA em minutos do período e do período anterior, total e por canal */
+  tma: AverageTimeByChannel;
+  tmaAnterior: AverageTimeByChannel;
   /** Atendimentos do período (Ligação + WhatsApp) */
   atendimentos: { total: number; ligacao: number; whatsapp: number };
   atendimentosAnterior: number;
   atendimentosSpark: { v: number }[];
 }) {
   const anterior = useMemo(() => previousRange(range), [range]);
+  const [canalTma, setCanalTma] = useState<CanalTma>("todos");
+  const tmaMinutos = tma[canalTma === "todos" ? "total" : canalTma];
+  const tmaAnteriorMinutos = tmaAnterior[canalTma === "todos" ? "total" : canalTma];
   const janela = janelaDeBusca(range, anterior);
   const { rows, carregado } = useFilasDiarias(janela.start, janela.end);
 
@@ -157,7 +193,8 @@ export default function FilasDashboard({
         <DashboardKpiCard
           title="TMA (tempo médio de atendimento)"
           value={tmaMinutos > 0 ? formatAverageTime(tmaMinutos) : "—"}
-          comparison="Ligação e WhatsApp"
+          comparison={canalTma === "todos" ? "Ligação e WhatsApp" : canalTma === "whatsapp" ? "Só WhatsApp" : "Só Ligação"}
+          controles={<SeletorCanalTma valor={canalTma} onChange={setCanalTma} />}
           footnote="equipe do call center"
           delta={comparar(tmaMinutos, tmaAnteriorMinutos, true)}
           icon={Timer}

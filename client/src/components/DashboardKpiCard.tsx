@@ -28,6 +28,8 @@ interface DashboardKpiCardProps {
   variant?: "light" | "dark";
   /** 0 a 100: mostra uma barra de progresso laranja */
   progress?: number;
+  /** Controles do cartão (ex.: escolher o canal), logo abaixo do número */
+  controles?: ReactNode;
 }
 
 export default function DashboardKpiCard({
@@ -44,6 +46,7 @@ export default function DashboardKpiCard({
   sparkData,
   variant = "light",
   progress,
+  controles,
 }: DashboardKpiCardProps) {
   const dark = variant === "dark";
   const gradientId = useId().replace(/:/g, "");
@@ -88,6 +91,7 @@ export default function DashboardKpiCard({
       <p className={cn("font-display mt-1 text-3xl font-bold", dark ? "text-brand-text" : "text-foreground")}>
         <AnimatedText text={value} />
       </p>
+      {controles ? <div className="mt-2">{controles}</div> : null}
       {progress !== undefined && (
         <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-primary-soft">
           <div

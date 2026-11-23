@@ -416,6 +416,26 @@ export function buildChannelAttendanceTotals(
   );
 }
 
+export interface AverageTimeByChannel {
+  total: number;
+  ligacao: number;
+  whatsapp: number;
+}
+
+/** TMA em minutos do período por canal: média dos tempos ponderada pelos atendimentos de cada registro (0 = sem dados) */
+export function buildAverageTimeByChannel(records: DailyPerformanceRecord[], range: DateRange): AverageTimeByChannel {
+  const periodRecords = filterVolumeRecordsByRange(records, range);
+  const media = (lista: DailyPerformanceRecord[]) => {
+    const n = lista.reduce((s, r) => s + r.attendancesCount, 0);
+    return n > 0 ? lista.reduce((s, r) => s + r.averageTimeMinutes * r.attendancesCount, 0) / n : 0;
+  };
+  return {
+    total: media(periodRecords),
+    ligacao: media(periodRecords.filter((r) => r.channel === "Ligação")),
+    whatsapp: media(periodRecords.filter((r) => r.channel === "WhatsApp")),
+  };
+}
+
 export function buildAttendancesTrend(
   records: DailyPerformanceRecord[],
   range: DateRange
