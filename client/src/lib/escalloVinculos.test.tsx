@@ -253,3 +253,11 @@ describe("vínculo com a Escallo: cadastrar e vincular quem só existe na Escall
     expect(validarNovaColaboradora(1.5, dados, equipe)).toContain("número inteiro");
   });
 });
+
+describe("vínculo com a Escallo: gestão (Triagem) não exige carga horária", () => {
+  it("aceita cadastrar Triagem sem carga horária e sem jornada; Atendente continua exigindo", () => {
+    const base = { name: "Gestora Teste", role: "Triagem", serviceChannel: "WhatsApp", workingHours: "", jornadaStart: "", jornadaEnd: "" } as NovaColaboradora;
+    expect(validarNovaColaboradora(500, base, equipe)).toBeNull();
+    expect(validarNovaColaboradora(500, { ...base, role: "Atendente" }, equipe)).toContain("carga horária");
+  });
+});

@@ -208,7 +208,7 @@ export function validarNovaColaboradora(codigo: number, dados: NovaColaboradora,
   if (!nome) return "Escreva o nome da colaboradora.";
   if (!dados.role) return "Escolha a função.";
   if (!dados.serviceChannel) return "Escolha o canal de atendimento.";
-  if (!dados.workingHours) return "Escolha a carga horária.";
+  if (!dados.workingHours && dados.role !== "Triagem") return "Escolha a carga horária."; // gestão (Triagem) não precisa de carga horária
   if (!isValidJornada(dados.jornadaStart, dados.jornadaEnd)) return "Informe início e fim da jornada (o horário final deve ser após o inicial).";
   const dono = attendants.find((a) => a.escalloCodigo === codigo);
   if (dono) return `O código ${codigo} já pertence a ${dono.name}.`;

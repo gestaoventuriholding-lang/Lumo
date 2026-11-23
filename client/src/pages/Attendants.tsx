@@ -167,8 +167,10 @@ export default function Attendants() {
   }, [workingHoursOptions, formData.workingHours]);
 
   const handleSave = () => {
-    if (!formData.name || !formData.workingHours || !formData.serviceChannel) {
-      toast.error("Preencha nome, canal e carga horária");
+    // Triagem (gestão) não precisa de carga horária nem de jornada
+    const exigeCarga = formData.role !== FUNCAO_TRIAGEM;
+    if (!formData.name || (exigeCarga && !formData.workingHours) || !formData.serviceChannel) {
+      toast.error(exigeCarga ? "Preencha nome, canal e carga horária" : "Preencha nome e canal");
       return;
     }
 
@@ -647,7 +649,7 @@ export default function Attendants() {
             {/* Carga Horária */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Carga Horária *
+                Carga Horária{formData.role === FUNCAO_TRIAGEM ? "" : " *"}
               </label>
               <Select
                 value={formData.workingHours}
