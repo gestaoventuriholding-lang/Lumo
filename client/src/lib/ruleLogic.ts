@@ -7,7 +7,7 @@
 //  - quem foi desligado antes do início da vigência nem entra na conta.
 // Depois da primeira assinatura o texto da regra não muda: cria-se uma nova versão (a antiga fica arquivada com as assinaturas dela).
 import { newId } from "@/lib/ids";
-import { FUNCAO_CONFIRMACAO, isConfirmacao } from "@/lib/attendantRole";
+import { FUNCAO_CONFIRMACAO, isAtendimento, isConfirmacao } from "@/lib/attendantRole";
 import type { Attendant } from "@/types/attendant";
 import {
   RULE_CATEGORY_MAX,
@@ -33,7 +33,7 @@ export function appliesToLabel(value: RuleAppliesTo): string {
 /** A regra alcança essa pessoa (pela função dela)? */
 export function ruleAppliesTo(rule: Pick<Rule, "appliesTo">, attendant: Pick<Attendant, "role">): boolean {
   if (rule.appliesTo === "all") return true;
-  return rule.appliesTo === FUNCAO_CONFIRMACAO ? isConfirmacao(attendant) : !isConfirmacao(attendant);
+  return rule.appliesTo === FUNCAO_CONFIRMACAO ? isConfirmacao(attendant) : isAtendimento(attendant);
 }
 
 /** Essa pessoa precisa assinar a regra em `today` (AAAA-MM-DD)? */

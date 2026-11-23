@@ -15,6 +15,11 @@ export function useAtendimentoData() {
       attendants: desempenho.atendimento.attendants,
       performanceRecords: desempenho.atendimento.records,
       productivityRecords: produtividade.atendimento.records,
+      triagem: {
+        attendants: desempenho.triagem.attendants,
+        performanceRecords: desempenho.triagem.records,
+        productivityRecords: produtividade.triagem.records,
+      },
       confirmacao: {
         attendants: desempenho.confirmacao.attendants,
         performanceRecords: desempenho.confirmacao.records,

@@ -44,7 +44,7 @@ import AttendantOccupancyMap from "@/components/AttendantOccupancyMap";
 import ChannelBadge from "@/components/ChannelBadge";
 import { desligadoEmTexto, isTerminated } from "@/lib/attendantStatus";
 import { CANAL_LIGACAO_E_WHATSAPP } from "@/types/attendant";
-import { FUNCAO_ATENDIMENTO, FUNCAO_CONFIRMACAO, FUNCOES, isConfirmacao, type Funcao } from "@/lib/attendantRole";
+import { FUNCAO_ATENDIMENTO, FUNCAO_CONFIRMACAO, FUNCAO_TRIAGEM, FUNCOES, isConfirmacao, isTriagem, type Funcao } from "@/lib/attendantRole";
 import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
 
@@ -96,7 +96,7 @@ export default function Attendants() {
       .filter((attendant) =>
         situacao === "todos" ? true : situacao === "desligados" ? isTerminated(attendant) : !isTerminated(attendant)
       )
-      .filter((attendant) => funcaoFiltro === "todas" || (funcaoFiltro === FUNCAO_CONFIRMACAO ? isConfirmacao(attendant) : !isConfirmacao(attendant)));
+      .filter((attendant) => funcaoFiltro === "todas" || (funcaoFiltro === FUNCAO_CONFIRMACAO ? isConfirmacao(attendant) : funcaoFiltro === FUNCAO_TRIAGEM ? isTriagem(attendant) : !isConfirmacao(attendant) && !isTriagem(attendant)));
   }, [attendants, searchTerm, situacao, funcaoFiltro]);
 
   // Paginação
@@ -118,7 +118,7 @@ export default function Attendants() {
       setEditingId(attendant.id);
       setFormData({
         name: attendant.name,
-        role: isConfirmacao(attendant) ? FUNCAO_CONFIRMACAO : FUNCAO_ATENDIMENTO,
+        role: isConfirmacao(attendant) ? FUNCAO_CONFIRMACAO : isTriagem(attendant) ? FUNCAO_TRIAGEM : FUNCAO_ATENDIMENTO,
         serviceChannel: attendant.serviceChannel,
         workingHours: attendant.workingHours,
         jornadaStart: attendant.jornadaStart,
@@ -437,6 +437,14 @@ export default function Attendants() {
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
                         {attendant.name}
+                        {isTriagem(attendant) && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                            data-testid="selo-triagem"
+                          >
+                            Triagem
+                          </span>
+                        )}
                         {isConfirmacao(attendant) && (
                           <span
                             className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
@@ -600,6 +608,11 @@ export default function Attendants() {
                   ))}
                 </SelectContent>
               </Select>
+              {formData.role === FUNCAO_TRIAGEM && (
+                <p className="text-xs text-muted-foreground">
+                  Recebe o paciente e transfere para o atendimento. O trabalho fica gravado, mas não conta como atendimento nos totais, médias, metas e rankings.
+                </p>
+              )}
               {formData.role === FUNCAO_CONFIRMACAO && (
                 <p className="text-xs text-muted-foreground">
                   Fica fora dos rankings, das médias e das metas do atendimento. O trabalho dela continua gravado.

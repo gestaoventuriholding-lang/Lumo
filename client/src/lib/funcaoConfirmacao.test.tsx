@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { FUNCAO_ATENDIMENTO, FUNCAO_CONFIRMACAO, isAtendimento, isConfirmacao, separarPorFuncao } from "./attendantRole";
+import { FUNCAO_ATENDIMENTO, FUNCAO_CONFIRMACAO, FUNCAO_TRIAGEM, isAtendimento, isConfirmacao, isTriagem, separarPorFuncao } from "./attendantRole";
 import { buildAttendantSummaries, buildDashboardStats } from "./performanceMetrics";
 import { buildOccupancyMap } from "./occupancyMap";
 import { saveAttendants } from "./attendantsStorage";
@@ -90,6 +90,20 @@ describe("função: Atendimento x Confirmação de agenda", () => {
     const chat = buildOccupancyMap(todos, "WhatsApp");
     expect(voz.rows.find((r) => r.name === "Cora Confirma")?.role).toBe(FUNCAO_CONFIRMACAO);
     expect(chat.rows.some((r) => r.name === "Cora Confirma")).toBe(true);
+  });
+});
+
+describe("função: Triagem (gestão)", () => {
+  it("fica fora do atendimento e dos totais, com os registros dela à parte", () => {
+    const todos = [pessoa({ id: 1, name: "Ana Teste" }), pessoa({ id: 2, name: "Gestora Teste", role: FUNCAO_TRIAGEM, serviceChannel: "WhatsApp" })];
+    const registros = [registro(1, 1, "Ana Teste", "Ligação", 50), registro(2, 2, "Gestora Teste", "WhatsApp", 80, 1)];
+    const { atendimento, triagem, confirmacao } = separarPorFuncao(todos, registros);
+    expect(isTriagem(todos[1])).toBe(true);
+    expect(isAtendimento(todos[1])).toBe(false);
+    expect(atendimento.attendants.map((a) => a.name)).toEqual(["Ana Teste"]);
+    expect(atendimento.records.map((r) => r.attendancesCount)).toEqual([50]);
+    expect(triagem.records.map((r) => r.attendancesCount)).toEqual([80]);
+    expect(confirmacao.attendants).toHaveLength(0);
   });
 });
 

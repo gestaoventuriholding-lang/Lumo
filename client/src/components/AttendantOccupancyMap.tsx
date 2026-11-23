@@ -353,6 +353,14 @@ function OccupancyRowView({
         <div className="min-w-0 leading-tight">
           <p className="truncate text-sm font-medium text-foreground">
             {row.name}
+            {row.role === "Triagem" && (
+              <span
+                className="ml-2 inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 align-middle text-[10px] font-medium text-muted-foreground"
+                data-testid="selo-triagem"
+              >
+                Triagem
+              </span>
+            )}
             {row.role === "Confirmação de agenda" && (
               <span
                 className="ml-2 inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 align-middle text-[10px] font-medium text-muted-foreground"
