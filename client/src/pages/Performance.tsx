@@ -2,6 +2,7 @@ import { newId as createId } from "@/lib/ids";
 import { attendantsActiveOn } from "@/lib/attendantStatus";
 import { useAtendimentoData } from "@/hooks/useAtendimentoData";
 import ConfirmacaoAgendaCard from "@/components/ConfirmacaoAgendaCard";
+import TriagemCard from "@/components/TriagemCard";
 import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -360,6 +361,10 @@ export default function Performance() {
 
       <motion.div variants={pageItemVariants}>
         <ConfirmacaoAgendaCard range={displayRange} />
+      </motion.div>
+
+      <motion.div variants={pageItemVariants}>
+        <TriagemCard range={displayRange} />
       </motion.div>
 
       <motion.div variants={pageItemVariants}>

@@ -37,7 +37,26 @@ export interface PreviousRange {
 }
 
 /** Período imediatamente anterior e do mesmo tamanho (mês fechado volta para o mês anterior) */
-export function previousRange(range: Pick<DateRange, "start" | "end">): PreviousRange {
+export function previousRange(range: Pick<DateRange, "start" | "end">, hoje: Date = new Date()): PreviousRange {
+  // Mês em andamento (do dia 1 até hoje, ou o mês inteiro que ainda não terminou): compara com o MESMO trecho do mês anterior,
+  // e não com o mês anterior inteiro (que mostraria uma queda falsa).
+  const inicio = parseIso(range.start);
+  const fimPedido = parseIso(range.end);
+  const mesmoMes = fimPedido.getFullYear() === inicio.getFullYear() && fimPedido.getMonth() === inicio.getMonth();
+  const mesAtual = hoje.getFullYear() === inicio.getFullYear() && hoje.getMonth() === inicio.getMonth();
+  if (inicio.getDate() === 1 && mesmoMes && mesAtual) {
+    const ultimoDiaDoMes = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0).getDate();
+    const ateHoje = fimPedido.getDate() === hoje.getDate() && hoje.getDate() > 1; // dia 1 até hoje
+    const mesInteiroNaoTerminou = isWholeMonth(range) && hoje.getDate() < ultimoDiaDoMes;
+    if (ateHoje || mesInteiroNaoTerminou) {
+      const ultimoDiaAnterior = new Date(inicio.getFullYear(), inicio.getMonth(), 0).getDate();
+      const ateDia = Math.min(hoje.getDate(), ultimoDiaAnterior);
+      const prevStart = new Date(inicio.getFullYear(), inicio.getMonth() - 1, 1);
+      const prevEnd = new Date(inicio.getFullYear(), inicio.getMonth() - 1, ateDia);
+      const name = `mês anterior até o dia ${ateDia}`;
+      return { start: toIso(prevStart), end: toIso(prevEnd), label: name, name };
+    }
+  }
   if (isWholeMonth(range)) {
     const start = parseIso(range.start);
     const prevStart = new Date(start.getFullYear(), start.getMonth() - 1, 1);

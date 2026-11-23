@@ -35,3 +35,23 @@ describe("comparação com o período anterior", () => {
     expect(describeChange(50, 0, "mês anterior").tone).toBe("neutral");
   });
 });
+
+describe("comparação com o mês anterior quando o mês está em andamento", () => {
+  const hoje = new Date(2026, 10, 23); // 23/11/2026
+  it("mês inteiro que ainda não terminou compara com o mesmo trecho do mês anterior", () => {
+    expect(previousRange({ start: "2026-11-01", end: "2026-11-30" }, hoje)).toMatchObject({ start: "2026-10-01", end: "2026-10-23", name: "mês anterior até o dia 23" });
+  });
+  it("do dia 1 até hoje também", () => {
+    expect(previousRange({ start: "2026-11-01", end: "2026-11-23" }, hoje)).toMatchObject({ start: "2026-10-01", end: "2026-10-23" });
+  });
+  it("mês anterior mais curto: não passa do último dia dele", () => {
+    expect(previousRange({ start: "2026-03-01", end: "2026-03-31" }, new Date(2026, 2, 30))).toMatchObject({ start: "2026-02-01", end: "2026-02-28" });
+  });
+  it("mês já fechado continua comparando com o mês anterior inteiro", () => {
+    expect(previousRange({ start: "2026-10-01", end: "2026-10-31" }, hoje)).toMatchObject({ start: "2026-09-01", end: "2026-09-30", name: "mês anterior" });
+  });
+  it("dia único e semana continuam como antes", () => {
+    expect(previousRange({ start: "2026-11-23", end: "2026-11-23" }, hoje).name).toBe("dia anterior");
+    expect(previousRange({ start: "2026-11-17", end: "2026-11-23" }, hoje).name).toBe("semana anterior");
+  });
+});

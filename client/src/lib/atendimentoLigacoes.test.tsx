@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listarConversasDoAgente, listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "../../../supabase/functions/escallo-atendimento/ligacoes";
+import { listarConversasDoAgente, listarLigacoesDoAgente, resumirTransferencias, UNIQUEID_LIGACAO } from "../../../supabase/functions/escallo-atendimento/ligacoes";
 import { pareceIdLigacao } from "./atendimentoEscallo";
 
 // Dados inventados no formato dos relatórios da Escallo (rel001 = chamadas de fila, rel002 = ligações com o agente)
@@ -94,5 +94,26 @@ describe("lista de conversas do agente (WhatsApp)", () => {
     expect(r.map((c) => c.protocolo)).toEqual(["20261119000009"]);
     expect(Object.keys(r[0]).sort()).toEqual(["inicio", "mensagens", "protocolo", "segundos"]);
     expect(JSON.stringify(r)).not.toContain("sigiloso");
+  });
+});
+
+describe("triagem: transferências do agente no dia", () => {
+  const at = (cod: string, nome: string, protocolo: string) => ({ agente: { codigo: cod, nome }, protocolo, mensagens: [{}] });
+  const regs = [
+    { atendimentos: [at("1008", "Gestora Teste", "P1"), at("1031", "Ana Teste", "P1")] },
+    { atendimentos: [at("1008", "Gestora Teste", "P2"), at("1031", "Ana Teste", "P2"), at("1032", "Bia Teste", "P2")] },
+    { atendimentos: [at("1008", "Gestora Teste", "P3"), at("1032", "Bia Teste", "P3")] },
+    { atendimentos: [at("1008", "Gestora Teste", "P4")] },
+    { atendimentos: [at("1031", "Ana Teste", "P5")] },
+    { atendimentos: [at("1008", "Gestora Teste", "P1"), at("1031", "Ana Teste", "P1")] }, // repetida em outra página
+  ];
+  it("conta as conversas dela, quantas passaram para outro agente e para quem (primeiro seguinte)", () => {
+    const r = resumirTransferencias(regs, "1008");
+    expect(r).toMatchObject({ conversas: 4, transferidas: 3, semTransferencia: 1 });
+    expect(r.destinos.map((d) => [d.nome, d.quantidade])).toEqual([["Ana Teste", 2], ["Bia Teste", 1]]);
+  });
+  it("agente sem conversas dá zero e não devolve protocolo nem texto", () => {
+    expect(resumirTransferencias(regs, "9999")).toEqual({ conversas: 0, transferidas: 0, semTransferencia: 0, destinos: [] });
+    expect(JSON.stringify(resumirTransferencias(regs, "1008"))).not.toMatch(/P1|P2|mensagens/);
   });
 });

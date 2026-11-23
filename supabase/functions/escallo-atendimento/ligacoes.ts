@@ -88,3 +88,54 @@ export function listarConversasDoAgente(registros: Linha[], codigo: string): Con
   }
   return [...achadas.values()].sort((x, y) => x.inicio.localeCompare(y.inicio)).slice(0, LIMITE_LIGACOES);
 }
+
+// ---- Triagem: quantas conversas o agente (gestão) recebeu e para quem passou ----
+// Em cada conversa a Escallo lista os atendimentos em ordem. Se depois do atendimento do agente vem outro agente, a conversa foi transferida.
+// Só contagens e nomes de agentes (equipe). Sem protocolo, sem texto, sem nome de paciente.
+export interface DestinoTransferencia {
+  codigo: string;
+  nome: string;
+  quantidade: number;
+}
+export interface ResumoTransferencias {
+  /** conversas em que o agente participou */
+  conversas: number;
+  /** conversas que seguiram com outro agente depois dele */
+  transferidas: number;
+  /** conversas que terminaram com o próprio agente */
+  semTransferencia: number;
+  /** para quem foram (primeiro agente depois dele), do maior para o menor */
+  destinos: DestinoTransferencia[];
+}
+
+export function resumirTransferencias(registros: Linha[], codigo: string): ResumoTransferencias {
+  const destinos = new Map<string, DestinoTransferencia>();
+  const vistas = new Set<string>();
+  let conversas = 0;
+  let transferidas = 0;
+  for (const r of registros) {
+    const atendimentos = Array.isArray(r.atendimentos) ? (r.atendimentos as Linha[]) : [];
+    const codigoDe = (a: Linha) => texto((a.agente as { codigo?: unknown } | undefined)?.codigo);
+    const i = atendimentos.findIndex((a) => codigoDe(a) === codigo);
+    if (i < 0) continue;
+    const protocolo = texto(atendimentos[i].protocolo);
+    if (protocolo) {
+      if (vistas.has(protocolo)) continue; // a mesma conversa pode vir em mais de uma página
+      vistas.add(protocolo);
+    }
+    conversas += 1;
+    const seguinte = atendimentos.slice(i + 1).find((a) => codigoDe(a) !== "" && codigoDe(a) !== codigo);
+    if (!seguinte) continue;
+    transferidas += 1;
+    const cod = codigoDe(seguinte);
+    const atual = destinos.get(cod) ?? { codigo: cod, nome: texto((seguinte.agente as { nome?: unknown }).nome).slice(0, 80), quantidade: 0 };
+    atual.quantidade += 1;
+    destinos.set(cod, atual);
+  }
+  return {
+    conversas,
+    transferidas,
+    semTransferencia: conversas - transferidas,
+    destinos: [...destinos.values()].sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, "pt-BR")),
+  };
+}

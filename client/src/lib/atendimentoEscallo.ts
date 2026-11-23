@@ -179,3 +179,22 @@ export function horaDaMensagem(dataHora: string): string {
   const m = /\d{2}:\d{2}/.exec(dataHora.split(" ")[1] ?? "");
   return m ? m[0] : "";
 }
+
+/** Resumo da triagem no dia: quantas conversas o agente recebeu e para quem passou. Só contagens (sem protocolo, texto ou paciente). */
+export interface ResumoTransferencias {
+  conversas: number;
+  transferidas: number;
+  semTransferencia: number;
+  destinos: { codigo: string; nome: string; quantidade: number }[];
+}
+
+export async function listarTransferencias(dia: string, codigoAgente: number): Promise<ResumoTransferencias> {
+  if (atendimentoInventado()) {
+    return { conversas: 40, transferidas: 38, semTransferencia: 2, destinos: [{ codigo: "9001", nome: "Atendente Exemplo A", quantidade: 22 }, { codigo: "9002", nome: "Atendente Exemplo B", quantidade: 16 }] };
+  }
+  const { data, error } = await getSupabase().functions.invoke("escallo-atendimento", { body: { canal: "WhatsApp", acao: "listar", resumo: "transferencias", dia, codigoAgente } });
+  if (error) throw new Error(await traduzirErroAtendimento(error));
+  const r = data as (Partial<ResumoTransferencias> & { tipo?: string }) | null;
+  if (!r || r.tipo !== "transferencias" || typeof r.conversas !== "number" || !Array.isArray(r.destinos)) throw new Error("A resposta da Escallo veio em um formato inesperado.");
+  return { conversas: r.conversas, transferidas: r.transferidas ?? 0, semTransferencia: r.semTransferencia ?? 0, destinos: r.destinos };
+}

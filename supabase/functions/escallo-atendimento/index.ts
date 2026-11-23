@@ -13,11 +13,12 @@
 //  { canal: "WhatsApp", protocolo, dia }                       -> { tipo: "conversa", ... }
 //  { canal: "WhatsApp", acao: "listar", dia, codigoAgente }    -> { tipo: "lista_conversas", conversas: [{ protocolo, inicio, segundos, mensagens }] }
 //                                                                 (sem texto de mensagem; a conversa é aberta depois, pelo protocolo escolhido)
+//  { canal: "WhatsApp", acao: "listar", resumo: "transferencias", dia, codigoAgente } -> { tipo: "transferencias", conversas, transferidas, semTransferencia, destinos: [{ codigo, nome, quantidade }] } (só contagens)
 //  { canal: "Ligação",  acao: "listar", dia, codigoAgente }    -> { tipo: "lista", ligacoes: [{ uniqueid, inicio, fila, segundos }] }
 //                                                                 (a Escallo não liga protocolo a ligação recebida: escolhe-se a ligação do agente no dia)
 //  { canal: "Ligação",  acao: "audio", uniqueid }              -> o som (application/octet-stream)
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { listarConversasDoAgente, listarLigacoesDoAgente, UNIQUEID_LIGACAO } from "./ligacoes.ts";
+import { listarConversasDoAgente, listarLigacoesDoAgente, resumirTransferencias, UNIQUEID_LIGACAO } from "./ligacoes.ts";
 
 const HOST_ESCALLO = "https://checkuplaboratoriodeanalisesclinicasltda-6b2800.escallo.com.br";
 const URL_HISTORICO = `${HOST_ESCALLO}/escallo/api/v1/recurso/relatorio/historicoMensagens/?registros=25&pagina=0`;
@@ -162,6 +163,7 @@ Deno.serve(async (req: Request) => {
           if (pagina.length < 100) acabou = true;
         }
       }
+      if (corpo.resumo === "transferencias") return json({ tipo: "transferencias", dia: diaLista, ...resumirTransferencias(registros, codigo) });
       return json({ tipo: "lista_conversas", dia: diaLista, conversas: listarConversasDoAgente(registros, codigo) });
     }
     const fila = await ler(URL_REL001);
