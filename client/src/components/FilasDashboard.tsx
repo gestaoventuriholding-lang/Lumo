@@ -36,7 +36,7 @@ function SeletorCanalTma({ valor, onChange, nome = "tma" }: { valor: CanalTma; o
     { v: "ligacao", rotulo: "Ligação" },
   ];
   return (
-    <div role="group" aria-label={`Canal do ${nome.toUpperCase()}`} className="inline-flex rounded-md border border-border p-0.5" data-testid={`canal-${nome}`}>
+    <div role="group" aria-label={`Canal do ${nome.toUpperCase()}`} className="inline-flex items-center gap-0.5" data-testid={`canal-${nome}`}>
       {opcoes.map((o) => (
         <button
           key={o.v}
@@ -45,8 +45,8 @@ function SeletorCanalTma({ valor, onChange, nome = "tma" }: { valor: CanalTma; o
           data-testid={`canal-${nome}-${o.v}`}
           onClick={() => onChange(o.v)}
           className={cn(
-            "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-            valor === o.v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            "rounded-md px-2 py-0.5 text-xs transition-colors",
+            valor === o.v ? "bg-primary-soft font-semibold text-primary" : "font-medium text-muted-foreground hover:text-foreground"
           )}
         >
           {o.rotulo}

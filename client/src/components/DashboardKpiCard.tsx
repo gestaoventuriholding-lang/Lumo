@@ -64,6 +64,7 @@ export default function DashboardKpiCard({
         <div className={cn("flex h-11 w-11 items-center justify-center rounded-lg", dark ? "bg-primary-soft" : iconBg)}>
           <Icon className={cn("h-[22px] w-[22px]", dark ? "text-primary" : iconColor)} />
         </div>
+        {controles ? <div className="ml-auto shrink-0 self-start">{controles}</div> : null}
         {sparkData.length > 1 && (
           <div className="h-11 w-24 shrink-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -91,7 +92,6 @@ export default function DashboardKpiCard({
       <p className={cn("font-display mt-1 text-3xl font-bold", dark ? "text-brand-text" : "text-foreground")}>
         <AnimatedText text={value} />
       </p>
-      {controles ? <div className="mt-2">{controles}</div> : null}
       {progress !== undefined && (
         <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-primary-soft">
           <div
