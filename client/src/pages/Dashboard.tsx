@@ -186,7 +186,7 @@ export default function Dashboard() {
 
   const { attendants: todosColaboradores, absences, productionGoals } = useEllosData();
   // Métricas, médias e contagens são do atendimento; a Confirmação de agenda aparece à parte (cartão próprio)
-  const { attendants, performanceRecords: dailyRecords, productivityRecords, confirmacao } = useAtendimentoData();
+  const { attendants, performanceRecords: dailyRecords, productivityRecords } = useAtendimentoData();
   // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
   const performanceRecords = useMemo(
     () => mergePeriodTotals(dailyRecords, productivityRecords, dateRange),
@@ -239,11 +239,9 @@ export default function Dashboard() {
 
   const colaboradoresCard = {
     title: "Total de Colaboradores",
-    value: String(dashboardStats.totalAttendants),
-    comparison:
-      confirmacao.attendants.length > 0
-        ? `${todosColaboradores.length} cadastrados · ${confirmacao.attendants.length} de confirmação de agenda`
-        : `${todosColaboradores.length} cadastrados no sistema`,
+    // Total = todos os colaboradores cadastrados (inclui Confirmação de agenda); as métricas dos outros cartões seguem só do atendimento
+    value: String(todosColaboradores.length),
+    comparison: "cadastrados no sistema",
     trend: "neutral" as const,
     icon: Users,
     iconBg: "bg-primary-soft",
