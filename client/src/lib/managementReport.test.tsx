@@ -54,7 +54,27 @@ const productionGoals: ProductionGoal[] = [
 ];
 
 describe("buildManagementReportData", () => {
-  it("monta rankings por canal e abaixo da meta", () => {
+  it("monta um ranking por canal com todos os colaboradores", () => {
+    const muitos = Array.from({ length: 14 }, (_, i) => ({ ...attendants[0], id: i + 1, name: `Pessoa ${i + 1}` }));
+    const dias = muitos.flatMap((a, i) =>
+      ["2026-06-09", "2026-06-10"].map((date, d) => ({
+        id: i * 2 + d + 1, attendantId: a.id, attendantName: a.name, date, channel: "Ligação" as const,
+        attendancesCount: 30, averageTimeMinutes: 4, createdAt: date, updatedAt: date,
+      }))
+    );
+    const data = buildManagementReportData({
+      period: "week",
+      dateRange: { start: "2026-06-09", end: "2026-06-10", label: "Semana" },
+      attendants: muitos,
+      performanceRecords: dias,
+      productionGoals,
+    });
+    expect(data.ligacaoRanking).toHaveLength(14);
+    // uma linha por pessoa, com a soma dos dias
+    expect(data.ligacaoRanking.every((linha) => linha.attendances === 60)).toBe(true);
+  });
+
+  it("separa os rankings por canal", () => {
     const records: DailyPerformanceRecord[] = [
       {
         id: 1,
@@ -93,7 +113,6 @@ describe("buildManagementReportData", () => {
     expect(data.ligacaoRanking[0].name).toBe("Ana Silva");
     expect(data.whatsappRanking).toHaveLength(1);
     expect(data.whatsappRanking[0].name).toBe("Bruno Costa");
-    expect(data.belowGoal.some((row) => row.name === "Bruno Costa")).toBe(true);
     expect(data.productivityTrend).toHaveLength(1);
     expect(hasManagementReportContent(data)).toBe(true);
   });

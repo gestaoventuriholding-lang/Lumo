@@ -1,5 +1,5 @@
 import type { Attendant } from "@/types/attendant";
-import type { AttendanceChannel, PerformanceIndicator, ProductionGoal } from "@/types/goals";
+import type { AttendanceChannel, ProductionGoal } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
 import type { DashboardPeriod, DateRange } from "@/lib/dateRangeFilter";
 import { periodScopeLabel, resolveDateRange } from "@/lib/dateRangeFilter";
@@ -9,7 +9,6 @@ import {
   buildProductivityTrend,
   compareAttendantSummaries,
   filterRecordsByRange,
-  recordsToIndicators,
   type AttendantPerformanceSummary,
   type ProductivityTrendPoint,
 } from "@/lib/performanceMetrics";
@@ -35,17 +34,6 @@ export interface ManagementReportRankingRow {
   score: number;
 }
 
-export interface ManagementReportBelowGoalRow {
-  name: string;
-  role: string;
-  channel: string;
-  target: number;
-  produced: number;
-  percentage: number;
-  difference: number;
-  alertLevel: "yellow" | "red";
-}
-
 export interface ManagementReportSummary {
   totalAttendances: number;
   averagePercentage: number;
@@ -63,20 +51,18 @@ export interface ManagementReportData {
   summary: ManagementReportSummary;
   ligacaoRanking: ManagementReportRankingRow[];
   whatsappRanking: ManagementReportRankingRow[];
-  belowGoal: ManagementReportBelowGoalRow[];
   productivityTrend: ProductivityTrendPoint[];
   /** Resumo das auditorias de atendimento do período (só quando as auditorias são informadas) */
   quality?: QualidadePeriodo;
 }
 
+/** Uma linha por colaborador com o total do período; entra todo mundo que teve atendimento */
 function summariesToRankingRows(
-  summaries: AttendantPerformanceSummary[],
-  limit = 10
+  summaries: AttendantPerformanceSummary[]
 ): ManagementReportRankingRow[] {
   return [...summaries]
     .filter((summary) => summary.totalAttendances > 0)
     .sort(compareAttendantSummaries)
-    .slice(0, limit)
     .map((summary, index) => ({
       position: index + 1,
       name: summary.name,
@@ -84,28 +70,6 @@ function summariesToRankingRows(
       averageTime: formatAverageTime(summary.averageTimeMinutes),
       metaPercent: Math.round(summary.averagePercentage),
       score: Math.round(summary.performanceScore * 10) / 10,
-    }));
-}
-
-function indicatorsToBelowGoalRows(
-  indicators: PerformanceIndicator[],
-  channelFilter: ManagementReportChannelFilter
-): ManagementReportBelowGoalRow[] {
-  return indicators
-    .filter((indicator) => indicator.alertLevel !== "green")
-    .filter(
-      (indicator) => channelFilter === "both" || indicator.channel === channelFilter
-    )
-    .sort((a, b) => a.percentage - b.percentage)
-    .map((indicator) => ({
-      name: indicator.attendantName,
-      role: indicator.role,
-      channel: indicator.channel,
-      target: indicator.dailyTarget,
-      produced: indicator.produced,
-      percentage: Math.round(indicator.percentage * 10) / 10,
-      difference: indicator.difference,
-      alertLevel: indicator.alertLevel === "yellow" ? "yellow" : "red",
     }));
 }
 
@@ -217,12 +181,6 @@ export function buildManagementReportData(
       )
     : [];
 
-  const periodIndicators = recordsToIndicators(
-    scopedRecords,
-    scopedAttendants,
-    productionGoals,
-    dateRange
-  );
   const dashboardStats = buildDashboardStats(
     scopedAttendants,
     scopedRecords,
@@ -251,7 +209,6 @@ export function buildManagementReportData(
     },
     ligacaoRanking: includeLigacao ? summariesToRankingRows(ligacaoSummaries) : [],
     whatsappRanking: includeWhatsapp ? summariesToRankingRows(whatsappSummaries) : [],
-    belowGoal: indicatorsToBelowGoalRows(periodIndicators, channelFilter),
     productivityTrend,
   };
 }

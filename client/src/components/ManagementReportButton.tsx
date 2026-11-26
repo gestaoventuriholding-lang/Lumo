@@ -335,7 +335,7 @@ export default function ManagementReportButton({
               )}
               {channels !== "both" && (
                 <p className="text-xs text-muted-foreground">
-                  Ranking e abaixo da meta só do canal selecionado.
+                  Pódio e ranking só do canal selecionado.
                 </p>
               )}
             </section>
