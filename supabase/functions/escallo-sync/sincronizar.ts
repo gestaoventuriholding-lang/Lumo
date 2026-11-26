@@ -3,6 +3,7 @@
 import { hojeSaoPaulo, type RegistroEscallo } from "./mapeamento.ts";
 import type { LinhaFila } from "./filas.ts";
 import type { ConsumoIADia } from "./ia.ts";
+import type { EscolhasMenuDia } from "./menu.ts";
 import { montarPlanoDia, type AvisoSync, type ColaboradorSync, type PlanoDia } from "./plano.ts";
 
 /** Fila da Escallo que não está em nenhum grupo conhecido: foi contada em "Outras" (vai para sync_runs.warnings) */
@@ -51,6 +52,9 @@ export interface Deps {
   /** Opcional: consumo de FTokens da IA do dia (rel103). Se falhar, o dia principal continua valendo. */
   buscarIA?(dia: string): Promise<ConsumoIADia | null>;
   gravarIA?(consumo: ConsumoIADia): Promise<void>;
+  /** Opcional: escolhas de exame no menu do WhatsApp no dia (rel092). Se falhar, o dia principal continua valendo. */
+  buscarMenu?(dia: string): Promise<EscolhasMenuDia | null>;
+  gravarMenu?(escolhas: EscolhasMenuDia): Promise<void>;
   esperar(ms: number): Promise<void>;
 }
 
@@ -73,6 +77,8 @@ export interface ResultadoSync {
   filas: { linhas: number; erros: string[]; avisos: AvisoFila[] };
   /** Dias de consumo de IA gravados e, se algum falhou, o motivo (não derruba a sincronização) */
   ia: { dias: number; erros: string[] };
+  /** Dias de escolhas do menu gravados e, se algum falhou, o motivo (não derruba a sincronização) */
+  menu: { dias: number; erros: string[] };
 }
 
 const dataValida = (s: unknown): s is string => {
@@ -177,6 +183,19 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       filas.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
     }
   };
+  const menu = { dias: 0, erros: [] as string[] };
+  const atualizarMenu = async (dia: string) => {
+    if (!deps.buscarMenu || !deps.gravarMenu) return;
+    try {
+      const m = await deps.buscarMenu(dia);
+      if (m) {
+        await deps.gravarMenu(m);
+        menu.dias += 1;
+      }
+    } catch (e) {
+      menu.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+    }
+  };
   for (let i = 0; i < dias.length; i++) {
     const dia = dias[i];
     const rel025 = await deps.buscarRelatorio("rel025", dia);
@@ -190,6 +209,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       gravacao.puladas_manuais += r.puladas_manuais;
       gravacao.alertas_novos += r.alertas_novos;
       await atualizarFilas(dia);
+      await atualizarMenu(dia);
       if (deps.buscarIA && deps.gravarIA) {
         try {
           const c = await deps.buscarIA(dia);
@@ -204,10 +224,11 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
     }
     if (i < dias.length - 1) await deps.esperar(1500);
   }
-  if (pedido.modo === "fechamento" && deps.buscarFilas && deps.gravarFilas) {
+  if (pedido.modo === "fechamento") {
     for (const dia of diasDaReleituraDeFilas(hoje)) {
       await deps.esperar(1500);
       await atualizarFilas(dia);
+      await atualizarMenu(dia);
     }
   }
   const soma = (f: (p: PlanoDia) => number) => planos.reduce((s, p) => s + f(p), 0);
@@ -227,5 +248,6 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
     avisos: [...planos.flatMap((p) => p.avisos), ...filas.avisos],
     filas,
     ia,
+    menu,
   };
 }

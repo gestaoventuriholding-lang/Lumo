@@ -29,3 +29,10 @@ from (
         from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d where extract(dow from d) <> 0) x
 ) y
 where antes < 5000;
+
+-- Escolhas de exame no menu principal do WhatsApp (rel092), inventadas: de segunda a sábado.
+delete from public.exam_choices_daily;
+insert into public.exam_choices_daily (date, imaging, laboratory, cardiology, invalid)
+select d::date, 210 + (extract(day from d)::int * 13) % 90, 190 + (extract(day from d)::int * 7) % 80, 8 + extract(day from d)::int % 12, 12 + extract(day from d)::int % 9
+from generate_series('2026-09-14'::date, '2026-11-17'::date, interval '1 day') d
+where extract(dow from d) <> 0;

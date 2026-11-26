@@ -58,6 +58,20 @@ export function resumoFilas(rows: FilaDia[], range: Periodo): ResumoFilas {
   };
 }
 
+/** Escolhas de exame no menu principal do WhatsApp (rel092), um registro por dia. "analises" = exames laboratoriais */
+export interface EscolhasDia {
+  date: string;
+  imagem: number;
+  analises: number;
+  cardiologicos: number;
+}
+
+export function resumoExames(rows: EscolhasDia[], range: Periodo): Omit<EscolhasDia, "date"> {
+  const lista = rows.filter((x) => x.date >= range.start && x.date <= range.end);
+  const soma = (f: (x: EscolhasDia) => number) => lista.reduce((s, x) => s + f(x), 0);
+  return { imagem: soma((x) => x.imagem), analises: soma((x) => x.analises), cardiologicos: soma((x) => x.cardiologicos) };
+}
+
 export interface PontoAreas {
   date: string;
   label: string;
@@ -66,17 +80,15 @@ export interface PontoAreas {
   cardiologicos: number;
 }
 
-/** Ligações atendidas dos 3 exames (laboratoriais, imagem, cardiológicos), um ponto por dia com movimento (do mais antigo ao mais novo) */
-export function serieExames(rows: FilaDia[], range: Periodo): PontoAreas[] {
-  const dias = new Map<string, PontoAreas>();
-  for (const x of noPeriodo(rows, range)) {
-    if (x.channel !== "Ligação" || (x.area !== "analises" && x.area !== "imagem" && x.area !== "cardiologicos")) continue;
-    const [, mes, dia] = x.date.split("-");
-    const p = dias.get(x.date) ?? { date: x.date, label: `${dia}/${mes}`, analises: 0, imagem: 0, cardiologicos: 0 };
-    p[x.area] += x.answered;
-    dias.set(x.date, p);
-  }
-  return [...dias.values()].sort((a, b) => a.date.localeCompare(b.date));
+/** Escolhas dos 3 exames, um ponto por dia com movimento (do mais antigo ao mais novo) */
+export function serieExames(rows: EscolhasDia[], range: Periodo): PontoAreas[] {
+  return rows
+    .filter((x) => x.date >= range.start && x.date <= range.end && x.analises + x.imagem + x.cardiologicos > 0)
+    .map((x) => {
+      const [, mes, dia] = x.date.split("-");
+      return { date: x.date, label: `${dia}/${mes}`, analises: x.analises, imagem: x.imagem, cardiologicos: x.cardiologicos };
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /** Menor e maior data a buscar para o período e o anterior (uma consulta só) */

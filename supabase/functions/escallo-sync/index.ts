@@ -11,6 +11,7 @@
 //  - o token da Escallo (ESCALLO_TOKEN) fica só no secret e é tirado de qualquer mensagem, registro ou log;
 //  - os logs têm só contagens; nenhum dado de pessoa.
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { INTERACAO_MENU_PRINCIPAL, menuParaTabela, resumirMenu } from "./menu.ts";
 import { iaParaTabela, lerRel103Completo, resumirConsumoIA } from "./ia.ts";
 import { filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
@@ -193,6 +194,13 @@ Deno.serve(async (req: Request) => {
       const { error } = await servico.from("ia_consumo_diario").upsert(iaParaTabela(consumo), { onConflict: "date" });
       if (error) throw new Error("não consegui gravar o consumo de IA");
     },
+    async buscarMenu(dia) {
+      return resumirMenu(dia, await buscarMenuEscallo(tokenEscallo, dia));
+    },
+    async gravarMenu(escolhas) {
+      const { error } = await servico.from("exam_choices_daily").upsert(menuParaTabela(escolhas), { onConflict: "date" });
+      if (error) throw new Error("não consegui gravar as escolhas do menu");
+    },
     async aplicarDia(plano) {
       const { data, error } = await servico.rpc("aplicar_sync_dia", { p: { dia: plano.dia, linhas: plano.linhas, alertas: plano.alertas } });
       if (error) throw new Error(`não consegui gravar o dia ${plano.dia}`);
@@ -252,6 +260,19 @@ async function buscarEscallo(token: string, rel: "rel025" | "rel090" | "rel001" 
     if (tentativa < 3) await esperar(3000 * tentativa);
   }
   throw new Error(`${rel} ${dia}: ${textoSeguro(ultimoErro, token, 200)}`);
+}
+
+/** rel092 (respostas do menu principal do WhatsApp) de um dia. Os registros vêm como lista ou objeto: quem lê é resumirMenu. */
+async function buscarMenuEscallo(token: string, dia: string): Promise<unknown> {
+  const resposta = await fetch(`${URL_BASE}/rel092/?registros=100&pagina=0`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Partner ${token}` },
+    body: JSON.stringify({ dataInicial: dia, dataFinal: dia, horarioInicial: "00:00:00", horarioFinal: "23:59:59", interacao: INTERACAO_MENU_PRINCIPAL }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const j = await resposta.json().catch(() => null);
+  if (!resposta.ok || !j?.data) throw new Error(`rel092 ${dia}: a Escallo respondeu ${resposta.status}`);
+  return j.data.registros;
 }
 
 /** rel103 (extrato de consumo da IA) de um dia: lê todas as páginas (ver lerRel103Completo em ia.ts). */

@@ -3,7 +3,7 @@
 // As regras de leitura ficam nas funções em supabase/functions (escallo-sync e escallo-atendimento).
 
 /** Fonte da data do último dado guardado */
-export type FonteUltimoDado = "produtividade-ligacao" | "produtividade-whatsapp" | "fila-ligacao" | "fila-whatsapp" | "ia";
+export type FonteUltimoDado = "produtividade-ligacao" | "produtividade-whatsapp" | "fila-ligacao" | "fila-whatsapp" | "menu" | "ia";
 
 export interface RelatorioUsado {
   codigo: string;
@@ -54,7 +54,7 @@ export const RELATORIOS_GUARDADOS: RelatorioUsado[] = [
     canal: "Ligação",
     traz: ["Cada chamada que entrou em uma fila", "Se foi atendida ou abandonada", "Fila escolhida e tempo de espera"],
     guarda: "Só totais por dia e por grupo de fila (laboratoriais, imagem, cardiológicos e outras): atendidas, abandonadas e soma da espera.",
-    ondeAparece: ["Dashboard: tempo médio de espera (TME), abandono e cartões de exames", "Auditoria: lista de ligações do dia"],
+    ondeAparece: ["Dashboard: tempo médio de espera (TME), abandono e cartão Outras filas", "Auditoria: lista de ligações do dia"],
     fonte: "fila-ligacao",
   },
   {
@@ -65,6 +65,15 @@ export const RELATORIOS_GUARDADOS: RelatorioUsado[] = [
     guarda: "Só o total do dia: atendimentos e soma da espera.",
     ondeAparece: ["Dashboard: tempo médio de espera (TME) do WhatsApp"],
     fonte: "fila-whatsapp",
+  },
+  {
+    codigo: "REL092",
+    nome: "Respostas do menu (chat)",
+    canal: "WhatsApp",
+    traz: ["Menu principal: qual tipo de exame o paciente escolheu", "Imagem, laboratoriais ou cardiológicos", "Respostas inválidas"],
+    guarda: "Só a contagem do dia de cada opção e das respostas inválidas.",
+    ondeAparece: ["Dashboard: cartões de exames e gráfico Exames por área"],
+    fonte: "menu",
   },
   {
     codigo: "REL103",

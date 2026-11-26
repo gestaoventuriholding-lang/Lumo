@@ -7,8 +7,9 @@ import DashboardKpiCard from "@/components/DashboardKpiCard";
 import { motion, cardItemVariants, staggerContainerVariants, CHART_DRAW_MS } from "@/lib/motionVariants";
 import { useFilasDiarias } from "@/hooks/useFilasDiarias";
 import { describeChange, previousRange, type Change } from "@/lib/periodComparison";
-import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoFilas, resumoIA, serieExames } from "@/lib/filasMetrics";
+import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoExames, resumoFilas, resumoIA, serieExames } from "@/lib/filasMetrics";
 import { useConsumoIA } from "@/hooks/useConsumoIA";
+import { useEscolhasExames } from "@/hooks/useEscolhasExames";
 import { formatAverageTime } from "@/lib/performanceStorage";
 import type { AverageTimeByChannel } from "@/lib/performanceMetrics";
 import { cn } from "@/lib/utils";
@@ -116,7 +117,7 @@ export default function FilasDashboard({
   const tmaMinutos = tma[canalTma === "todos" ? "total" : canalTma];
   const tmaAnteriorMinutos = tmaAnterior[canalTma === "todos" ? "total" : canalTma];
   const janela = janelaDeBusca(range, anterior);
-  const { rows, carregado } = useFilasDiarias(janela.start, janela.end);
+  const { rows } = useFilasDiarias(janela.start, janela.end);
 
   // O consumo de IA também precisa do mês inteiro até o fim do período, para mostrar quanto da franquia de 5.000 FTokens já foi usada
   const inicioIA = [janela.start, mesDaData(range.end).start].sort()[0];
@@ -127,7 +128,11 @@ export default function FilasDashboard({
 
   const atual = useMemo(() => resumoFilas(rows, range), [rows, range]);
   const antes = useMemo(() => resumoFilas(rows, anterior), [rows, anterior]);
-  const serie = useMemo(() => serieExames(rows, range), [rows, range]);
+  // Exames: quantas vezes cada opção foi escolhida no menu principal do WhatsApp (rel092)
+  const { rows: escolhas, carregado: escolhasCarregadas } = useEscolhasExames(janela.start, janela.end);
+  const exames = useMemo(() => resumoExames(escolhas, range), [escolhas, range]);
+  const examesAntes = useMemo(() => resumoExames(escolhas, anterior), [escolhas, anterior]);
+  const serie = useMemo(() => serieExames(escolhas, range), [escolhas, range]);
 
   const comparar = (a?: number, b?: number, lowerIsBetter = false, unit?: "points") =>
     describeChange(a ?? 0, b ?? 0, anterior.name, { lowerIsBetter, unit });
@@ -138,23 +143,30 @@ export default function FilasDashboard({
     atual.tmeLigacao !== undefined || atual.tmeWhatsapp !== undefined
       ? `Ligação ${tempo(atual.tmeLigacao)} · WhatsApp ${tempo(atual.tmeWhatsapp)}`
       : "Sem dados de fila no período";
-  const semFila = carregado && !atual.temDados;
   const ic = { iconBg: "bg-primary-soft", iconColor: "text-primary", sparkColor: chartColors.primary, trend: "neutral" as const };
 
   const exame = (testId: string, title: string, valor: number, anteriorValor: number): SubCartao => ({
     testId,
     title,
     value: valor > 0 ? formatCount(valor) : "—",
-    detail: "ligações atendidas",
-    legenda: LEGENDA_FILA,
-    delta: comparar(valor, anteriorValor),
+    detail: "vezes que a opção foi escolhida",
+    legenda: "menu principal do WhatsApp",
+    // sem dado no período anterior não há com o que comparar
+    delta: anteriorValor > 0 ? comparar(valor, anteriorValor) : undefined,
   });
   const subcartoes: SubCartao[] = [
     ...subcartoesIniciais,
-    exame("cartao-analises", "Exames laboratoriais", atual.analises, antes.analises),
-    exame("cartao-imagem", "Exames por imagem", atual.imagem, antes.imagem),
-    exame("cartao-cardiologicos", "Exames cardiológicos", atual.cardiologicos, antes.cardiologicos),
-    exame("cartao-outras", "Outras", atual.outras, antes.outras),
+    exame("cartao-analises", "Exames laboratoriais", exames.analises, examesAntes.analises),
+    exame("cartao-imagem", "Exames por imagem", exames.imagem, examesAntes.imagem),
+    exame("cartao-cardiologicos", "Exames cardiológicos", exames.cardiologicos, examesAntes.cardiologicos),
+    {
+      testId: "cartao-outras",
+      title: "Outras filas",
+      value: atual.outras > 0 ? formatCount(atual.outras) : "—",
+      detail: "ligações atendidas",
+      legenda: "filas que não são de exame",
+      delta: comparar(atual.outras, antes.outras),
+    },
     {
       testId: "cartao-abandono",
       title: "Abandono",
@@ -227,12 +239,12 @@ export default function FilasDashboard({
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-base font-semibold text-foreground">Exames por área</h2>
           <p className="text-xs text-muted-foreground">
-            Ligações atendidas por fila da URA. “Outras” (Orçamento, Falar com Atendente…) ficam só no cartão. O WhatsApp não tem fila por exame, então não entra aqui.
+            Quantas vezes cada tipo de exame foi escolhido no menu principal do WhatsApp (REL092 da Escallo). Ligações não entram aqui.
           </p>
         </div>
         {serie.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground" data-testid="filas-vazio">
-            {semFila ? "Sem dados de fila neste período." : "Carregando…"}
+            {escolhasCarregadas ? "Sem escolhas de exame neste período." : "Carregando…"}
           </p>
         ) : (
           <>

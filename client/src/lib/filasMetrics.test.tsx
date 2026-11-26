@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoFilas, resumoIA, serieExames, type FilaDia, type IaDia } from "./filasMetrics";
+import { IA_FTOKENS_CONTRATADOS, franquiaDoMes, janelaDeBusca, mesDaData, resumoExames, resumoFilas, resumoIA, serieExames, type FilaDia, type IaDia } from "./filasMetrics";
 
 // Dados inventados.
 const f = (date: string, channel: FilaDia["channel"], area: FilaDia["area"], answered: number, abandoned: number, waitSecondsTotal: number): FilaDia => ({
@@ -54,12 +54,22 @@ describe("filas: resumo do período", () => {
   });
 });
 
-describe("filas: gráfico dos 3 exames", () => {
-  it("um ponto por dia com ligações, em ordem, sem WhatsApp nem 'outras'", () => {
-    const s = serieExames(rows, periodo);
-    expect(s).toEqual([
+describe("exames: escolhas no menu do WhatsApp", () => {
+  const escolhas = [
+    { date: "2026-11-03", analises: 7, imagem: 9, cardiologicos: 1 },
+    { date: "2026-11-02", analises: 10, imagem: 30, cardiologicos: 5 },
+    { date: "2026-11-08", analises: 0, imagem: 0, cardiologicos: 0 }, // domingo sem movimento
+    { date: "2026-10-30", analises: 99, imagem: 99, cardiologicos: 99 }, // fora do período
+  ];
+
+  it("soma só o período", () => {
+    expect(resumoExames(escolhas, periodo)).toEqual({ analises: 17, imagem: 39, cardiologicos: 6 });
+  });
+
+  it("gráfico: um ponto por dia com escolhas, em ordem de data", () => {
+    expect(serieExames(escolhas, periodo)).toEqual([
       { date: "2026-11-02", label: "02/11", analises: 10, imagem: 30, cardiologicos: 5 },
-      { date: "2026-11-03", label: "03/11", analises: 0, imagem: 20, cardiologicos: 0 },
+      { date: "2026-11-03", label: "03/11", analises: 7, imagem: 9, cardiologicos: 1 },
     ]);
   });
 });
