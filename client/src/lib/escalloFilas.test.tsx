@@ -136,6 +136,27 @@ describe("filas: dentro da sincronização", () => {
     expect(b.gravadas).toEqual([]);
   });
 
+  it("no fechamento, relê as filas dos 7 dias (sem domingo); nos outros modos, só o próprio dia", async () => {
+    const lidos: string[] = [];
+    const registrar = async (dia: string) => { lidos.push(dia); return { linhas: [] }; };
+    // 26/11/2026 é quinta: fecha o dia 25 e relê de 19 a 24, pulando o domingo 22
+    await sincronizar(deps({ buscarFilas: registrar }).d, { modo: "fechamento" }, "2026-11-26");
+    expect(lidos).toEqual(["2026-11-25", "2026-11-19", "2026-11-20", "2026-11-21", "2026-11-23", "2026-11-24"]);
+    lidos.length = 0;
+    await sincronizar(deps({ buscarFilas: registrar }).d, { modo: "hoje" }, "2026-11-26");
+    expect(lidos).toEqual(["2026-11-26"]);
+  });
+
+  it("se um dia da releitura falhar, os outros seguem e o erro fica anotado", async () => {
+    const { d, gravadas } = deps();
+    const original = d.buscarFilas!;
+    d.buscarFilas = async (dia) => { if (dia === "2026-11-20") throw new Error("rel091 fora do ar"); return original(dia); };
+    const r = await sincronizar(d, { modo: "fechamento" }, "2026-11-26");
+    expect(gravadas).toHaveLength(5);
+    expect(r.filas.erros).toEqual(["2026-11-20: rel091 fora do ar"]);
+    expect(r.dias).toEqual(["2026-11-25"]);
+  });
+
   it("se as filas falharem, o dia principal continua gravado e o erro fica anotado", async () => {
     const { d } = deps({ async buscarFilas() { throw new Error("rel001 fora do ar"); } });
     const r = await sincronizar(d, { modo: "hoje" }, "2026-11-05");

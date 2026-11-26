@@ -72,8 +72,8 @@ export default function Reports() {
         <div>
           <h2 id="rel-guardados" className="text-lg font-semibold text-foreground">Atualizados automaticamente</h2>
           <p className="text-sm text-muted-foreground">
-            De segunda a sábado, de hora em hora entre 06:00 e 20:00. De terça a sábado e no domingo, às 03:30, o dia anterior é fechado.
-            O domingo não é sincronizado.
+            De segunda a sábado, de hora em hora entre 06:00 e 20:00. De terça a sábado e no domingo, às 03:30, o dia anterior é fechado
+            e as filas (REL001 e REL091) dos últimos 7 dias são lidas de novo. O domingo não é sincronizado.
           </p>
         </div>
         <div className="grid gap-4 xl:grid-cols-2">

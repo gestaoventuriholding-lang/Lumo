@@ -23,6 +23,8 @@ export const JANELA_ATUALIZAR_AGORA_MIN = 5;
 /** Modos que o agendador (chave secreta) pode pedir. Os outros só um administrador logado. */
 export const MODOS_DO_AGENDADOR: readonly Modo[] = ["hoje", "fechamento"];
 export const MAX_DIAS_POR_PEDIDO = 7;
+/** No fechamento, quantos dias para trás as filas são conferidas de novo (a Escallo recalcula a espera depois do dia fechado) */
+export const DIAS_RELEITURA_FILAS = 7;
 
 export interface PedidoSync {
   modo: ModoPedido;
@@ -113,6 +115,12 @@ export function diasDoPedido(pedido: PedidoSync, hoje: string): string[] {
   return pedido.dias ?? [];
 }
 
+/** Dias anteriores ao que está sendo fechado cujas filas são lidas de novo. Domingo fica de fora (não é sincronizado). */
+export function diasDaReleituraDeFilas(hoje: string): string[] {
+  return Array.from({ length: DIAS_RELEITURA_FILAS - 1 }, (_, i) => somarDias(hoje, -(DIAS_RELEITURA_FILAS - i)))
+    .filter((d) => new Date(`${d}T12:00:00Z`).getUTCDay() !== 0);
+}
+
 /** Modo como fica gravado em sync_runs ("agora" é uma execução manual) */
 export function modoRegistrado(modo: ModoPedido): Modo {
   return modo === "agora" ? "manual" : modo;
@@ -157,6 +165,18 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
   const gravacao = { ...VAZIA };
   const filas = { linhas: 0, erros: [] as string[], avisos: [] as AvisoFila[] };
   const ia = { dias: 0, erros: [] as string[] };
+  // Totais de fila de um dia: atualiza por cima (nunca apaga) e, se falhar, só anota o erro
+  const atualizarFilas = async (dia: string) => {
+    if (!deps.buscarFilas || !deps.gravarFilas) return;
+    try {
+      const { linhas, avisos } = await deps.buscarFilas(dia);
+      for (const a of avisos ?? []) if (!filas.avisos.some((x) => x.fila === a.fila && x.dia === a.dia)) filas.avisos.push(a);
+      if (linhas.length > 0) await deps.gravarFilas(linhas);
+      filas.linhas += linhas.length;
+    } catch (e) {
+      filas.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+    }
+  };
   for (let i = 0; i < dias.length; i++) {
     const dia = dias[i];
     const rel025 = await deps.buscarRelatorio("rel025", dia);
@@ -169,16 +189,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       gravacao.atualizadas += r.atualizadas;
       gravacao.puladas_manuais += r.puladas_manuais;
       gravacao.alertas_novos += r.alertas_novos;
-      if (deps.buscarFilas && deps.gravarFilas) {
-        try {
-          const { linhas, avisos } = await deps.buscarFilas(dia);
-          for (const a of avisos ?? []) if (!filas.avisos.some((x) => x.fila === a.fila && x.dia === a.dia)) filas.avisos.push(a);
-          if (linhas.length > 0) await deps.gravarFilas(linhas);
-          filas.linhas += linhas.length;
-        } catch (e) {
-          filas.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
-        }
-      }
+      await atualizarFilas(dia);
       if (deps.buscarIA && deps.gravarIA) {
         try {
           const c = await deps.buscarIA(dia);
@@ -192,6 +203,12 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       }
     }
     if (i < dias.length - 1) await deps.esperar(1500);
+  }
+  if (pedido.modo === "fechamento" && deps.buscarFilas && deps.gravarFilas) {
+    for (const dia of diasDaReleituraDeFilas(hoje)) {
+      await deps.esperar(1500);
+      await atualizarFilas(dia);
+    }
   }
   const soma = (f: (p: PlanoDia) => number) => planos.reduce((s, p) => s + f(p), 0);
   return {
