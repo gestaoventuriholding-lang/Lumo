@@ -362,14 +362,6 @@ export default function Performance() {
       <PeriodTotalsNotice range={displayRange} />
 
       <motion.div variants={pageItemVariants}>
-        <ConfirmacaoAgendaCard range={displayRange} />
-      </motion.div>
-
-      <motion.div variants={pageItemVariants}>
-        <TriagemCard range={displayRange} />
-      </motion.div>
-
-      <motion.div variants={pageItemVariants}>
         <PerformanceRankings
           ligacaoSummaries={ligacaoSummaries}
           whatsappSummaries={whatsappSummaries}
@@ -442,6 +434,12 @@ export default function Performance() {
           </CardContent>
         </Card>
 </motion.div>
+      </motion.div>
+
+      {/* funções fora das médias do atendimento: lado a lado; se só houver uma, ela ocupa a linha toda */}
+      <motion.div variants={pageItemVariants} className="grid grid-cols-1 gap-4 empty:hidden lg:grid-cols-2 lg:[&>*:only-child]:col-span-2">
+        <ConfirmacaoAgendaCard range={displayRange} />
+        <TriagemCard range={displayRange} />
       </motion.div>
 
       <motion.div variants={pageItemVariants}>

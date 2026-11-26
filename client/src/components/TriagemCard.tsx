@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Loader2, Split } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import CartaoFuncao from "@/components/CartaoFuncao";
 import { Input } from "@/components/ui/input";
 import { useAtendimentoData } from "@/hooks/useAtendimentoData";
 import type { DateRange } from "@/lib/dateRangeFilter";
@@ -23,26 +23,18 @@ export default function TriagemCard({ range }: { range: DateRange }) {
   );
   if (triagem.attendants.length === 0) return null;
   return (
-    <Card data-testid="cartao-triagem">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Split aria-hidden className="h-4 w-4" />
-          Triagem
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-          <p className="font-display text-2xl font-bold tabular-nums">{volume.toLocaleString("pt-BR")}</p>
-          <p className="text-sm text-muted-foreground">conversas recebidas na triagem no período</p>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {triagem.attendants.map((a) => a.name).join(", ")}. Não conta como atendimento: fica fora dos totais, médias, metas e rankings.
-        </p>
-        {triagem.attendants.map((a) => (
-          <TransferenciasDoDia key={a.id} colaborador={a} />
-        ))}
-      </CardContent>
-    </Card>
+    <CartaoFuncao
+      testId="cartao-triagem"
+      icon={Split}
+      titulo="Triagem"
+      pessoas={triagem.attendants.map((a) => a.name).join(", ")}
+      metricas={[{ rotulo: "conversas recebidas no período", valor: volume.toLocaleString("pt-BR") }]}
+      nota="Não conta como atendimento: fica fora dos totais, médias, metas e rankings."
+    >
+      {triagem.attendants.map((a) => (
+        <TransferenciasDoDia key={a.id} colaborador={a} />
+      ))}
+    </CartaoFuncao>
   );
 }
 
@@ -71,7 +63,7 @@ function TransferenciasDoDia({ colaborador }: { colaborador: Attendant }) {
     return <p className="text-xs text-muted-foreground">{colaborador.name} não tem código da Escallo: vincule em Atendentes para ver as transferências.</p>;
   }
   return (
-    <div className="space-y-2 rounded-lg border border-border p-3" data-testid="transferencias-triagem">
+    <div className="space-y-2 border-t border-border pt-4" data-testid="transferencias-triagem">
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1">
           <label htmlFor={`transf-dia-${colaborador.id}`} className="text-xs font-medium text-muted-foreground">
