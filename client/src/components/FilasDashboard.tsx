@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Hourglass, Timer, TrendingUp } from "lucide-react";
 import { AnimatedText } from "@/components/AnimatedNumber";
 import ChangeBadge from "@/components/ChangeBadge";
@@ -26,6 +26,15 @@ import type { DateRange } from "@/lib/dateRangeFilter";
 const formatCount = (v: number) => v.toLocaleString("pt-BR");
 const formatDecimal = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const tempo = (segundos?: number) => (segundos !== undefined && segundos > 0 ? formatAverageTime(segundos / 60) : "—");
+
+/** Os 3 exames, na mesma ordem do relatório da Escallo (REL092): imagem, laboratoriais, cardiológicos */
+const EXAMES = [
+  { chave: "imagem", nome: "Exames por imagem", cor: chartColors.exames[1] },
+  { chave: "analises", nome: "Exames laboratoriais", cor: chartColors.exames[0] },
+  { chave: "cardiologicos", nome: "Exames cardiológicos", cor: chartColors.exames[2] },
+] as const;
+
+type VisaoExames = "total" | "dia";
 
 type CanalTma = "todos" | "whatsapp" | "ligacao";
 
@@ -114,6 +123,7 @@ export default function FilasDashboard({
   const anterior = useMemo(() => previousRange(range), [range]);
   const [canalTma, setCanalTma] = useState<CanalTma>("todos");
   const [canalTme, setCanalTme] = useState<CanalTma>("todos");
+  const [visaoExames, setVisaoExames] = useState<VisaoExames>("total");
   const tmaMinutos = tma[canalTma === "todos" ? "total" : canalTma];
   const tmaAnteriorMinutos = tmaAnterior[canalTma === "todos" ? "total" : canalTma];
   const janela = janelaDeBusca(range, anterior);
@@ -133,6 +143,7 @@ export default function FilasDashboard({
   const exames = useMemo(() => resumoExames(escolhas, range), [escolhas, range]);
   const examesAntes = useMemo(() => resumoExames(escolhas, anterior), [escolhas, anterior]);
   const serie = useMemo(() => serieExames(escolhas, range), [escolhas, range]);
+  const totaisExames = EXAMES.map((e) => ({ nome: e.nome, valor: exames[e.chave], cor: e.cor }));
 
   const comparar = (a?: number, b?: number, lowerIsBetter = false, unit?: "points") =>
     describeChange(a ?? 0, b ?? 0, anterior.name, { lowerIsBetter, unit });
@@ -235,12 +246,31 @@ export default function FilasDashboard({
         ))}
       </motion.div>
 
-      <div className="ellos-panel-sm p-5">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-semibold text-foreground">Exames por área</h2>
-          <p className="text-xs text-muted-foreground">
-            Quantas vezes cada tipo de exame foi escolhido no menu principal do WhatsApp (REL092 da Escallo). Ligações não entram aqui.
-          </p>
+      <div className="ellos-panel-sm p-5" data-testid="grafico-exames">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Exames por área</h2>
+            <p className="text-xs text-muted-foreground">
+              Quantas vezes cada tipo de exame foi escolhido no menu principal do WhatsApp (REL092 da Escallo). Ligações não entram aqui.
+            </p>
+          </div>
+          <div role="group" aria-label="Visão do gráfico de exames" className="inline-flex items-center gap-0.5">
+            {([["total", "Total"], ["dia", "Por dia"]] as const).map(([v, rotulo]) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={visaoExames === v}
+                data-testid={`visao-exames-${v}`}
+                onClick={() => setVisaoExames(v)}
+                className={cn(
+                  "rounded-md px-2 py-0.5 text-xs transition-colors",
+                  visaoExames === v ? "bg-primary-soft font-semibold text-primary" : "font-medium text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
         </div>
         {serie.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground" data-testid="filas-vazio">
@@ -249,24 +279,39 @@ export default function FilasDashboard({
         ) : (
           <>
             <div className="mb-2 flex flex-wrap gap-4 text-xs text-foreground">
-              {["Exames laboratoriais", "Exames por imagem", "Exames cardiológicos"].map((nome, i) => (
-                <span key={nome} className="inline-flex items-center gap-1.5">
-                  <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: chartColors.exames[i] }} />
-                  {nome}
+              {EXAMES.map((e) => (
+                <span key={e.chave} className="inline-flex items-center gap-1.5">
+                  <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: e.cor }} />
+                  {e.nome}
                 </span>
               ))}
             </div>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={serie} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
-                  <CartesianGrid {...chartGridProps} />
-                  <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
-                  <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
-                  <Tooltip cursor={chartCursor} contentStyle={chartTooltipContentStyle} formatter={(v: number, nome: string) => [formatCount(v), nome]} />
-                  <Bar dataKey="analises" name="Exames laboratoriais" fill={chartColors.exames[0]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
-                  <Bar dataKey="imagem" name="Exames por imagem" fill={chartColors.exames[1]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
-                  <Bar dataKey="cardiologicos" name="Exames cardiológicos" fill={chartColors.exames[2]} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
-                </BarChart>
+                {visaoExames === "total" ? (
+                  <BarChart data={totaisExames} margin={{ top: 24, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid {...chartGridProps} />
+                    <XAxis dataKey="nome" {...chartAxisProps} interval={0} />
+                    <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
+                    <Tooltip cursor={chartCursor} contentStyle={chartTooltipContentStyle} formatter={(v: number) => [formatCount(v), "Vezes escolhido"]} />
+                    <Bar dataKey="valor" maxBarSize={160} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS}>
+                      {totaisExames.map((t) => (
+                        <Cell key={t.nome} fill={t.cor} />
+                      ))}
+                      <LabelList dataKey="valor" position="top" formatter={(v: number) => formatCount(v)} className="fill-foreground text-xs font-semibold tabular-nums" />
+                    </Bar>
+                  </BarChart>
+                ) : (
+                  <BarChart data={serie} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid {...chartGridProps} />
+                    <XAxis dataKey="label" {...chartAxisProps} interval="preserveStartEnd" minTickGap={16} />
+                    <YAxis {...chartAxisProps} width={44} tickFormatter={(v: number) => v.toLocaleString("pt-BR")} />
+                    <Tooltip cursor={chartCursor} contentStyle={chartTooltipContentStyle} formatter={(v: number, nome: string) => [formatCount(v), nome]} />
+                    {EXAMES.map((e) => (
+                      <Bar key={e.chave} dataKey={e.chave} name={e.nome} fill={e.cor} maxBarSize={28} radius={chartBarRadius} isAnimationActive animationDuration={CHART_DRAW_MS} />
+                    ))}
+                  </BarChart>
+                )}
               </ResponsiveContainer>
             </div>
           </>
