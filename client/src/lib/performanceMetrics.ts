@@ -11,6 +11,7 @@ import type { DailyPerformanceRecord } from "@/types/performance";
 import type { DateRange } from "@/lib/dateRangeFilter";
 import { getLocalDateString } from "@/lib/performanceStorage";
 import { chartColors } from "@/lib/chartTheme";
+import { contaNaMeta } from "@/lib/diasDaMeta";
 import { isChannelSummaryImportRow, normalizeName } from "@/lib/spreadsheetImport";
 
 function getAlertLevel(percentage: number): AlertLevel {
@@ -146,6 +147,30 @@ export function recordsToIndicators(
   });
 }
 
+/** Atendimentos e meta somada dos dias que contam para a meta (ver diasDaMeta.ts). Registro sem meta ativa fica fora. */
+export function somarMeta(
+  records: DailyPerformanceRecord[],
+  productionGoals: ProductionGoal[],
+  range: DateRange,
+  hoje: string = getLocalDateString()
+): { goalAttendances: number; goalTarget: number } {
+  let goalAttendances = 0;
+  let goalTarget = 0;
+  for (const record of records) {
+    // total de período (importação sem dia a dia) não tem dia próprio: entra inteiro
+    if ((record.periodDays ?? 1) <= 1 && !contaNaMeta(record.date, range, hoje)) continue;
+    const meta = getRecordTarget(record, productionGoals);
+    if (meta <= 0) continue;
+    goalAttendances += record.attendancesCount;
+    goalTarget += meta;
+  }
+  return { goalAttendances, goalTarget };
+}
+
+/** Meta atingida em %: atendimentos ÷ meta somada (0 = sem meta no período) */
+export const percentualDaMeta = (m: { goalAttendances: number; goalTarget: number }) =>
+  m.goalTarget > 0 ? (m.goalAttendances / m.goalTarget) * 100 : 0;
+
 export interface AttendantPerformanceSummary {
   attendantId: number;
   name: string;
@@ -153,6 +178,9 @@ export interface AttendantPerformanceSummary {
   totalAttendances: number;
   averageTimeMinutes: number;
   averagePercentage: number;
+  /** Atendimentos e meta somada só dos dias que contam para a meta */
+  goalAttendances?: number;
+  goalTarget?: number;
   /** Atendimentos por minuto de TMA — volume + agilidade */
   performanceScore: number;
   ranking: number;
@@ -241,6 +269,8 @@ export function buildAttendantSummaries(
         totalAttendances: 0,
         averageTimeMinutes: 0,
         averagePercentage: 0,
+        goalAttendances: 0,
+        goalTarget: 0,
         performanceScore: 0,
         ranking: 0,
       };
@@ -251,12 +281,8 @@ export function buildAttendantSummaries(
       attendantRecords.reduce((sum, r) => sum + r.averageTimeMinutes * r.attendancesCount, 0) /
       totalAttendances;
 
-    const totalTarget = attendantRecords.reduce(
-      (sum, record) => sum + getRecordTarget(record, productionGoals),
-      0
-    );
-    const averagePercentage =
-      totalTarget > 0 ? (totalAttendances / totalTarget) * 100 : 0;
+    const meta = somarMeta(attendantRecords, productionGoals, range);
+    const averagePercentage = percentualDaMeta(meta);
 
     const performanceScore = calculatePerformanceScore(
       totalAttendances,
@@ -271,6 +297,7 @@ export function buildAttendantSummaries(
       totalAttendances,
       averageTimeMinutes: weightedTime,
       averagePercentage,
+      ...meta,
       performanceScore,
       ranking: 0,
     };
@@ -303,19 +330,10 @@ export function buildDashboardStats(
   range: DateRange
 ): DashboardStats {
   const periodRecords = filterVolumeRecordsByRange(records, range);
-  const indicators = recordsToIndicators(
-    recordsForVolumeMetrics(records),
-    attendants,
-    productionGoals,
-    range
-  );
-
   const totalAttendances = periodRecords.reduce((sum, r) => sum + r.attendancesCount, 0);
 
-  const averagePercentage =
-    indicators.length > 0
-      ? indicators.reduce((sum, i) => sum + i.percentage, 0) / indicators.length
-      : 0;
+  // mesma conta da tela de Desempenho: atendimentos ÷ meta somada dos dias que contam
+  const averagePercentage = percentualDaMeta(somarMeta(periodRecords, productionGoals, range));
 
   const averageTime =
     totalAttendances > 0

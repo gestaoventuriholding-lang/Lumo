@@ -62,6 +62,7 @@ import AtualizarAgoraButton from "@/components/AtualizarAgoraButton";
 import { cn } from "@/lib/utils";
 import { useAtendimentoData } from "@/hooks/useAtendimentoData";
 import FilasDashboard from "@/components/FilasDashboard";
+import { LEGENDA_META } from "@/lib/diasDaMeta";
 
 function EmptySection({ message }: { message: string }) {
   return (
@@ -269,7 +270,8 @@ export default function Dashboard() {
       testId: "cartao-meta",
       title: periodMetaLabel(period),
       value: dashboardStats.averagePercentage > 0 ? `${dashboardStats.averagePercentage.toFixed(0)}%` : "—",
-      detail: "média de atingimento da equipe",
+      detail: "atendimentos sobre a meta da equipe",
+      legenda: LEGENDA_META,
       delta: describeChange(dashboardStats.averagePercentage, previous.stats.averagePercentage, previous.name, { unit: "points" as const }),
     },
     {

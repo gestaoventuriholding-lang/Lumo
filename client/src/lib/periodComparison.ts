@@ -1,5 +1,5 @@
 import type { DateRange } from "@/lib/dateRangeFilter";
-import type { AttendantPerformanceSummary } from "@/lib/performanceMetrics";
+import { percentualDaMeta, type AttendantPerformanceSummary } from "@/lib/performanceMetrics";
 
 function parseIso(date: string): Date {
   const [y, m, d] = date.split("-").map(Number);
@@ -88,8 +88,11 @@ export function kpisFromSummaries(summaries: AttendantPerformanceSummary[]): Kpi
   const totalAttendances = withData.reduce((sum, s) => sum + s.totalAttendances, 0);
   const averageTime =
     withData.reduce((sum, s) => sum + s.averageTimeMinutes * s.totalAttendances, 0) / totalAttendances;
-  const averagePercentage =
-    withData.reduce((sum, s) => sum + s.averagePercentage, 0) / withData.length;
+  // mesma conta do Dashboard: atendimentos ÷ meta somada de toda a equipe
+  const averagePercentage = percentualDaMeta({
+    goalAttendances: withData.reduce((sum, s) => sum + (s.goalAttendances ?? 0), 0),
+    goalTarget: withData.reduce((sum, s) => sum + (s.goalTarget ?? 0), 0),
+  });
   return { totalAttendances, averageTime, attendantsCount: withData.length, averagePercentage };
 }
 

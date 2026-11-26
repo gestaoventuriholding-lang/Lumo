@@ -46,8 +46,10 @@ import {
   buildAttendantSummaries,
   compareAttendantSummaries,
   filterRecordsByRange,
+  formatGoalPercentage,
   getDailyTarget,
 } from "@/lib/performanceMetrics";
+import { LEGENDA_META } from "@/lib/diasDaMeta";
 import {
   formatAverageTime,
   getLocalDateString,
@@ -435,6 +437,7 @@ export default function Performance() {
             <p className="font-display text-2xl font-bold">
               <AnimatedText text={kpis.averagePercentage > 0 ? `${Math.round(kpis.averagePercentage)}%` : "—"} />
             </p>
+            <p className="text-xs text-muted-foreground">{LEGENDA_META}</p>
             <ChangeBadge className="mt-1" change={describeChange(kpis.averagePercentage, previousKpis.averagePercentage, previousInfo.name, { unit: "points" })} />
           </CardContent>
         </Card>
@@ -546,10 +549,10 @@ export default function Performance() {
                           <TableCell>{formatAverageTime(row.averageTimeMinutes)}</TableCell>
                           <TableCell>
                             <ToneValue
-                              tone={row.averagePercentage >= 90 ? "good" : row.averagePercentage >= 80 ? "warn" : "bad"}
+                              tone={row.averagePercentage <= 0 ? undefined : row.averagePercentage >= 90 ? "good" : row.averagePercentage >= 80 ? "warn" : "bad"}
                               className="font-bold"
                             >
-                              {Math.round(row.averagePercentage)}%
+                              {formatGoalPercentage(row.averagePercentage)}
                             </ToneValue>
                           </TableCell>
                         </TableRow>
