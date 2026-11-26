@@ -612,8 +612,10 @@ export function buildPerformanceAlerts(indicators: PerformanceIndicator[]): Perf
 }
 
 function formatMinutesLabel(minutes: number): string {
-  const wholeMinutes = Math.floor(minutes);
-  const seconds = Math.round((minutes - wholeMinutes) * 60);
+  // arredonda o total em segundos antes de separar: senão 3,9999 min vira "3m 60s"
+  const totalSeconds = Math.round(minutes * 60);
+  const wholeMinutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
   if (seconds === 0) return `${wholeMinutes}m`;
   return `${wholeMinutes}m ${seconds}s`;
 }
