@@ -3,8 +3,9 @@ import { useEllosData } from "@/contexts/EllosDataContext";
 import { separarPorFuncao } from "@/lib/attendantRole";
 
 /**
- * Dados para rankings, médias, metas e contagens: só colaboradores de Atendimento.
+ * Dados para rankings, médias e metas: só colaboradores de Atendimento.
  * A Confirmação de agenda vem separada em `confirmacao`, para aparecer à parte e sem meta.
+ * `volume` serve para contar atendimentos (Atendimento + Confirmação de agenda; a Triagem fica fora).
  */
 export function useAtendimentoData() {
   const { attendants, performanceRecords, productivityRecords } = useEllosData();
@@ -15,6 +16,10 @@ export function useAtendimentoData() {
       attendants: desempenho.atendimento.attendants,
       performanceRecords: desempenho.atendimento.records,
       productivityRecords: produtividade.atendimento.records,
+      volume: {
+        performanceRecords: desempenho.volume.records,
+        productivityRecords: produtividade.volume.records,
+      },
       triagem: {
         attendants: desempenho.triagem.attendants,
         performanceRecords: desempenho.triagem.records,

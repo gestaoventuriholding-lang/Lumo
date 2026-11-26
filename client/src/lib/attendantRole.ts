@@ -36,18 +36,23 @@ export interface ConjuntoPorFuncao<R extends { attendantId: number }> {
 
 /**
  * Separa colaboradores e registros por função, uma regra só para todas as telas:
- * `atendimento` alimenta rankings, médias, metas e contagens; `confirmacao` aparece à parte, sem meta.
+ * `atendimento` alimenta rankings, médias e metas; `confirmacao` aparece à parte, sem meta;
+ * `volume` é a quantidade de atendimentos do call center (atendimento + confirmação, sem a triagem).
  */
 export function separarPorFuncao<R extends { attendantId: number }>(
   attendants: Attendant[],
   records: R[]
-): { atendimento: ConjuntoPorFuncao<R>; confirmacao: ConjuntoPorFuncao<R>; triagem: ConjuntoPorFuncao<R> } {
+): { atendimento: ConjuntoPorFuncao<R>; confirmacao: ConjuntoPorFuncao<R>; triagem: ConjuntoPorFuncao<R>; volume: ConjuntoPorFuncao<R> } {
   const confirmacaoIds = new Set(attendants.filter(isConfirmacao).map((a) => a.id));
   const triagemIds = new Set(attendants.filter(isTriagem).map((a) => a.id));
   return {
     atendimento: {
       attendants: attendants.filter(isAtendimento),
       records: records.filter((r) => !confirmacaoIds.has(r.attendantId) && !triagemIds.has(r.attendantId)),
+    },
+    volume: {
+      attendants: attendants.filter((a) => !isTriagem(a)),
+      records: records.filter((r) => !triagemIds.has(r.attendantId)),
     },
     triagem: {
       attendants: attendants.filter(isTriagem),

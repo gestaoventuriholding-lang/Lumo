@@ -187,7 +187,7 @@ export default function FilasDashboard({
           title="Atendimentos"
           value={atendimentos.total > 0 ? formatCount(atendimentos.total) : "—"}
           comparison={atendimentos.total > 0 ? `Ligação ${formatCount(atendimentos.ligacao)} · WhatsApp ${formatCount(atendimentos.whatsapp)}` : "Sem registros no período"}
-          footnote="equipe do call center"
+          footnote="inclui Confirmação de agenda; sem a Triagem"
           delta={comparar(atendimentos.total, atendimentosAnterior)}
           icon={TrendingUp}
           sparkData={atendimentosSpark}

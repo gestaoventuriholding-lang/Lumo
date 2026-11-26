@@ -186,12 +186,17 @@ export default function Dashboard() {
   const { period, dateRange } = usePeriodFilter();
 
   const { attendants: todosColaboradores, absences, productionGoals } = useEllosData();
-  // Métricas, médias e contagens são do atendimento; a Confirmação de agenda aparece à parte (cartão próprio)
-  const { attendants, performanceRecords: dailyRecords, productivityRecords } = useAtendimentoData();
+  // Médias e metas são só do atendimento. A QUANTIDADE de atendimentos inclui a Confirmação de agenda (a Triagem fica fora)
+  const { attendants, performanceRecords: dailyRecords, productivityRecords, volume } = useAtendimentoData();
   // totais de período de relatórios (sem dia a dia) entram quando cabem no filtro
   const performanceRecords = useMemo(
     () => mergePeriodTotals(dailyRecords, productivityRecords, dateRange),
     [dailyRecords, productivityRecords, dateRange]
+  );
+
+  const volumeRecords = useMemo(
+    () => mergePeriodTotals(volume.performanceRecords, volume.productivityRecords, dateRange),
+    [volume, dateRange]
   );
 
   const dashboardStats = useMemo(
@@ -202,13 +207,13 @@ export default function Dashboard() {
   const tmaPorCanal = useMemo(() => buildAverageTimeByChannel(performanceRecords, dateRange), [performanceRecords, dateRange]);
 
   const channelTotals = useMemo(
-    () => buildChannelAttendanceTotals(performanceRecords, dateRange),
-    [performanceRecords, dateRange]
+    () => buildChannelAttendanceTotals(volumeRecords, dateRange),
+    [volumeRecords, dateRange]
   );
 
   const attendancesTrend = useMemo(
-    () => buildAttendancesTrend(performanceRecords, dateRange),
-    [performanceRecords, dateRange]
+    () => buildAttendancesTrend(volumeRecords, dateRange),
+    [volumeRecords, dateRange]
   );
 
   const productivityTrend = useMemo(
@@ -217,8 +222,8 @@ export default function Dashboard() {
   );
 
   const channelDistribution = useMemo(
-    () => buildChannelDistribution(performanceRecords, dateRange),
-    [performanceRecords, dateRange]
+    () => buildChannelDistribution(volumeRecords, dateRange),
+    [volumeRecords, dateRange]
   );
 
   const totalAbsenceDays = useMemo(
@@ -233,8 +238,12 @@ export default function Dashboard() {
       name: range.name,
       stats: buildDashboardStats(attendants, records, productionGoals, { ...range }),
       tma: buildAverageTimeByChannel(records, { ...range }),
+      atendimentos: buildChannelAttendanceTotals(
+        mergePeriodTotals(volume.performanceRecords, volume.productivityRecords, range),
+        { ...range }
+      ).total,
     };
-  }, [dailyRecords, productivityRecords, attendants, productionGoals, dateRange]);
+  }, [dailyRecords, productivityRecords, volume, attendants, productionGoals, dateRange]);
 
   const channelTotal = channelDistribution.reduce((sum, item) => sum + item.value, 0);
   const formatCount = (value: number) => value.toLocaleString("pt-BR");
@@ -319,7 +328,7 @@ export default function Dashboard() {
           tma={tmaPorCanal}
           tmaAnterior={previous.tma}
           atendimentos={channelTotals}
-          atendimentosAnterior={previous.stats.totalAttendances}
+          atendimentosAnterior={previous.atendimentos}
           atendimentosSpark={attendanceSpark}
         />
       </motion.div>

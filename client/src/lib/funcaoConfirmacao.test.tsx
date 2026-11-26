@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { FUNCAO_ATENDIMENTO, FUNCAO_CONFIRMACAO, FUNCAO_TRIAGEM, isAtendimento, isConfirmacao, isTriagem, separarPorFuncao } from "./attendantRole";
-import { buildAttendantSummaries, buildDashboardStats } from "./performanceMetrics";
+import { buildAttendantSummaries, buildChannelAttendanceTotals, buildDashboardStats } from "./performanceMetrics";
 import { buildOccupancyMap } from "./occupancyMap";
 import { saveAttendants } from "./attendantsStorage";
 import { resumoConfirmacao } from "@/components/ConfirmacaoAgendaCard";
@@ -56,6 +56,13 @@ describe("função: Atendimento x Confirmação de agenda", () => {
     expect(atendimento.records.map((r) => r.id)).toEqual([1, 2]);
     expect(confirmacao.attendants.map((a) => a.id)).toEqual([3]);
     expect(confirmacao.records.map((r) => r.id)).toEqual([3, 4]);
+  });
+
+  it("a quantidade de atendimentos (volume) inclui a confirmação e deixa a triagem de fora", () => {
+    const gestora = pessoa({ id: 9, name: "Gestora Teste", role: FUNCAO_TRIAGEM, serviceChannel: "WhatsApp" });
+    const { volume } = separarPorFuncao([...todos, gestora], [...registros, registro(99, 9, "Gestora Teste", "WhatsApp", 80)]);
+    expect(volume.records.map((r) => r.id)).toEqual(registros.map((r) => r.id));
+    expect(buildChannelAttendanceTotals(volume.records, dia).total).toBe(180); // 145 do atendimento + 35 da confirmação
   });
 
   it("a confirmação some dos rankings (as duas listas e o geral)", () => {
