@@ -23,7 +23,8 @@ type PerformanceRankingsProps = {
 
 const TOP_COUNT = 3;
 
-const STORAGE_KEY = "ellos-ranking-prefs";
+// v2: o padrão passou a ser Atendimentos; escolhas salvas antes disso não valem mais
+const STORAGE_KEY = "ellos-ranking-prefs-v2";
 
 function loadPrefs(): { channel?: RankingChannel; criterion?: RankingCriterion } {
   try {
@@ -191,7 +192,7 @@ export default function PerformanceRankings({
   });
   const [criterion, setCriterion] = useState<RankingCriterion>(() => {
     const saved = loadPrefs().criterion;
-    return RANKING_CRITERIA.some((c) => c.value === saved) ? (saved as RankingCriterion) : "goal";
+    return RANKING_CRITERIA.some((c) => c.value === saved) ? (saved as RankingCriterion) : "attendances";
   });
 
   function update(next: Partial<{ channel: RankingChannel; criterion: RankingCriterion }>) {

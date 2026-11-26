@@ -442,7 +442,7 @@ export function buildManagementReportPdf(data: ManagementReportData, minScore = 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...TEXTO_SECUNDARIO);
-  doc.text(`Pódio ordenado pela meta atingida (empate: menor TMA). A meta é calculada ${LEGENDA_META}.`, MARGIN, y - 4);
+  doc.text(`Pódio ordenado pela quantidade de atendimentos (empate: menor TMA). A % da meta é calculada ${LEGENDA_META}.`, MARGIN, y - 4);
 
   // a primeira página é só dos pódios; as tabelas começam na segunda
   doc.addPage();

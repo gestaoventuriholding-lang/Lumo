@@ -50,14 +50,14 @@ describe("calculatePerformanceScore", () => {
 });
 
 describe("compareAttendantSummaries", () => {
-  it("ordena pelo score composto de volume e agilidade", () => {
+  it("por padrão quem atendeu mais fica na frente, mesmo com % de meta menor", () => {
     const first = summary({
       attendantId: 1,
       name: "Ana",
       totalAttendances: 80,
       averageTimeMinutes: 3,
-      averagePercentage: 100,
-      performanceScore: calculatePerformanceScore(80, 3, 100),
+      averagePercentage: 123,
+      performanceScore: calculatePerformanceScore(80, 3, 123),
     });
     const second = summary({
       attendantId: 2,
@@ -68,7 +68,7 @@ describe("compareAttendantSummaries", () => {
       performanceScore: calculatePerformanceScore(120, 6, 100),
     });
 
-    expect(compareAttendantSummaries(first, second)).toBeLessThan(0);
+    expect(compareAttendantSummaries(first, second)).toBeGreaterThan(0);
   });
 });
 
