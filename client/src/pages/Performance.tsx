@@ -49,20 +49,17 @@ import {
   formatGoalPercentage,
   getDailyTarget,
 } from "@/lib/performanceMetrics";
-import { LEGENDA_META } from "@/lib/diasDaMeta";
 import {
   formatAverageTime,
   getLocalDateString,
   parseTimeInput,
 } from "@/lib/performanceStorage";
-import { periodAttendancesLabel, type DateRange } from "@/lib/dateRangeFilter";
+import type { DateRange } from "@/lib/dateRangeFilter";
 import type { AttendanceChannel } from "@/types/goals";
 import type { DailyPerformanceRecord } from "@/types/performance";
 import { motion } from "@/lib/motionVariants";
-import { Plus, Edit2, Trash2, Clock, Phone, Users, Target } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import PeriodTotalsNotice from "@/components/PeriodTotalsNotice";
-import ChangeBadge from "@/components/ChangeBadge";
-import { describeChange, kpisFromSummaries, previousRange } from "@/lib/periodComparison";
 import ProductivitySection from "@/components/ProductivitySection";
 import { ToneValue } from "@/components/ToneMark";
 import ChannelBadge, { ChannelIcon } from "@/components/ChannelBadge";
@@ -70,9 +67,7 @@ import { mergePeriodTotals } from "@/lib/periodTotals";
 import ManagementReportButton from "@/components/ManagementReportButton";
 import PeriodFilterBar from "@/components/PeriodFilterBar";
 import PerformanceRankings from "@/components/PerformanceRankings";
-import { pageContainerVariants, pageItemVariants, staggerContainerVariants, cardItemVariants } from "@/lib/motionVariants";
-import { AnimatedText } from "@/components/AnimatedNumber";
-import AnimatedNumber from "@/components/AnimatedNumber";
+import { pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
 
 const channels: AttendanceChannel[] = ["Ligação", "WhatsApp"];
 
@@ -179,16 +174,6 @@ export default function Performance() {
       buildAttendantSummaries(summaryRecords, atendentesMetricas, productionGoals, displayRange, "WhatsApp"),
     [summaryRecords, atendentesMetricas, productionGoals, displayRange]
   );
-
-  const kpis = useMemo(() => kpisFromSummaries(attendantSummaries), [attendantSummaries]);
-
-  const previousInfo = useMemo(() => previousRange(displayRange), [displayRange]);
-  const previousKpis = useMemo(() => {
-    const prevRecords = mergePeriodTotals(registrosMetricas, productivityRecords, previousInfo);
-    return kpisFromSummaries(
-      buildAttendantSummaries(prevRecords, atendentesMetricas, productionGoals, { ...previousInfo })
-    );
-  }, [registrosMetricas, productivityRecords, atendentesMetricas, productionGoals, previousInfo]);
 
   const summaryRows = useMemo(
     () =>
@@ -368,72 +353,6 @@ export default function Performance() {
           overallSummaries={attendantSummaries}
           period={period}
         />
-      </motion.div>
-
-      <motion.div variants={staggerContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
-<Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              {periodAttendancesLabel(period)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-bold"><AnimatedNumber value={kpis.totalAttendances} /></p>
-            <ChangeBadge className="mt-1" change={describeChange(kpis.totalAttendances, previousKpis.totalAttendances, previousInfo.name)} />
-          </CardContent>
-        </Card>
-</motion.div>
-
-        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
-<Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Tempo Médio
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-bold">
-              <AnimatedText text={kpis.averageTime > 0 ? formatAverageTime(kpis.averageTime) : "—"} />
-            </p>
-            <ChangeBadge className="mt-1" change={describeChange(kpis.averageTime, previousKpis.averageTime, previousInfo.name, { lowerIsBetter: true })} />
-          </CardContent>
-        </Card>
-</motion.div>
-
-        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
-<Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Colaboradores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-bold"><AnimatedNumber value={kpis.attendantsCount} /></p>
-          </CardContent>
-        </Card>
-</motion.div>
-
-        <motion.div variants={cardItemVariants} className="h-full [&>*]:h-full">
-<Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Média da Meta
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-bold">
-              <AnimatedText text={kpis.averagePercentage > 0 ? `${Math.round(kpis.averagePercentage)}%` : "—"} />
-            </p>
-            <p className="text-xs text-muted-foreground">{LEGENDA_META}</p>
-            <ChangeBadge className="mt-1" change={describeChange(kpis.averagePercentage, previousKpis.averagePercentage, previousInfo.name, { unit: "points" })} />
-          </CardContent>
-        </Card>
-</motion.div>
       </motion.div>
 
       {/* funções fora das médias do atendimento: lado a lado; se só houver uma, ela ocupa a linha toda */}
