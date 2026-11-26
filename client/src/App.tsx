@@ -31,6 +31,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Structure = lazy(() => import("./pages/Structure"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const UsersPage = lazy(() => import("./pages/Users"));
+const Reports = lazy(() => import("./pages/Reports"));
 
 function PageLoader() {
   return (
@@ -67,6 +68,7 @@ function AppRoutes() {
               <Route path="/amostra-visual" component={AmostraVisual} />
               <Route path="/structure" component={Structure} />
               <Route path="/calendar" component={CalendarPage} />
+              <Route path="/reports" component={Reports} />
               <Route path="/import" component={ImportPage} />
               <Route path="/users" component={UsersPage} />
               <Route path="/settings" component={Settings} />
