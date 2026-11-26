@@ -32,7 +32,7 @@ export default function CartaoFuncao({
           <p className="truncate text-sm text-muted-foreground" title={pessoas}>{pessoas}</p>
         </div>
       </header>
-      <dl className="grid grid-cols-2 gap-3">
+      <dl className="grid grid-cols-2 gap-3 [&>*:only-child]:col-span-2">
         {metricas.map((m) => (
           <div key={m.rotulo} className="flex flex-col-reverse justify-end rounded-lg border border-border px-4 py-3">
             <dt className="text-xs text-muted-foreground">{m.rotulo}</dt>

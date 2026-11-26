@@ -65,7 +65,7 @@ function TransferenciasDoDia({ colaborador }: { colaborador: Attendant }) {
   return (
     <div className="space-y-2 border-t border-border pt-4" data-testid="transferencias-triagem">
       <div className="flex flex-wrap items-end gap-2">
-        <div className="space-y-1">
+        <div className="flex flex-col gap-1">
           <label htmlFor={`transf-dia-${colaborador.id}`} className="text-xs font-medium text-muted-foreground">
             Transferências de {colaborador.name} no dia
           </label>
