@@ -325,7 +325,7 @@ export default function FollowUpPage() {
 
       <Dialog open={emConversa !== null} onOpenChange={(aberto) => !aberto && setEmConversa(null)}>
         <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-2xl">
-          <DialogHeader>
+          <DialogHeader className="shrink-0">
             <DialogTitle>Conversa do orçamento</DialogTitle>
             <DialogDescription>
               {emConversa ? `Protocolo ${emConversa.protocol}, de ${dataBr(emConversa.date)}.` : ""} Para falar com o paciente, procure o protocolo na Escallo.
