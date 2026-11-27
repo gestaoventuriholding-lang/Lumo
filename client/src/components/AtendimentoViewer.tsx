@@ -110,6 +110,13 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
     }
   };
 
+  // Follow-up: quem clicou em "Ver conversa" já pediu o histórico, então ele abre sozinho
+  const abreSozinho = somenteEste && !ehLigacao && Boolean(escolhido);
+  useEffect(() => {
+    if (abreSozinho) void abrirConversa(escolhido, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abreSozinho, escolhido, chaveReset]);
+
   const carregarAudio = async (uniqueid: string) => {
     const minha = pedido.current;
     setCarregandoAudio(uniqueid);
@@ -193,7 +200,13 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
         </div>
       )}
 
-      {!ehLigacao && escolhido && !conversas && !conversa && (
+      {abreSozinho && !conversa && !erro && (
+        <p className="flex items-center gap-2 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground" data-testid="carregando-conversa">
+          <Loader2 className="h-4 w-4 animate-spin" /> Carregando a conversa…
+        </p>
+      )}
+
+      {!ehLigacao && escolhido && !conversas && !conversa && (!abreSozinho || erro) && (
         <div className="space-y-3 rounded-lg border bg-muted/30 p-4" data-testid="conversa-registrada">
           <p className="flex items-center gap-2 text-sm font-medium">
             <MessageSquare className="h-4 w-4" /> {somenteEste ? "Conversa deste atendimento" : "Conversa desta auditoria"}
@@ -201,7 +214,7 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
           <p className="text-xs text-muted-foreground">Protocolo {escolhido}.{somenteEste ? "" : " Para trocar de conversa, busque as conversas do dia."}</p>
           <Button type="button" size="sm" onClick={() => abrirConversa(escolhido, false)} disabled={carregandoConversa !== null} data-testid="carregar-conversa">
             {carregandoConversa && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-            Carregar conversa
+            {abreSozinho ? "Tentar novamente" : "Carregar conversa"}
           </Button>
         </div>
       )}
