@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { areaDoOrcamento, extrairOrcamentos, lerOrcamentosDoDia, orcamentosParaTabela } from "../../../supabase/functions/escallo-sync/orcamentos";
+import { areaDoOrcamento, empresaEnviouOrcamento, extrairOrcamentos, lerOrcamentosDoDia, orcamentosParaTabela } from "../../../supabase/functions/escallo-sync/orcamentos";
 import { sincronizar, type Deps } from "../../../supabase/functions/escallo-sync/sincronizar";
 import { aplicarContato, filtrarFollowUps, motivosDePerda, resumirFollowUps, validarContato } from "./followUpLogic";
 import type { FollowUp, FollowUpUpdate } from "@/types/followUp";
 
+const arquivoEnviado = { direcao: "Enviado", tipo: "Arquivo", conteudo: "segredo" };
 const conversa = (id: number, classificacao: string, extra: Record<string, unknown> = {}) => ({
   id,
   classificacao: { id: 1, nome: classificacao },
   clienteContato: `contato-${id}`,
   mensagensContato: [{ conteudo: "texto do paciente" }],
-  atendimentos: [{ protocolo: `P${id}`, agente: { codigo: 10, nome: "Agente Teste" }, mensagens: [{ conteudo: "segredo" }] }],
+  atendimentos: [{ protocolo: `P${id}`, agente: { codigo: 10, nome: "Agente Teste" }, mensagens: [arquivoEnviado] }],
   ...extra,
 });
 
@@ -28,6 +29,23 @@ describe("Follow-up: orçamentos vindos da Escallo", () => {
     expect(JSON.stringify(linhas)).not.toMatch(/contato|segredo|texto do paciente/);
   });
 
+  it("só entra quando a empresa enviou valor, arquivo ou imagem", async () => {
+    const com = (...mensagens: Record<string, string>[]) => conversa(1, "Orçamento AC", { atendimentos: [{ protocolo: "P1", agente: { codigo: 10 }, mensagens }] });
+    const texto = (direcao: string, conteudo: string) => ({ direcao, tipo: "Texto", conteudo });
+    expect(empresaEnviouOrcamento(com(texto("Enviado", "O hemograma fica R$ 35")))).toBe(true);
+    expect(empresaEnviouOrcamento(com(texto("Enviado", "Total: 1.250,00")))).toBe(true);
+    expect(empresaEnviouOrcamento(com({ direcao: "Enviado", tipo: "Imagem", conteudo: "" }))).toBe(true);
+    const sem = [
+      com(),
+      com(texto("Enviado", "Já vou verificar, um momento")),
+      com(texto("Recebido", "Me cobraram R$ 40")),
+      com({ direcao: "Recebido", tipo: "Arquivo", conteudo: "pedido médico" }),
+    ];
+    for (const c of sem) expect(extrairOrcamentos("2026-11-26", [c])).toEqual([]);
+    expect(await lerOrcamentosDoDia("2026-11-26", async () => [sem[3]])).toEqual([]);
+    expect(await lerOrcamentosDoDia("2026-11-26", async () => [com(texto("Enviado", "R$ 35"))])).toHaveLength(1);
+  });
+
   it("o mesmo contato na mesma área conta uma vez (fica a conversa mais recente); áreas diferentes contam as duas", () => {
     const mesmo = { clienteContato: "x" };
     const linhas = extrairOrcamentos("2026-11-26", [conversa(5, "Orçamento AC", mesmo), conversa(3, "Orçamento AC", mesmo), conversa(4, "Orçamento DI", mesmo)]);
@@ -36,7 +54,7 @@ describe("Follow-up: orçamentos vindos da Escallo", () => {
 
   it("usa o último atendimento com agente (depois da triagem) e pula conversa sem protocolo", () => {
     const linhas = extrairOrcamentos("2026-11-26", [
-      conversa(1, "Orçamento AC", { atendimentos: [{ protocolo: "A", agente: { codigo: 1, nome: "Triagem" } }, { protocolo: "B", agente: { codigo: 2, nome: "Fez" } }] }),
+      conversa(1, "Orçamento AC", { atendimentos: [{ protocolo: "A", agente: { codigo: 1, nome: "Triagem" } }, { protocolo: "B", agente: { codigo: 2, nome: "Fez" }, mensagens: [arquivoEnviado] }] }),
       conversa(2, "Orçamento AC", { atendimentos: [] }),
     ]);
     expect(linhas).toHaveLength(1);

@@ -1,4 +1,4 @@
-// Ellos: Follow-up de orçamentos. A equipe resgata quem pediu orçamento no WhatsApp e ainda não tem registro de que fez.
+// Ellos: Follow-up de orçamentos. A equipe resgata quem recebeu orçamento no WhatsApp e ainda não tem registro de que fez.
 // A lista vem da classificação das conversas na Escallo; o resultado do contato é marcado aqui.
 // Sem nome nem telefone do paciente (LGPD): o protocolo localiza o atendimento na Escallo.
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -126,7 +126,7 @@ export default function FollowUpPage() {
   );
 
   const cartoes = [
-    { label: "Orçamentos no período", valor: numero(resumo.total), apoio: "Pedidos no WhatsApp", tom: "text-foreground" },
+    { label: "Orçamentos no período", valor: numero(resumo.total), apoio: "Enviados no WhatsApp", tom: "text-foreground" },
     { label: "A contatar", valor: numero(resumo.pending), apoio: "Sem nenhum retorno ainda", tom: "text-warning" },
     {
       label: "Aguardando retorno",
@@ -151,7 +151,7 @@ export default function FollowUpPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Follow-up</h1>
           <p className="mt-1 text-muted-foreground">
-            Resgate de quem pediu orçamento no WhatsApp e ainda não tem registro de que fez o exame
+            Resgate de quem recebeu orçamento no WhatsApp e ainda não tem registro de que fez o exame
           </p>
         </div>
       </motion.div>
@@ -235,7 +235,7 @@ export default function FollowUpPage() {
         ) : filtrados.length === 0 ? (
           <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
             {lista.length === 0
-              ? "Nenhum orçamento nesse período. Eles chegam no fechamento do dia, com as conversas que a equipe classificou como orçamento na Escallo."
+              ? "Nenhum orçamento nesse período. Eles chegam no fechamento do dia, com as conversas classificadas como orçamento na Escallo em que o orçamento foi enviado."
               : "Nenhum orçamento com esses filtros."}
           </p>
         ) : (

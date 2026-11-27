@@ -77,9 +77,9 @@ export const RELATORIOS_GUARDADOS: RelatorioUsado[] = [
   },
   {
     codigo: "Classificação das conversas",
-    nome: "Orçamentos pedidos no chat",
+    nome: "Orçamentos enviados no chat",
     canal: "WhatsApp",
-    traz: ["Histórico de mensagens do dia", "A classificação que a equipe marcou em cada conversa (Orçamento AC e Orçamento DI)", "Protocolo e atendente"],
+    traz: ["Histórico de mensagens do dia", "A classificação que a equipe marcou em cada conversa (Orçamento AC e Orçamento DI)", "Se a empresa enviou valor, arquivo ou imagem (sem isso a conversa não entra)", "Protocolo e atendente"],
     guarda: "Só das conversas de orçamento: protocolo, data, área e atendente. Sem nome, telefone ou mensagens do paciente.",
     ondeAparece: ["Follow-up"],
     fonte: "orcamentos",

@@ -1,4 +1,5 @@
-// Ellos: conversas do WhatsApp que a equipe classificou como orçamento (histórico de mensagens da Escallo), sem rede e sem banco.
+// Ellos: conversas do WhatsApp que a equipe classificou como orçamento E em que a empresa enviou o orçamento
+// (histórico de mensagens da Escallo), sem rede e sem banco.
 // Alimenta a tela de Follow-up. LGPD: sai daqui só protocolo, data, área e atendente (equipe).
 // Nome, telefone e mensagens do paciente são lidos e descartados: nunca vão para o banco nem para log.
 
@@ -32,8 +33,26 @@ export function areaDoOrcamento(classificacao: unknown): AreaOrcamento | null {
   return "outros";
 }
 
+const VALOR_EM_REAIS = /R\$\s*\d|\b\d{1,3}(\.\d{3})*,\d{2}\b/;
+
+const atendimentosDe = (r: Linha) => (Array.isArray(r.atendimentos) ? (r.atendimentos as Linha[]) : []);
+
 /**
- * `registros` são as conversas do dia (historicoMensagens). Devolve as classificadas como orçamento.
+ * A Escallo não tem o campo "orçamento feito". O sinal usado: a empresa ENVIOU na conversa um valor escrito,
+ * um arquivo ou uma imagem. O conteúdo é só examinado aqui; nunca é guardado.
+ */
+export function empresaEnviouOrcamento(conversa: Linha): boolean {
+  return atendimentosDe(conversa).some((a) =>
+    (Array.isArray(a.mensagens) ? (a.mensagens as Linha[]) : []).some(
+      (m) =>
+        m.direcao === "Enviado" &&
+        (m.tipo === "Arquivo" || m.tipo === "Imagem" || (m.tipo === "Texto" && VALOR_EM_REAIS.test(String(m.conteudo ?? ""))))
+    )
+  );
+}
+
+/**
+ * `registros` são as conversas do dia (historicoMensagens). Devolve as classificadas como orçamento em que houve envio.
  * O mesmo contato com duas conversas de orçamento da mesma área no dia conta uma vez (fica a mais recente).
  */
 export function extrairOrcamentos(dia: string, registros: Linha[]): OrcamentoDia[] {
@@ -43,7 +62,9 @@ export function extrairOrcamentos(dia: string, registros: Linha[]): OrcamentoDia
     const area = areaDoOrcamento((r.classificacao as Linha | undefined)?.nome);
     const chatId = Number(r.id);
     if (!area || !Number.isSafeInteger(chatId) || chatId <= 0) continue;
-    const atendimentos = Array.isArray(r.atendimentos) ? (r.atendimentos as Linha[]) : [];
+    // `comEnvio` vem da leitura do dia, que já conferiu e descartou as mensagens
+    if (r.comEnvio !== true && !empresaEnviouOrcamento(r)) continue;
+    const atendimentos = atendimentosDe(r);
     const comProtocolo = atendimentos.filter((a) => PROTOCOLO_OK.test(String(a.protocolo ?? "").trim()));
     // quem fez o orçamento: o último atendimento com agente (antes dele pode ter havido triagem)
     const doAgente = [...comProtocolo].reverse().find((a) => (a.agente as Linha | undefined)?.codigo) ?? comProtocolo[comProtocolo.length - 1];
@@ -83,12 +104,13 @@ export async function lerOrcamentosDoDia(
         if (vistos.has(r.id)) continue;
         vistos.add(r.id);
         novas += 1;
-        if (!areaDoOrcamento((r.classificacao as Linha | undefined)?.nome)) continue;
+        if (!areaDoOrcamento((r.classificacao as Linha | undefined)?.nome) || !empresaEnviouOrcamento(r)) continue;
         enxutas.push({
+          comEnvio: true,
           id: r.id,
           classificacao: r.classificacao,
           clienteContato: r.clienteContato,
-          atendimentos: (Array.isArray(r.atendimentos) ? (r.atendimentos as Linha[]) : []).map((a) => ({ protocolo: a.protocolo, agente: a.agente })),
+          atendimentos: atendimentosDe(r).map((a) => ({ protocolo: a.protocolo, agente: a.agente })),
         });
       }
       // página incompleta (ou repetida): acabou o dia

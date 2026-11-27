@@ -144,6 +144,9 @@ A API da Escallo é lida **por dia fechado**, para trazer os relatórios sem bai
 Rota `/follow-up` (`pages/FollowUp.tsx`, `lib/followUpLogic.ts`, `lib/followUpApi.ts`, tabela `quote_followups`).
 - A lista vem das conversas do WhatsApp **classificadas** pela equipe na Escallo como "Orçamento AC"/"Orçamento DI"
   (`escallo-sync/orcamentos.ts`, histórico de mensagens). Ligações não são classificadas, então não entram.
+- Só entra quem **recebeu** o orçamento: além da classificação, a empresa precisa ter enviado na conversa um valor em reais,
+  um arquivo ou uma imagem (a Escallo não tem o campo "orçamento feito"; o conteúdo do anexo não é aberto). Decisão da
+  Amanda em 27/11/2026. Omnitags e palavra-chave não são usadas.
 - Entra só no **fechamento** (dia anterior e anteontem) e no modo manual: ler o dia inteiro de conversas é pesado demais para a hora em hora.
 - A Escallo não informa se o paciente fez o exame: o resultado do contato é marcado pela equipe na tela.
 - **LGPD**: guarda só protocolo, data, área e atendente. Nunca nome, telefone ou mensagem. A sincronização não toca nas colunas do
