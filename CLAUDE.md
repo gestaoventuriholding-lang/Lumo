@@ -140,6 +140,16 @@ A API da Escallo é lida **por dia fechado**, para trazer os relatórios sem bai
 - **Gravação de dados da Escallo** ainda não é um botão no app: foi feita em scripts locais (pasta `scripts/`, não versionada),
   sempre com simulação, backup e desfazer. A Fase B de 29/10 gravou só Ligação (8 colaboradores) com origem `API Escallo`.
 
+## Follow-up de orçamentos
+Rota `/follow-up` (`pages/FollowUp.tsx`, `lib/followUpLogic.ts`, `lib/followUpApi.ts`, tabela `quote_followups`).
+- A lista vem das conversas do WhatsApp **classificadas** pela equipe na Escallo como "Orçamento AC"/"Orçamento DI"
+  (`escallo-sync/orcamentos.ts`, histórico de mensagens). Ligações não são classificadas, então não entram.
+- Entra só no **fechamento** (dia anterior e anteontem) e no modo manual: ler o dia inteiro de conversas é pesado demais para a hora em hora.
+- A Escallo não informa se o paciente fez o exame: o resultado do contato é marcado pela equipe na tela.
+- **LGPD**: guarda só protocolo, data, área e atendente. Nunca nome, telefone ou mensagem. A sincronização não toca nas colunas do
+  acompanhamento; o app não cria nem apaga linhas (permissão de coluna no banco).
+- Não passa pelo `cloudStore` (milhares de linhas por mês): a tela busca o período quando abre.
+
 ## Pendências conhecidas
 1. Cadastro público no Supabase ainda ligado (qualquer um com o link pode criar conta vazia).
    Sugestão já feita: desligar em Authentication → Sign In / Providers → "Allow new users to sign up".

@@ -29,11 +29,13 @@ interface Props {
   codigoAgente?: number | null;
   /** Atendimento escolhido na lista: devolve o identificador para a auditoria */
   onEscolher?: (identificador: string) => void;
+  /** Mostra só o atendimento do protocolo informado, sem busca do dia (Follow-up) */
+  somenteEste?: boolean;
 }
 
 const duracao = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente, onEscolher }: Props) {
+export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente, onEscolher, somenteEste = false }: Props) {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [ligacoes, setLigacoes] = useState<LigacaoDaLista[] | null>(null);
@@ -67,7 +69,7 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
 
   useEffect(() => () => setAudioUrl((a) => (a && URL.revokeObjectURL(a), null)), []);
 
-  const semCodigo = Boolean(canal) && !codigoAgente;
+  const semCodigo = !somenteEste && Boolean(canal) && !codigoAgente;
   const podeBuscar = Boolean(canal && dia && codigoAgente);
 
   const buscar = async () => {
@@ -133,15 +135,17 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
   };
 
   const mostrandoLista = Boolean(ligacoes || conversas);
-  const vazio = !mostrandoLista && !conversa && !erro && !carregando && !escolhido;
+  const vazio = !somenteEste && !mostrandoLista && !conversa && !erro && !carregando && !escolhido;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3" data-testid="atendimento-viewer">
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={buscar} disabled={!podeBuscar || carregando} data-testid="buscar-atendimento">
-          {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-          {ehLigacao ? "Buscar ligações do dia" : "Buscar conversas do dia"}
-        </Button>
+        {!somenteEste && (
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={buscar} disabled={!podeBuscar || carregando} data-testid="buscar-atendimento">
+            {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            {ehLigacao ? "Buscar ligações do dia" : "Buscar conversas do dia"}
+          </Button>
+        )}
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5" /> Vem da Escallo na hora e não é salvo.
         </p>
@@ -192,9 +196,9 @@ export default function AtendimentoViewer({ canal, protocolo, dia, codigoAgente,
       {!ehLigacao && escolhido && !conversas && !conversa && (
         <div className="space-y-3 rounded-lg border bg-muted/30 p-4" data-testid="conversa-registrada">
           <p className="flex items-center gap-2 text-sm font-medium">
-            <MessageSquare className="h-4 w-4" /> Conversa desta auditoria
+            <MessageSquare className="h-4 w-4" /> {somenteEste ? "Conversa deste atendimento" : "Conversa desta auditoria"}
           </p>
-          <p className="text-xs text-muted-foreground">Protocolo {escolhido}. Para trocar de conversa, busque as conversas do dia.</p>
+          <p className="text-xs text-muted-foreground">Protocolo {escolhido}.{somenteEste ? "" : " Para trocar de conversa, busque as conversas do dia."}</p>
           <Button type="button" size="sm" onClick={() => abrirConversa(escolhido, false)} disabled={carregandoConversa !== null} data-testid="carregar-conversa">
             {carregandoConversa && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
             Carregar conversa

@@ -32,6 +32,7 @@ const Structure = lazy(() => import("./pages/Structure"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const UsersPage = lazy(() => import("./pages/Users"));
 const Reports = lazy(() => import("./pages/Reports"));
+const FollowUp = lazy(() => import("./pages/FollowUp"));
 
 function PageLoader() {
   return (
@@ -61,6 +62,7 @@ function AppRoutes() {
               <Route path="/performance" component={Performance} />
               <Route path="/absences" component={Absences} />
               <Route path="/incidents" component={Incidents} />
+              <Route path="/follow-up" component={FollowUp} />
               <Route path="/rules" component={Rules} />
               <Route path="/knowledge" component={KnowledgeBase} />
               <Route path="/audits" component={Audits} />

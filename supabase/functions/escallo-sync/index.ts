@@ -13,6 +13,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { INTERACAO_MENU_PRINCIPAL, menuParaTabela, resumirMenu } from "./menu.ts";
 import { iaParaTabela, lerRel103Completo, resumirConsumoIA } from "./ia.ts";
+import { lerOrcamentosDoDia, orcamentosParaTabela, REGISTROS_POR_PAGINA } from "./orcamentos.ts";
 import { filasNaoReconhecidas, paraTabela, resumirLigacoes, resumirWhatsapp } from "./filas.ts";
 import { hojeSaoPaulo, LOGIN_LIMITE_PADRAO_SEGUNDOS, type Colaborador, type RegistroEscallo } from "./mapeamento.ts";
 import {
@@ -201,6 +202,14 @@ Deno.serve(async (req: Request) => {
       const { error } = await servico.from("exam_choices_daily").upsert(menuParaTabela(escolhas), { onConflict: "date" });
       if (error) throw new Error("não consegui gravar as escolhas do menu");
     },
+    async buscarOrcamentos(dia) {
+      return lerOrcamentosDoDia(dia, (pagina) => buscarPaginaDoHistorico(tokenEscallo, dia, pagina));
+    },
+    async gravarOrcamentos(linhas, colaboradores) {
+      // upsert só com as colunas da Escallo: situação, anotações e retornos que a equipe marcou continuam como estão
+      const { error } = await servico.from("quote_followups").upsert(orcamentosParaTabela(linhas, colaboradores), { onConflict: "chat_id" });
+      if (error) throw new Error("não consegui gravar os orçamentos");
+    },
     async aplicarDia(plano) {
       const { data, error } = await servico.rpc("aplicar_sync_dia", { p: { dia: plano.dia, linhas: plano.linhas, alertas: plano.alertas } });
       if (error) throw new Error(`não consegui gravar o dia ${plano.dia}`);
@@ -220,6 +229,7 @@ Deno.serve(async (req: Request) => {
       ignored_terminated: resultado.totais.ignoradosDesligados, warnings: resultado.avisos.slice(0, 50),
       duration_ms: Date.now() - inicio,
     }).eq("id", corrida.id);
+    if (resultado.orcamentos.erros.length > 0) console.log(`escallo-sync: orçamentos com erro: ${textoSeguro(resultado.orcamentos.erros.join(" | "), tokenEscallo)}`);
     console.log(`escallo-sync: ${pedido.modo} ${resultado.dias.join(",")} ok (${resultado.gravacao.inseridas} novas, ${resultado.gravacao.atualizadas} atualizadas)`);
     return json({ ok: true, modo: pedido.modo, gravou: resultado.gravou, dias: resultado.dias, gravacao: resultado.gravacao, totais: resultado.totais, planos: resultado.planos });
   } catch (e) {
@@ -273,6 +283,31 @@ async function buscarMenuEscallo(token: string, dia: string): Promise<unknown> {
   const j = await resposta.json().catch(() => null);
   if (!resposta.ok || !j?.data) throw new Error(`rel092 ${dia}: a Escallo respondeu ${resposta.status}`);
   return j.data.registros;
+}
+
+/** Uma página do histórico de conversas de um dia (usado para achar os orçamentos). Tenta de novo se falhar. */
+async function buscarPaginaDoHistorico(token: string, dia: string, pagina: number): Promise<Record<string, unknown>[]> {
+  let ultimoErro = "";
+  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+    try {
+      const resposta = await fetch(`${URL_BASE}/historicoMensagens/?registros=${REGISTROS_POR_PAGINA}&pagina=${pagina}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Partner ${token}` },
+        body: JSON.stringify({ dataInicial: dia, dataFinal: dia, horarioInicial: "00:00:01", horarioFinal: "23:59:59" }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      const j = await resposta.json().catch(() => null);
+      if (resposta.ok && j) {
+        const registros = j.data?.registros;
+        return Array.isArray(registros) ? registros : []; // página além do fim
+      }
+      ultimoErro = `HTTP ${resposta.status}`;
+    } catch (e) {
+      ultimoErro = textoSeguro(e, token, 120);
+    }
+    if (tentativa < 2) await esperar(2000);
+  }
+  throw new Error(`histórico ${dia}: ${textoSeguro(ultimoErro, token, 200)}`);
 }
 
 /** rel103 (extrato de consumo da IA) de um dia: lê todas as páginas (ver lerRel103Completo em ia.ts). */

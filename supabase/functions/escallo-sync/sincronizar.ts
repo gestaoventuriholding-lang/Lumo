@@ -4,6 +4,7 @@ import { hojeSaoPaulo, type RegistroEscallo } from "./mapeamento.ts";
 import type { LinhaFila } from "./filas.ts";
 import type { ConsumoIADia } from "./ia.ts";
 import type { EscolhasMenuDia } from "./menu.ts";
+import type { OrcamentoDia } from "./orcamentos.ts";
 import { montarPlanoDia, type AvisoSync, type ColaboradorSync, type PlanoDia } from "./plano.ts";
 
 /** Fila da Escallo que não está em nenhum grupo conhecido: foi contada em "Outras" (vai para sync_runs.warnings) */
@@ -55,6 +56,9 @@ export interface Deps {
   /** Opcional: escolhas de exame no menu do WhatsApp no dia (rel092). Se falhar, o dia principal continua valendo. */
   buscarMenu?(dia: string): Promise<EscolhasMenuDia | null>;
   gravarMenu?(escolhas: EscolhasMenuDia): Promise<void>;
+  /** Opcional: conversas classificadas como orçamento no dia (Follow-up). Se falhar, o dia principal continua valendo. */
+  buscarOrcamentos?(dia: string): Promise<OrcamentoDia[]>;
+  gravarOrcamentos?(linhas: OrcamentoDia[], colaboradores: ColaboradorSync[]): Promise<void>;
   esperar(ms: number): Promise<void>;
 }
 
@@ -79,6 +83,8 @@ export interface ResultadoSync {
   ia: { dias: number; erros: string[] };
   /** Dias de escolhas do menu gravados e, se algum falhou, o motivo (não derruba a sincronização) */
   menu: { dias: number; erros: string[] };
+  /** Orçamentos gravados para o Follow-up e, se algum dia falhou, o motivo (não derruba a sincronização) */
+  orcamentos: { linhas: number; erros: string[] };
 }
 
 const dataValida = (s: unknown): s is string => {
@@ -196,6 +202,18 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       menu.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
     }
   };
+  const orcamentos = { linhas: 0, erros: [] as string[] };
+  // Lê o dia inteiro de conversas, por isso fica fora das execuções de hora em hora (só no fechamento e no manual)
+  const atualizarOrcamentos = async (dia: string) => {
+    if (!deps.buscarOrcamentos || !deps.gravarOrcamentos) return;
+    try {
+      const linhas = await deps.buscarOrcamentos(dia);
+      if (linhas.length > 0) await deps.gravarOrcamentos(linhas, colaboradores);
+      orcamentos.linhas += linhas.length;
+    } catch (e) {
+      orcamentos.erros.push(`${dia}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+    }
+  };
   for (let i = 0; i < dias.length; i++) {
     const dia = dias[i];
     const rel025 = await deps.buscarRelatorio("rel025", dia);
@@ -210,6 +228,7 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       gravacao.alertas_novos += r.alertas_novos;
       await atualizarFilas(dia);
       await atualizarMenu(dia);
+      if (pedido.modo === "fechamento" || pedido.modo === "manual") await atualizarOrcamentos(dia);
       if (deps.buscarIA && deps.gravarIA) {
         try {
           const c = await deps.buscarIA(dia);
@@ -230,6 +249,9 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
       await atualizarFilas(dia);
       await atualizarMenu(dia);
     }
+    // a classificação pode ser marcada depois: o dia anterior ao fechado é lido de novo (domingo não tem)
+    const anteontem = somarDias(hoje, -2);
+    if (new Date(`${anteontem}T12:00:00Z`).getUTCDay() !== 0) await atualizarOrcamentos(anteontem);
   }
   const soma = (f: (p: PlanoDia) => number) => planos.reduce((s, p) => s + f(p), 0);
   return {
@@ -249,5 +271,6 @@ export async function sincronizar(deps: Deps, pedido: PedidoSync, hoje: string =
     filas,
     ia,
     menu,
+    orcamentos,
   };
 }

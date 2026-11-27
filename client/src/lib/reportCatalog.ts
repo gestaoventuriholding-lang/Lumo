@@ -3,7 +3,7 @@
 // As regras de leitura ficam nas funções em supabase/functions (escallo-sync e escallo-atendimento).
 
 /** Fonte da data do último dado guardado */
-export type FonteUltimoDado = "produtividade-ligacao" | "produtividade-whatsapp" | "fila-ligacao" | "fila-whatsapp" | "menu" | "ia";
+export type FonteUltimoDado = "produtividade-ligacao" | "produtividade-whatsapp" | "fila-ligacao" | "fila-whatsapp" | "menu" | "orcamentos" | "ia";
 
 export interface RelatorioUsado {
   codigo: string;
@@ -74,6 +74,15 @@ export const RELATORIOS_GUARDADOS: RelatorioUsado[] = [
     guarda: "Só a contagem do dia de cada opção e das respostas inválidas.",
     ondeAparece: ["Dashboard: cartões de exames e gráfico Exames por área"],
     fonte: "menu",
+  },
+  {
+    codigo: "Classificação das conversas",
+    nome: "Orçamentos pedidos no chat",
+    canal: "WhatsApp",
+    traz: ["Histórico de mensagens do dia", "A classificação que a equipe marcou em cada conversa (Orçamento AC e Orçamento DI)", "Protocolo e atendente"],
+    guarda: "Só das conversas de orçamento: protocolo, data, área e atendente. Sem nome, telefone ou mensagens do paciente.",
+    ondeAparece: ["Follow-up"],
+    fonte: "orcamentos",
   },
   {
     codigo: "REL103",

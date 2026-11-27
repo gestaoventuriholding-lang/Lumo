@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEllosData } from "@/contexts/EllosDataContext";
 import { buscarFilasDiarias } from "@/lib/filasApi";
+import { ultimoDiaDeOrcamento } from "@/lib/followUpApi";
 import { buscarConsumoIA } from "@/lib/iaApi";
 import { buscarEscolhasExames } from "@/lib/menuApi";
 import { motion, pageContainerVariants, pageItemVariants } from "@/lib/motionVariants";
@@ -26,10 +27,11 @@ type Ultimo = string | null | "carregando";
 export default function Reports() {
   const { productivityRecords } = useEllosData();
   const hoje = getLocalDateString();
-  const [banco, setBanco] = useState<Record<"fila-ligacao" | "fila-whatsapp" | "menu" | "ia", Ultimo>>({
+  const [banco, setBanco] = useState<Record<"fila-ligacao" | "fila-whatsapp" | "menu" | "orcamentos" | "ia", Ultimo>>({
     "fila-ligacao": "carregando",
     "fila-whatsapp": "carregando",
     menu: "carregando",
+    orcamentos: "carregando",
     ia: "carregando",
   });
 
@@ -37,12 +39,13 @@ export default function Reports() {
     let vivo = true;
     // 90 dias bastam para achar o último dado; a IA traz no máximo uma linha por dia
     const inicio = new Date(Date.parse(`${hoje}T12:00:00Z`) - 90 * 86_400_000).toISOString().slice(0, 10);
-    void Promise.all([buscarFilasDiarias(inicio, hoje), buscarConsumoIA(inicio, hoje), buscarEscolhasExames(inicio, hoje)]).then(([filas, ia, escolhas]) => {
+    void Promise.all([buscarFilasDiarias(inicio, hoje), buscarConsumoIA(inicio, hoje), buscarEscolhasExames(inicio, hoje), ultimoDiaDeOrcamento()]).then(([filas, ia, escolhas, orcamento]) => {
       if (!vivo) return;
       setBanco({
         "fila-ligacao": ultimaData(filas.filter((f) => f.channel === "Ligação").map((f) => f.date)) ?? null,
         "fila-whatsapp": ultimaData(filas.filter((f) => f.channel === "WhatsApp").map((f) => f.date)) ?? null,
         menu: ultimaData(escolhas.map((d) => d.date)) ?? null,
+        orcamentos: orcamento,
         ia: ultimaData(ia.map((d) => d.date)) ?? null,
       });
     });
@@ -76,7 +79,8 @@ export default function Reports() {
           <h2 id="rel-guardados" className="text-lg font-semibold text-foreground">Atualizados automaticamente</h2>
           <p className="text-sm text-muted-foreground">
             De segunda a sábado, de hora em hora entre 06:00 e 20:00. De terça a sábado e no domingo, às 03:30, o dia anterior é fechado
-            e as filas e o menu (REL001, REL091 e REL092) dos últimos 7 dias são lidos de novo. O domingo não é sincronizado.
+            e as filas e o menu (REL001, REL091 e REL092) dos últimos 7 dias são lidos de novo. Os orçamentos do Follow-up entram só
+            nesse fechamento. O domingo não é sincronizado.
           </p>
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
