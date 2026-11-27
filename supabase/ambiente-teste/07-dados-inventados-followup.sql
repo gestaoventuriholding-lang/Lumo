@@ -18,7 +18,7 @@ select
   case when b.semente % 6 = 0 then 'imagem' else 'laboratorio' end,
   e.id, e.name,
   s.status,
-  case when s.status = 'declined' then (array['price', 'insurance', 'elsewhere', 'no_answer'])[1 + b.semente % 4] end,
+  case when s.status = 'declined' then (array['price', 'insurance', 'elsewhere', 'no_answer'])[1 + (b.semente / 8) % 4] end,
   case when s.status = 'waiting' then 'Anotação inventada: ficou de confirmar o dia.' else '' end,
   case when s.status = 'waiting' then b.dia + 2 + b.semente % 5 end,
   case when s.status = 'pending' then 0 else 1 + b.semente % 2 end,
